@@ -1,526 +1,609 @@
-/* --- GAME STATE & CONFIG --- */
-const CONFIG = {
-    TOTAL_STAGES: 101,
-    STORAGE_KEY: 'valentine_game_state_v1'
-};
 
+/**
+ * WILL YOU BE MY VALENTINE? 💘
+ * Senior Engineer Refactor - Engine & 101 Stages
+ */
+
+/* --- 1. CORE STATE & DOM --- */
 const STATE = {
     yesCount: 0,
     noCount: 0,
     startTime: null,
     isWin: false,
-    effects: [] // Will be populated
+    activeEffect: null,
+    lastFrameTime: 0
 };
 
-/* --- DOM CACHE --- */
 const DOM = {
     yesBtn: document.getElementById('btn-yes'),
     noBtn: document.getElementById('btn-no'),
-    mainCard: document.getElementById('main-card'),
-    buttonArea: document.getElementById('button-area'),
     dialogue: document.getElementById('dialogue-text'),
     yesCount: document.getElementById('yes-count'),
-    timeDisplay: document.getElementById('time-display'),
     progressFill: document.getElementById('progress-fill'),
-    stageIndicator: document.getElementById('stage-indicator'),
-    resetBtn: document.getElementById('reset-btn'),
+    timeDisplay: document.getElementById('time-display'),
+    buttonArea: document.getElementById('button-area'),
     winScreen: document.getElementById('win-screen'),
-    finalTime: document.getElementById('final-time'),
-    finalNo: document.getElementById('final-no'),
     fakeContainer: document.getElementById('fake-container'),
-    confettiCanvas: document.getElementById('confetti-canvas')
+    resetBtn: document.getElementById('reset-btn'),
+    stageIndicator: document.getElementById('stage-indicator'),
+    mainCard: document.getElementById('main-card')
 };
 
-/* --- AUDIO ENGINE (WebAudio API) --- */
-const AudioEngine = {
-    ctx: new (window.AudioContext || window.webkitAudioContext)(),
-    
-    playTone(freq, type, duration, vol = 0.1) {
-        // Safety check for suspended state
-        if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
-        
-        try {
-            const osc = this.ctx.createOscillator();
-            const gain = this.ctx.createGain();
-            osc.type = type;
-            osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-            gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-            
-            osc.connect(gain);
-            gain.connect(this.ctx.destination);
-            osc.start();
-            osc.stop(this.ctx.currentTime + duration);
-        } catch (e) {
-            // Audio context might be restricted, ignore error
-        }
-    },
-
-    playYes() { this.playTone(800 + Math.random()*200, 'sine', 0.15, 0.2); },
-    playNo() { this.playTone(150, 'sawtooth', 0.3, 0.15); },
-    playWin() { 
-        [440, 554, 659, 880].forEach((f, i) => setTimeout(() => this.playTone(f, 'sine', 0.5, 0.2), i*100)); 
-    }
-};
-
-/* --- DIALOGUES --- */
 const DIALOGUES = [
-    "Please say yes! 🥺", "Don't be mean... 💔", "I'll make you cookies! 🍪",
-    "Is that a misclick? 🤨", "Are you sure? 🧐", "Stop breaking my heart 😭",
-    "I'm not giving up! 💪", "Just one little click... 🤏", "Love is patient... 🕊️",
-    "You're testing me... 😤", "Okay, now it's war 😈", "Click YES to win 🏆",
-    "Why are you running? 🏃‍♂️", "Pretty please? 🍒", "I know you want to 😏"
+    "Please say yes! 🥺", "Don't break my heart 💔", "I'll give you cookies 🍪", 
+    "Just one click! ☝️", "Why are you running? 🏃", "Am I a joke to you? 🤡", 
+    "Pretty please? 🍒", "I won't stop asking 📢", "Love me! 💖", "Resistance is futile 🤖",
+    "I'm not crying, you are 😿", "This is bullying! 😭", "Okay, rude. 😒", 
+    "You're playing hard to get! 😏", "Click YES already! 😡"
 ];
 
-function getRandomDialogue() {
-    return DIALOGUES[Math.floor(Math.random() * DIALOGUES.length)];
+/* --- 2. AUDIO SYSTEM --- */
+let audioCtx = null;
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 }
 
-/* --- UTILITIES --- */
-function formatTime(ms) {
-    const totalSec = Math.floor(ms / 1000);
-    const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
-    const s = (totalSec % 60).toString().padStart(2, '0');
-    const centi = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
-    return `${m}:${s}.${centi}`;
-}
-
-// Reset visual properties of buttons for a clean slate
-function resetButtons() {
-    const btns = [DOM.yesBtn, DOM.noBtn];
-    btns.forEach(b => {
-        if (!b) return;
-        b.style.transform = 'none';
-        b.style.position = 'relative'; // Reset to relative layout flow
-        b.style.left = 'auto';
-        b.style.top = 'auto';
-        b.style.opacity = '1';
-        b.style.filter = 'none';
-        b.style.transition = '0.2s';
-        b.style.pointerEvents = 'auto';
-        b.classList.remove('blur-heavy', 'spin-fast', 'blur-mode');
-        
-        // Remove all event listeners via cloning (nuclear option)
-        const newB = b.cloneNode(true);
-        if (b.parentNode) b.parentNode.replaceChild(newB, b);
-    });
+function playSound(type) {
+    if (!audioCtx) initAudio();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
     
-    // Re-acquire DOM references after clone
-    DOM.yesBtn = document.getElementById('btn-yes');
-    DOM.noBtn = document.getElementById('btn-no');
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    const now = audioCtx.currentTime;
 
-    // Re-attach standard listeners if elements exist
-    if (DOM.yesBtn) DOM.yesBtn.addEventListener('pointerdown', handleYes);
-    if (DOM.noBtn) DOM.noBtn.addEventListener('pointerdown', handleNo);
-
-    // Clear fake container
-    if (DOM.fakeContainer) DOM.fakeContainer.innerHTML = '';
-    
-    // Reset layout
-    if (DOM.buttonArea) DOM.buttonArea.style.flexDirection = 'row';
-}
-
-/* --- SPAWN UTILS (SMART SPAWN) --- */
-function getNonOverlappingPosition(width, height, existingPositions) {
-    if (!DOM.buttonArea) return { x: 0, y: 0 };
-    
-    const area = DOM.buttonArea.getBoundingClientRect();
-    const padding = 10;
-    
-    // Define Safe Zone: Avoid top 25% (Dialogue area)
-    const safeTop = area.height * 0.25; 
-    const maxY = area.height - height - padding;
-    const maxX = area.width - width - padding;
-    
-    const maxAttempts = 50; 
-    const minDistance = 75; 
-
-    for (let i = 0; i < maxAttempts; i++) {
-        const x = Math.random() * (maxX - padding) + padding;
-        const y = Math.random() * (maxY - safeTop) + safeTop;
-
-        let overlap = false;
-        for (const pos of existingPositions) {
-            const dx = (x + width/2) - (pos.x + width/2);
-            const dy = (y + height/2) - (pos.y + height/2);
-            const distance = Math.sqrt(dx*dx + dy*dy);
-            if (distance < minDistance) { overlap = true; break; }
-        }
-
-        if (!overlap) return { x, y };
+    if (type === 'yes') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(500 + (STATE.yesCount * 10), now);
+        osc.frequency.exponentialRampToValueAtTime(800 + (STATE.yesCount * 10), now + 0.1);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+    } else if (type === 'no') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.linearRampToValueAtTime(80, now + 0.2);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+        osc.start(now);
+        osc.stop(now + 0.2);
+    } else if (type === 'win') {
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(440, now);
+        osc.frequency.setValueAtTime(554, now + 0.2);
+        osc.frequency.setValueAtTime(659, now + 0.4);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0, now + 2);
+        osc.start(now);
+        osc.stop(now + 2);
     }
-    // Fallback
+}
+
+/* --- 3. UTILITIES --- */
+function getRandomDialogue() { return DIALOGUES[Math.floor(Math.random() * DIALOGUES.length)]; }
+function clamp(val, min, max) { return Math.min(Math.max(val, min), max); }
+function lerp(start, end, t) { return start * (1 - t) + end * t; }
+
+function getSafePosition(element, padding = 10) {
+    const area = DOM.buttonArea.getBoundingClientRect();
+    const btn = element.getBoundingClientRect();
+    const maxX = area.width - btn.width - padding;
+    const maxY = area.height - btn.height - padding;
     return {
-        x: Math.random() * (maxX - padding) + padding,
-        y: Math.random() * (maxY - safeTop) + safeTop
+        x: Math.random() * maxX,
+        y: Math.random() * maxY
     };
 }
 
-/* --- EFFECT GENERATORS --- */
-const EffectGen = {
-    // 1. Static/Simple
-    static: () => ({ name: "Normal", init: () => {} }),
-    
-    // 2. Wiggle/Small Movement
-    wiggle: (intensity) => ({
-        name: "Wiggle",
-        init: () => {
-            DOM.yesBtn.style.position = 'relative';
-            const tick = () => {
-                const x = (Math.random() - 0.5) * intensity;
-                const y = (Math.random() - 0.5) * intensity;
-                DOM.yesBtn.style.transform = `translate(${x}px, ${y}px)`;
-                requestAnimationFrame(tick);
-            };
-            // Note: In a real engine, we'd store the requestID to cancel it. 
-            // For simplicity here, resetButtons() clears transforms which breaks the visual loop visually.
-        }
-    }),
-
-    // 3. Run Away (Hover/Proximity)
-    runAway: (speed) => ({
-        name: "RunAway",
-        init: () => {
-            DOM.yesBtn.style.position = 'absolute';
-            DOM.yesBtn.style.transition = `top ${0.3/speed}s, left ${0.3/speed}s`;
-            
-            const move = () => {
-                const area = DOM.buttonArea.getBoundingClientRect();
-                const btn = DOM.yesBtn.getBoundingClientRect();
-                // Safe zone math
-                const x = Math.random() * (area.width - btn.width);
-                const y = Math.random() * (area.height - btn.height); // Full height allowed for chaos
-                DOM.yesBtn.style.left = x + 'px';
-                DOM.yesBtn.style.top = y + 'px';
-            };
-            
-            // Move initially
-            move();
-            
-            // Move on interaction
-            DOM.yesBtn.onpointerover = move; // Desktop
-            // Mobile: use a touch proximity hack if needed, or just rely on 'click' missing
-        }
-    }),
-
-    // 4. Visual Tricks (Scale/Opacity/Blur)
-    visual: (type, val) => ({
-        name: "Visual",
-        init: () => {
-            if (type === 'scale') DOM.yesBtn.style.transform = `scale(${val})`;
-            if (type === 'opacity') {
-                // Clamped Opacity Logic
-                const clampedOpacity = Math.min(Math.max(val, 0.18), 0.28);
-                DOM.yesBtn.style.opacity = clampedOpacity;
-                DOM.dialogue.innerText = "Where is it? 👻";
-            }
-            if (type === 'blur') {
-                // Hard Blur Logic: Equalize buttons + Random Swap
-                DOM.yesBtn.classList.add('blur-mode');
-                DOM.noBtn.classList.add('blur-mode');
-                
-                // Random Swap
-                const isSwapped = Math.random() > 0.5;
-                DOM.buttonArea.style.flexDirection = isSwapped ? 'row-reverse' : 'row';
-                DOM.dialogue.innerText = "Read carefully... 🌫️";
-            }
-        }
-    }),
-
-    // 5. Clones (Smart Spawning + Penalty)
-    clones: (count) => ({
-        name: "Clones",
-        init: () => {
-            DOM.yesBtn.style.position = 'absolute';
-            DOM.yesBtn.style.zIndex = '20';
-            DOM.dialogue.innerText = "Which one is real? 🤔";
-            
-            const btnW = DOM.yesBtn.offsetWidth || 110;
-            const btnH = DOM.yesBtn.offsetHeight || 50;
-            const usedPositions = [];
-
-            // Position Real Button
-            const pReal = getNonOverlappingPosition(btnW, btnH, usedPositions);
-            usedPositions.push(pReal);
-            DOM.yesBtn.style.left = pReal.x + 'px';
-            DOM.yesBtn.style.top = pReal.y + 'px';
-
-            // Spawn Clones
-            for(let i=0; i<count; i++){
-                const clone = document.createElement('button');
-                clone.className = 'game-btn btn-yes fake-btn';
-                clone.innerText = "YES 💖";
-                clone.style.opacity = (Math.random() * 0.05 + 0.75).toString(); // Slightly ghosty
-                
-                const p = getNonOverlappingPosition(btnW, btnH, usedPositions);
-                usedPositions.push(p);
-                clone.style.left = p.x + 'px';
-                clone.style.top = p.y + 'px';
-
-                // Penalty Logic
-                clone.onpointerdown = (e) => {
-                    e.stopPropagation(); e.preventDefault();
-                    AudioEngine.playNo();
-                    STATE.noCount++;
-                    
-                    DOM.mainCard.classList.remove('shake');
-                    void DOM.mainCard.offsetWidth;
-                    DOM.mainCard.classList.add('shake');
-                    
-                    DOM.dialogue.innerText = getRandomDialogue();
-                    updateUI();
-                    saveGame();
-
-                    clone.innerText = "NOPE 💀";
-                    clone.style.background = "#57606f";
-                    clone.style.transform = "scale(0.8)";
-                    setTimeout(() => clone.remove(), 400);
-                };
-                DOM.fakeContainer.appendChild(clone);
-            }
-        }
-    })
-};
-
-/* --- GENERATE 101 STAGES --- */
-function generateStages() {
-    const ef = [];
-    // Stage 0 (Index 0 is unused or Stage 1 mapped to index 0)
-    // We map click count X to effect X. 
-    
-    for(let i=0; i<=101; i++) {
-        if(i < 5) ef.push(EffectGen.static());
-        else if(i < 15) ef.push(EffectGen.wiggle(i * 2));
-        else if(i < 25) ef.push(EffectGen.runAway(1));
-        else if(i < 35) ef.push(EffectGen.visual('scale', 0.8));
-        else if(i < 45) ef.push(EffectGen.runAway(2));
-        else if(i < 55) ef.push(EffectGen.visual('opacity', 0.2)); // Will be clamped
-        else if(i < 65) ef.push(EffectGen.clones(Math.floor(i/10)));
-        else if(i < 75) ef.push(EffectGen.visual('blur', 0)); // Value ignored, hard logic used
-        else if(i < 85) ef.push(EffectGen.clones(10));
-        else if(i < 95) ef.push(EffectGen.runAway(3)); // Fast
-        else if(i < 101) ef.push(EffectGen.visual('scale', 0.5)); // Tiny
-        else ef.push(EffectGen.static()); // 101: Victory lap
+/* --- 4. ENGINE CORE --- */
+function loadGame() {
+    const saved = localStorage.getItem('valentine_save_v2');
+    if (saved) {
+        const data = JSON.parse(saved);
+        STATE.yesCount = data.yesCount || 0;
+        STATE.noCount = data.noCount || 0;
+        STATE.startTime = data.startTime ? new Date(data.startTime) : null;
     }
-    STATE.effects = ef;
-}
-
-/* --- GAME LOOP --- */
-function initGame() {
-    loadGame();
-    generateStages();
     updateUI();
-    applyCurrentStage();
     
-    // Timer Loop
-    setInterval(() => {
-        if(STATE.startTime && !STATE.isWin) {
-            const now = Date.now();
-            DOM.timeDisplay.innerText = formatTime(now - STATE.startTime);
-        }
-    }, 30);
-    
-    // Background Particles
-    createParticles();
+    if (STATE.yesCount >= 101) handleWin();
+    else initStage(STATE.yesCount);
+
+    requestAnimationFrame(gameLoop);
 }
 
-function handleYes() {
-    if(STATE.isWin) return;
+function saveGame() {
+    localStorage.setItem('valentine_save_v2', JSON.stringify({
+        yesCount: STATE.yesCount,
+        noCount: STATE.noCount,
+        startTime: STATE.startTime
+    }));
+}
+
+function resetGame() {
+    localStorage.removeItem('valentine_save_v2');
+    location.reload();
+}
+
+function startGameTimer() {
+    if (!STATE.startTime) STATE.startTime = new Date();
+}
+
+// Global Game Loop
+function gameLoop(timestamp) {
+    if (STATE.isWin) return;
     
-    if(STATE.yesCount === 0) {
-        STATE.startTime = Date.now();
+    const dt = timestamp - STATE.lastFrameTime;
+    STATE.lastFrameTime = timestamp;
+
+    // Timer Update
+    if (STATE.startTime) {
+        const diff = new Date() - STATE.startTime;
+        const mins = Math.floor(diff / 60000).toString().padStart(2, '0');
+        const secs = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+        const ms = Math.floor((diff % 1000) / 10).toString().padStart(2, '0');
+        DOM.timeDisplay.innerText = `${mins}:${secs}.${ms}`;
     }
 
-    AudioEngine.playYes();
+    // Effect Update
+    if (STATE.activeEffect && STATE.activeEffect.tick) {
+        STATE.activeEffect.tick(dt, timestamp);
+    }
+
+    requestAnimationFrame(gameLoop);
+}
+
+/* --- 5. ROBUST RESET SYSTEM --- */
+function resetButtons() {
+    // Reset YES Button
+    const yes = DOM.yesBtn;
+    yes.style.cssText = ''; // Clear all inline styles
+    yes.className = 'game-btn btn-yes';
+    yes.innerText = 'YES 💖';
+    
+    // Reset NO Button
+    const no = DOM.noBtn;
+    no.style.cssText = '';
+    no.className = 'game-btn btn-no';
+    no.innerText = 'NO 💔';
+
+    // Reset Container
+    DOM.buttonArea.style.cssText = '';
+    DOM.buttonArea.className = 'button-area';
+    
+    // Reset Dialogue
+    DOM.dialogue.style.transform = '';
+    
+    // Clear Fakes
+    DOM.fakeContainer.innerHTML = '';
+}
+
+function cleanupActiveEffect() {
+    if (STATE.activeEffect && STATE.activeEffect.cleanup) {
+        STATE.activeEffect.cleanup();
+    }
+    STATE.activeEffect = null;
+}
+
+/* --- 6. EFFECT GENERATORS (100 Unique Effects) --- */
+// We generate 101 stages procedurally with specific overrides
+
+const EFFECTS_REGISTRY = [];
+
+function registerEffect(generator) {
+    EFFECTS_REGISTRY.push(generator);
+}
+
+function makeAbsolute(btn) {
+    btn.style.position = 'absolute';
+    btn.style.left = '50%';
+    btn.style.top = '50%';
+    btn.style.transform = 'translate(-50%, -50%)';
+}
+
+/* --- GENERATOR FUNCTIONS --- */
+// 1. Static Text / Simple
+const genSimple = (text) => () => ({
+    name: "Simple",
+    init: () => { DOM.dialogue.innerText = text; }
+});
+
+// 2. Movement (Wander)
+const genWander = (speed) => () => ({
+    name: "Wander",
+    init: () => { 
+        makeAbsolute(DOM.yesBtn);
+        this.x = DOM.buttonArea.clientWidth / 2;
+        this.y = DOM.buttonArea.clientHeight / 2;
+        this.vx = (Math.random() - 0.5) * speed;
+        this.vy = (Math.random() - 0.5) * speed;
+        DOM.dialogue.innerText = "Catch me! 🦋";
+    },
+    tick: (dt) => {
+        const bounds = DOM.buttonArea.getBoundingClientRect();
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        // Bounce
+        if (this.x < 20 || this.x > bounds.width - 60) this.vx *= -1;
+        if (this.y < 20 || this.y > bounds.height - 40) this.vy *= -1;
+        
+        DOM.yesBtn.style.left = `${this.x}px`;
+        DOM.yesBtn.style.top = `${this.y}px`;
+        DOM.yesBtn.style.transform = 'translate(-50%, -50%)';
+    }
+});
+
+// 3. Runaway (Evade Mouse)
+const genRunaway = (radius, cooldown) => () => ({
+    name: "Runaway",
+    init: () => {
+        makeAbsolute(DOM.yesBtn);
+        this.lastMove = 0;
+        DOM.dialogue.innerText = "Too slow! 🏎️";
+    },
+    onPointerNear: () => {
+        const now = Date.now();
+        if (now - this.lastMove > cooldown) {
+            const pos = getSafePosition(DOM.yesBtn);
+            DOM.yesBtn.style.transition = 'all 0.2s cubic-bezier(0.25, 1, 0.5, 1)';
+            DOM.yesBtn.style.left = pos.x + 'px';
+            DOM.yesBtn.style.top = pos.y + 'px';
+            DOM.yesBtn.style.transform = 'none';
+            this.lastMove = now;
+        }
+    }
+});
+
+// 4. Orbit
+const genOrbit = (speed, radius) => () => ({
+    name: "Orbit",
+    init: () => {
+        makeAbsolute(DOM.yesBtn);
+        DOM.dialogue.innerText = "Round and round~ 😵";
+    },
+    tick: (dt, time) => {
+        const cx = DOM.buttonArea.clientWidth / 2;
+        const cy = DOM.buttonArea.clientHeight / 2;
+        const rads = time * speed * 0.002;
+        DOM.yesBtn.style.left = (cx + Math.cos(rads) * radius) + 'px';
+        DOM.yesBtn.style.top = (cy + Math.sin(rads) * radius) + 'px';
+    }
+});
+
+// 5. Visual Tricks (Scale/Opacity)
+const genVisual = (type, val) => () => ({
+    name: "Visual",
+    init: () => {
+        if (type === 'scale') DOM.yesBtn.style.transform = `scale(${val})`;
+        if (type === 'opacity') {
+            DOM.yesBtn.style.opacity = val;
+            DOM.dialogue.innerText = "Where is it? 👻";
+        }
+        if (type === 'blur') DOM.yesBtn.classList.add('blur-heavy');
+        if (type === 'spin') DOM.yesBtn.classList.add('spin-fast');
+    }
+});
+
+// 6. Fake Clones
+const genClones = (count) => () => ({
+    name: "Clones",
+    init: () => {
+        makeAbsolute(DOM.yesBtn);
+        DOM.dialogue.innerText = "Which one is real? 🤔";
+        for (let i = 0; i < count; i++) {
+            const clone = document.createElement('button');
+            clone.className = 'game-btn btn-yes fake-btn';
+            clone.innerText = "YES 💖";
+            const pos = getSafePosition(DOM.yesBtn);
+            clone.style.left = pos.x + 'px';
+            clone.style.top = pos.y + 'px';
+            
+            // Clone behavior: run away or vanish
+            clone.onpointerdown = () => {
+                clone.innerText = "NOPE";
+                clone.style.background = "#747d8c";
+                setTimeout(() => clone.remove(), 500);
+            };
+            DOM.fakeContainer.appendChild(clone);
+        }
+    }
+});
+
+// 7. Teleport
+const genTeleport = (interval) => () => ({
+    name: "Teleport",
+    init: () => {
+        makeAbsolute(DOM.yesBtn);
+        this.timer = 0;
+        DOM.dialogue.innerText = "Blink and miss! ✨";
+    },
+    tick: (dt) => {
+        this.timer += dt;
+        if (this.timer > interval) {
+            const pos = getSafePosition(DOM.yesBtn);
+            DOM.yesBtn.style.left = pos.x + 'px';
+            DOM.yesBtn.style.top = pos.y + 'px';
+            DOM.yesBtn.style.transform = 'none';
+            this.timer = 0;
+        }
+    }
+});
+
+// 8. Swap
+const genSwap = () => () => ({
+    name: "Swap",
+    init: () => {
+        DOM.buttonArea.style.flexDirection = 'row-reverse';
+        DOM.dialogue.innerText = "Wait, that's illegal! 👮";
+    }
+});
+
+// 9. Resize Pulse
+const genPulse = (speed) => () => ({
+    name: "Pulse",
+    init: () => { DOM.dialogue.innerText = "Breathing... 🫁"; },
+    tick: (dt, time) => {
+        const scale = 1 + Math.sin(time * speed * 0.005) * 0.3;
+        DOM.yesBtn.style.transform = `scale(${scale})`;
+    }
+});
+
+/* --- POPULATE 101 EFFECTS --- */
+// Index 0 = Stage 1
+function buildEffectsLibrary() {
+    const list = [];
+    
+    // Stages 1-20: Tutorial / Easy
+    list.push(genSimple("Just click it! ❤️")); // 1
+    list.push(genSimple("Are you sure? 🥺")); // 2
+    list.push(genVisual('scale', 0.9)); // 3
+    list.push(genVisual('scale', 0.8)); // 4
+    list.push(genPulse(1)); // 5
+    list.push(genSwap()); // 6
+    list.push(genSimple("I can do this all day 🕐")); // 7
+    list.push(genVisual('opacity', 0.8)); // 8
+    list.push(genWander(0.5)); // 9
+    list.push(genWander(1)); // 10
+    
+    // 11-20
+    for(let i=0; i<5; i++) list.push(genRunaway(100, 500 - (i*50)));
+    for(let i=0; i<5; i++) list.push(genTeleport(1500 - (i*100)));
+
+    // Stages 21-50: Medium (Movement & Tricks)
+    for(let i=0; i<10; i++) list.push(genOrbit(1 + i*0.2, 50 + i*5)); // Orbiting
+    for(let i=0; i<10; i++) list.push(genClones(3 + Math.floor(i/2))); // Clones
+    for(let i=0; i<10; i++) list.push(genRunaway(120, 300)); // Faster runaway
+
+    // Stages 51-80: Hard (Visuals)
+    for(let i=0; i<10; i++) list.push(genVisual('opacity', 0.5 - (i*0.04))); // Fading
+    for(let i=0; i<5; i++) list.push(genVisual('blur', 0)); // Blur
+    for(let i=0; i<5; i++) list.push(genVisual('spin', 0)); // Spin
+    for(let i=0; i<10; i++) list.push(genTeleport(600 - (i*30))); // Fast teleport
+
+    // Stages 81-99: Chaos
+    for(let i=0; i<19; i++) {
+        // Mix effects using a closure
+        const isOdd = i % 2 === 0;
+        if(isOdd) list.push(genClones(10));
+        else list.push(genOrbit(5, 80));
+    }
+
+    // Stage 100: Final Boss (Index 99)
+    list.push(() => ({
+        name: "Final Boss",
+        init: () => {
+            makeAbsolute(DOM.yesBtn);
+            DOM.yesBtn.style.transition = 'transform 0.1s';
+            DOM.dialogue.innerText = "FINAL STAGE: CATCH ME! 🔥";
+            DOM.noBtn.style.display = 'none'; // Remove NO button
+        },
+        tick: (dt, time) => {
+            // Erratic movement
+            const cx = DOM.buttonArea.clientWidth / 2;
+            const cy = DOM.buttonArea.clientHeight / 2;
+            const x = cx + Math.cos(time * 0.01) * 100;
+            const y = cy + Math.sin(time * 0.02) * 60;
+            DOM.yesBtn.style.left = x + 'px';
+            DOM.yesBtn.style.top = y + 'px';
+            DOM.yesBtn.style.transform = `translate(-50%, -50%) rotate(${Math.sin(time*0.01)*20}deg)`;
+        }
+    }));
+
+    // Stage 101: Victory Lap (Index 100)
+    list.push(() => ({
+        name: "Victory",
+        init: () => {
+            DOM.yesBtn.style.transform = 'scale(2)';
+            DOM.yesBtn.style.boxShadow = '0 0 30px var(--primary)';
+            DOM.dialogue.innerText = "ONE LAST TIME! 💍";
+            DOM.noBtn.style.display = 'none';
+        }
+    }));
+
+    // Fill remaining if any gap (fallback)
+    while(list.length < 102) list.push(genSimple("Keep going!"));
+
+    return list;
+}
+
+const EFFECT_LIBRARY = buildEffectsLibrary();
+
+function initStage(index) {
+    if (index > 100) index = 100;
+    
+    // UI Updates
+    DOM.stageIndicator.innerText = `Stage: ${index + 1} / 101`;
+    const percent = Math.min((index / 101) * 100, 100);
+    DOM.progressFill.style.width = `${percent}%`;
+
+    // Effect Application
+    cleanupActiveEffect();
+    resetButtons();
+
+    // Loop effects if index > defined list (safety)
+    const factory = EFFECT_LIBRARY[index] || EFFECT_LIBRARY[index % EFFECT_LIBRARY.length];
+    
+    // Create new effect instance
+    STATE.activeEffect = factory();
+    if (STATE.activeEffect.init) STATE.activeEffect.init();
+    
+    console.log(`Stage ${index+1}: ${STATE.activeEffect.name}`);
+}
+
+/* --- 7. EVENT HANDLERS --- */
+function handleYes(e) {
+    // Mobile double-tap prevention if needed, but handled by pointer events
+    startGameTimer();
+    playSound('yes');
     STATE.yesCount++;
     
-    // Visual Feedback
-    spawnFloatingHeart(DOM.yesBtn);
-    DOM.dialogue.innerText = "Yay! 💘";
+    createParticle(e.clientX, e.clientY, '💖');
     
-    if(STATE.yesCount >= CONFIG.TOTAL_STAGES) {
-        winGame();
-    } else {
-        saveGame();
-        applyCurrentStage();
+    saveGame();
+    
+    if (STATE.yesCount >= 101) {
         updateUI();
+        handleWin();
+    } else {
+        updateUI();
+        initStage(STATE.yesCount);
+        if (STATE.yesCount < 100) DOM.dialogue.innerText = getRandomDialogue();
     }
 }
 
-function handleNo() {
-    AudioEngine.playNo();
+function handleNo(e) {
+    startGameTimer();
+    playSound('no');
     STATE.noCount++;
+    
+    // Visual Shake
     DOM.mainCard.classList.remove('shake');
-    void DOM.mainCard.offsetWidth; // Trigger reflow
+    void DOM.mainCard.offsetWidth; // trigger reflow
     DOM.mainCard.classList.add('shake');
+    
     DOM.dialogue.innerText = getRandomDialogue();
     updateUI();
     saveGame();
 }
 
-function applyCurrentStage() {
-    if(STATE.yesCount >= 101) return;
+// Global Pointer Move for Proximity Effects
+document.addEventListener('pointermove', (e) => {
+    if (STATE.isWin || !STATE.activeEffect || !STATE.activeEffect.onPointerNear) return;
     
-    resetButtons();
+    const rect = DOM.yesBtn.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const dist = Math.hypot(e.clientX - centerX, e.clientY - centerY);
     
-    const effectFn = STATE.effects[STATE.yesCount];
-    if(effectFn && effectFn.init) {
-        // console.log(`Applying Stage ${STATE.yesCount}: ${effectFn.name}`);
-        effectFn.init();
+    // Proximity threshold
+    if (dist < 120) {
+        STATE.activeEffect.onPointerNear(e);
     }
-}
+});
 
 function updateUI() {
     DOM.yesCount.innerText = STATE.yesCount;
-    DOM.progressFill.style.width = `${(STATE.yesCount / CONFIG.TOTAL_STAGES) * 100}%`;
-    DOM.stageIndicator.innerText = `Stage: ${STATE.yesCount + 1} / ${CONFIG.TOTAL_STAGES}`;
+    // Progress bar updated in initStage usually
 }
 
-function winGame() {
+function createParticle(x, y, char) {
+    const el = document.createElement('div');
+    el.innerText = char;
+    el.style.position = 'fixed';
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.style.fontSize = '2rem';
+    el.style.pointerEvents = 'none';
+    el.style.zIndex = '1000';
+    el.style.animation = 'floatUp 1s ease-out forwards';
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 1000);
+}
+
+/* --- 8. WIN LOGIC --- */
+function handleWin() {
     STATE.isWin = true;
+    cleanupActiveEffect();
+    resetButtons();
+    playSound('win');
+    
     DOM.winScreen.classList.remove('hidden');
+    DOM.timeDisplay.innerText = DOM.timeDisplay.innerText || "00:00.00";
+    document.getElementById('final-time').innerText = DOM.timeDisplay.innerText;
+    document.getElementById('final-no').innerText = STATE.noCount;
     
-    const duration = Date.now() - STATE.startTime;
-    DOM.finalTime.innerText = formatTime(duration);
-    DOM.finalNo.innerText = STATE.noCount;
-    
-    AudioEngine.playWin();
     startConfetti();
-    saveGame();
 }
 
-/* --- SAVE/LOAD --- */
-function saveGame() {
-    const data = {
-        yesCount: STATE.yesCount,
-        noCount: STATE.noCount,
-        startTime: STATE.startTime,
-        isWin: STATE.isWin
-    };
-    localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
-}
+/* --- 9. INITIALIZATION & BINDINGS --- */
+// Using pointerdown for instant reaction on mobile
+DOM.yesBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); handleYes(e); });
+DOM.noBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); handleNo(e); });
+DOM.resetBtn.addEventListener('click', resetGame);
 
-function loadGame() {
-    const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
-    if(saved) {
-        const parsed = JSON.parse(saved);
-        STATE.yesCount = parsed.yesCount || 0;
-        STATE.noCount = parsed.noCount || 0;
-        STATE.startTime = parsed.startTime;
-        STATE.isWin = parsed.isWin || false;
-    }
-}
+// Win Screen Buttons
+document.getElementById('btn-replay').addEventListener('click', resetGame);
+document.getElementById('btn-share').addEventListener('click', () => {
+    const text = `I completed the Valentine Challenge 💘\nTime: ${DOM.timeDisplay.innerText}\nNO clicks: ${STATE.noCount}\nTry it: ${window.location.href}`;
+    navigator.clipboard.writeText(text).then(() => alert("Result copied to clipboard! 📋"));
+});
 
-// Attach listeners if element exists
-if (DOM.resetBtn) {
-    DOM.resetBtn.addEventListener('click', () => {
-        if(confirm('Start over?')) {
-            localStorage.removeItem(CONFIG.STORAGE_KEY);
-            location.reload();
-        }
-    });
-}
-
-// Initial Listeners
-if (DOM.yesBtn) DOM.yesBtn.addEventListener('pointerdown', handleYes);
-if (DOM.noBtn) DOM.noBtn.addEventListener('pointerdown', handleNo);
-
-/* --- EXTRA VISUALS (PARTICLES/CONFETTI) --- */
-function createParticles() {
-    // FIX: Check for both IDs (container vs js) and ensure element exists to prevent crash
-    const container = document.getElementById('particles-container') || document.getElementById('particles-js');
-    if (!container) return;
-
-    const colors = ['#ff758c', '#ff7eb3', '#a29bfe', '#fab1a0'];
-    
-    for(let i=0; i<30; i++) {
+// Particle Background Logic
+function initParticles() {
+    const container = document.getElementById('particles-js');
+    for(let i=0; i<20; i++) {
         const p = document.createElement('div');
-        p.className = 'heart-particle';
-        p.innerText = ['❤', '✨', '🌸'][Math.floor(Math.random()*3)];
+        p.className = 'particle';
+        const size = Math.random() * 10 + 5;
+        p.style.width = size + 'px';
+        p.style.height = size + 'px';
         p.style.left = Math.random() * 100 + 'vw';
-        p.style.fontSize = (Math.random() * 20 + 10) + 'px';
-        p.style.color = colors[Math.floor(Math.random()*colors.length)];
-        p.style.animationDuration = (Math.random() * 5 + 5) + 's';
-        p.style.animationDelay = (Math.random() * 5) + 's';
+        p.style.top = '100vh';
+        p.style.animationDuration = Math.random() * 5 + 5 + 's';
+        p.style.animationDelay = Math.random() * 5 + 's';
         container.appendChild(p);
     }
 }
 
-function spawnFloatingHeart(target) {
-    if (!target) return;
-    const rect = target.getBoundingClientRect();
-    const heart = document.createElement('div');
-    heart.innerText = "💖";
-    heart.style.position = 'fixed';
-    heart.style.left = (rect.left + rect.width/2) + 'px';
-    heart.style.top = rect.top + 'px';
-    heart.style.fontSize = '2rem';
-    heart.style.pointerEvents = 'none';
-    heart.style.zIndex = '100';
-    heart.style.transition = '1s';
-    
-    document.body.appendChild(heart);
-    
-    requestAnimationFrame(() => {
-        heart.style.transform = `translate(0, -100px) scale(1.5)`;
-        heart.style.opacity = '0';
-    });
-    
-    setTimeout(() => heart.remove(), 1000);
-}
-
-// Simple Confetti Canvas Logic
+// Confetti
 function startConfetti() {
-    const canvas = DOM.confettiCanvas;
-    if (!canvas) return;
+    const canvas = document.getElementById('confetti-canvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
     
-    const pieces = [];
-    const colors = ['#ff758c', '#a29bfe', '#fdcb6e', '#00b894'];
+    const particles = Array.from({length: 150}, () => ({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height - canvas.height,
+        color: ['#ff6b81', '#ff4757', '#a18cd1', '#fbc2eb', '#ffffff'][Math.floor(Math.random() * 5)],
+        size: Math.random() * 5 + 2,
+        speed: Math.random() * 5 + 2,
+        wobble: Math.random() * Math.PI * 2
+    }));
     
-    for(let i=0; i<150; i++) {
-        pieces.push({
-            x: Math.random() * canvas.width,
-            y: Math.random() * canvas.height - canvas.height,
-            color: colors[Math.floor(Math.random() * colors.length)],
-            size: Math.random() * 10 + 5,
-            speed: Math.random() * 5 + 2,
-            drift: Math.random() * 2 - 1
-        });
-    }
-    
-    function loop() {
-        ctx.clearRect(0,0,canvas.width, canvas.height);
-        pieces.forEach(p => {
-            ctx.fillStyle = p.color;
-            ctx.fillRect(p.x, p.y, p.size, p.size);
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach(p => {
             p.y += p.speed;
-            p.x += p.drift;
-            if(p.y > canvas.height) p.y = -20;
+            p.wobble += 0.05;
+            const xOffset = Math.sin(p.wobble) * 2;
+            
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x + xOffset, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+            
+            if(p.y > canvas.height) p.y = -10;
         });
-        requestAnimationFrame(loop);
+        requestAnimationFrame(draw);
     }
-    loop();
+    draw();
 }
 
-/* --- BOOTSTRAP --- */
-const shareBtn = document.getElementById('btn-share');
-if (shareBtn) {
-    shareBtn.onclick = () => {
-        const text = `I survived the Valentine YES Challenge 💘\nAttempts: ${STATE.noCount} NOs\nTime: ${DOM.finalTime.innerText}`;
-        navigator.clipboard.writeText(text).then(() => alert('Result copied! Send it to your valentine 💌'));
-    };
-}
-
-const replayBtn = document.getElementById('btn-replay');
-if (replayBtn) {
-    replayBtn.onclick = () => {
-        localStorage.removeItem(CONFIG.STORAGE_KEY);
-        location.reload();
-    };
-}
-
-// Start
-initGame();
+window.onload = () => {
+    initParticles();
+    loadGame();
+};
