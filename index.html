@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,8 +9,8 @@
 </head>
 <body>
 
-    <!-- Particle Background -->
-    <div id="particles-js"></div>
+    <!-- Floating Background Particles (Generated via CSS/JS) -->
+    <div id="particles-container"></div>
 
     <!-- UI Controls -->
     <button id="reset-btn" class="ui-btn" title="Reset Progress">↻ Reset</button>
@@ -40,12 +39,15 @@
 
             <!-- Interaction Area -->
             <div class="button-area" id="button-area">
+                <!-- YES Button -->
                 <button id="btn-yes" class="game-btn btn-yes">YES 💖</button>
+                <!-- NO Button -->
                 <button id="btn-no" class="game-btn btn-no">NO 💔</button>
+                
+                <!-- Container for Clones -->
+                <div id="fake-container"></div>
             </div>
             
-            <!-- Fake Buttons Container (For clones) -->
-            <div id="fake-container"></div>
         </div>
     </div>
 
@@ -58,7 +60,7 @@
                 <p>Time: <span id="final-time">00:00</span></p>
                 <p>NO Clicks: <span id="final-no">0</span></p>
             </div>
-            <p class="win-note">You are officially my valentine now!</p>
+            <p class="win-note">You are officially my valentine now! 🥰</p>
             <div class="win-actions">
                 <button id="btn-share" class="action-btn">Share Result 💌</button>
                 <button id="btn-replay" class="action-btn">Play Again 🔄</button>
