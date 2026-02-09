@@ -1,0 +1,72 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Will You Be My Valentine? 💘</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <!-- Particle Background -->
+    <div id="particles-js"></div>
+
+    <!-- UI Controls -->
+    <button id="reset-btn" class="ui-btn" title="Reset Progress">↻ Reset</button>
+
+    <!-- Main Game Container -->
+    <div class="game-container">
+        <div class="glass-card" id="main-card">
+            
+            <!-- Header Stats -->
+            <div class="stats-bar">
+                <div class="timer">⏱ <span id="time-display">00:00.00</span></div>
+                <div class="progress-wrapper">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="counter">YES: <span id="yes-count">0</span>/101</div>
+            </div>
+
+            <!-- Stage Indicator -->
+            <div id="stage-indicator" class="stage-text">Stage: 1 / 101</div>
+
+            <!-- Main Title & Dialogue -->
+            <h1 class="title">Will you be my valentine? 💘</h1>
+            <div class="dialogue-box">
+                <p id="dialogue-text">Please say yes! 🥺</p>
+            </div>
+
+            <!-- Interaction Area -->
+            <div class="button-area" id="button-area">
+                <button id="btn-yes" class="game-btn btn-yes">YES 💖</button>
+                <button id="btn-no" class="game-btn btn-no">NO 💔</button>
+            </div>
+            
+            <!-- Fake Buttons Container (For clones) -->
+            <div id="fake-container"></div>
+        </div>
+    </div>
+
+    <!-- Win Screen Overlay -->
+    <div id="win-screen" class="hidden">
+        <div class="win-content glass-card">
+            <h1>YAYYY!!! 💍</h1>
+            <h2>YOU SAID YES 101 TIMES! 💘</h2>
+            <div class="win-stats">
+                <p>Time: <span id="final-time">00:00</span></p>
+                <p>NO Clicks: <span id="final-no">0</span></p>
+            </div>
+            <p class="win-note">You are officially my valentine now!</p>
+            <div class="win-actions">
+                <button id="btn-share" class="action-btn">Share Result 💌</button>
+                <button id="btn-replay" class="action-btn">Play Again 🔄</button>
+            </div>
+        </div>
+        <canvas id="confetti-canvas"></canvas>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
