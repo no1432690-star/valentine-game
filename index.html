@@ -423,15 +423,9 @@
 </head>
 <body>
 
-    <!-- Audio Elements: Use ./ to be safe with relative paths on servers -->
-    <audio id="bgm-lobby" loop preload="auto">
-        <source src="./music/lobby.mp3" type="audio/mpeg">
-        <source src="music/lobby.mp3" type="audio/mpeg">
-    </audio>
-    <audio id="bgm-game" loop preload="auto">
-        <source src="./music/game.mp3" type="audio/mpeg">
-        <source src="music/game.mp3" type="audio/mpeg">
-    </audio>
+    <!-- Audio Elements: FIXED PATHS -->
+    <audio id="bgm-lobby" src="./music/lobby.mp3" loop preload="auto"></audio>
+    <audio id="bgm-game" src="./music/game.mp3" loop preload="auto"></audio>
 
     <!-- Floating Background Particles -->
     <div id="particles-container"></div>
@@ -909,33 +903,56 @@
             init() {
                 DOM.audioLobby.volume = 0.5;
                 DOM.audioGame.volume = 0.4;
-                
-                // Debug listeners
-                DOM.audioLobby.addEventListener('error', (e) => console.error("Lobby Audio Error:", e));
-                DOM.audioGame.addEventListener('error', (e) => console.error("Game Audio Error:", e));
             },
-            playLobby() {
-                if(SETTINGS.lobbyMusic && STATE.inLobby) {
-                    DOM.audioLobby.play().catch(e => console.log("Lobby music blocked:", e));
-                } else {
-                    DOM.audioLobby.pause();
-                }
+
+            // 1. Logic Reset + Fade (Helper)
+            fadeOut(audio, callback) {
+                if(audio.paused) { callback(); return; }
+                const originalVol = audio.volume;
+                const fade = setInterval(() => {
+                    if(audio.volume > 0.05) {
+                        audio.volume -= 0.05;
+                    } else {
+                        clearInterval(fade);
+                        audio.pause();
+                        audio.volume = originalVol;
+                        audio.currentTime = 0; // Reset as requested
+                        callback();
+                    }
+                }, 50); // 50ms * 10 steps = ~0.5s fade
             },
-            playGame() {
-                if(SETTINGS.gameMusic && !STATE.inLobby) {
-                    DOM.audioGame.play().catch(e => console.log("Game music blocked:", e));
-                } else {
-                    DOM.audioGame.pause();
-                }
-            },
-            update() {
-                if(STATE.inLobby) {
-                    this.playLobby();
-                    DOM.audioGame.pause();
+
+            // 2. Switch Functions (Strict Logic)
+            switchToGame() {
+                // Pause Lobby first
+                this.fadeOut(DOM.audioLobby, () => {
+                    // Play Game Music
                     DOM.audioGame.currentTime = 0;
+                    if(SETTINGS.gameMusic) {
+                        DOM.audioGame.play().catch(e => console.log("Game Play Error:", e));
+                    }
+                });
+            },
+
+            switchToLobby() {
+                // Pause Game first
+                this.fadeOut(DOM.audioGame, () => {
+                    // Play Lobby Music
+                    DOM.audioLobby.currentTime = 0;
+                    if(SETTINGS.lobbyMusic) {
+                        DOM.audioLobby.play().catch(e => console.log("Lobby Play Error:", e));
+                    }
+                });
+            },
+
+            update() {
+                // Generic update for toggle switches
+                if(STATE.inLobby) {
+                    if(!SETTINGS.lobbyMusic) DOM.audioLobby.pause();
+                    else if(DOM.audioLobby.paused) DOM.audioLobby.play().catch(e=>{});
                 } else {
-                    DOM.audioLobby.pause();
-                    this.playGame();
+                    if(!SETTINGS.gameMusic) DOM.audioGame.pause();
+                    else if(DOM.audioGame.paused) DOM.audioGame.play().catch(e=>{});
                 }
             }
         };
@@ -1179,6 +1196,9 @@
                 // Game in progress (reload), try to resume
                 DOM.startOverlay.classList.add('hidden');
                 DOM.lobbyScreen.classList.add('hidden');
+                // Don't call play here automatically to avoid errors, user must interact first
+                // But usually reload means they already interacted with page.
+                // We'll let AudioCtrl.update() try.
                 AudioCtrl.update();
             }
             
@@ -1197,7 +1217,10 @@
             STATE.inLobby = false;
             DOM.lobbyScreen.classList.add('hidden');
             DOM.mainCard.style.pointerEvents = 'auto';
-            AudioCtrl.update();
+            
+            // Switch Audio safely
+            AudioCtrl.switchToGame();
+            
             applyCurrentStage(); // Only now allow effects to start
         }
 
@@ -1295,20 +1318,33 @@
             }
         }
 
-        /* --- START OVERLAY INTERACTION --- */
-        DOM.btnStartGame.addEventListener('click', () => {
-            // UNLOCK AUDIO HERE
+        /* --- START OVERLAY INTERACTION (CRITICAL FIX) --- */
+        DOM.btnStartGame.addEventListener('click', async () => {
+            // 1. Resume Web Audio Context
             SFX.resume();
             
+            // 2. Unlock HTML5 Audio (Load & Try Play)
+            DOM.audioLobby.load();
+            DOM.audioGame.load();
+
             // Hide Start Overlay
             DOM.startOverlay.classList.add('hidden');
             
-            // Show Lobby if needed
+            // 3. Determine flow
             if(STATE.inLobby) {
                 DOM.lobbyScreen.classList.remove('hidden');
-                AudioCtrl.playLobby();
+                if(SETTINGS.lobbyMusic) {
+                    try {
+                        // FORCE PLAY LOBBY MUSIC
+                        await DOM.audioLobby.play();
+                        console.log("Lobby music started successfully.");
+                    } catch (e) {
+                        console.log("Lobby music blocked:", e);
+                    }
+                }
             } else {
-                AudioCtrl.playGame();
+                // Determine if we need to start game music
+                AudioCtrl.switchToGame();
             }
         });
 
