@@ -28,7 +28,6 @@
         }
 
         body {
-            /* Updated font stack for multi-language */
             font-family: 'Nunito', 'Noto Sans', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans Devanagari', sans-serif;
             background: linear-gradient(120deg, #a18cd1 0%, #fbc2eb 100%);
             height: 100vh;
@@ -424,8 +423,8 @@
 <body>
 
     <!-- Audio Elements: FIXED PATHS -->
-    <audio id="bgm-lobby" src="./music/lobby.mp3" loop preload="auto"></audio>
-    <audio id="bgm-game" src="./music/game.mp3" loop preload="auto"></audio>
+    <audio id="bgm-lobby" src="./music/lobby.mp3" loop></audio>
+    <audio id="bgm-game" src="./music/game.mp3" loop></audio>
 
     <!-- Floating Background Particles -->
     <div id="particles-container"></div>
@@ -903,6 +902,10 @@
             init() {
                 DOM.audioLobby.volume = 0.5;
                 DOM.audioGame.volume = 0.4;
+
+                // LOG ERRORS FOR DEBUGGING
+                DOM.audioLobby.onerror = (e) => console.warn("Cannot load Lobby Music. Check path ./music/lobby.mp3", e);
+                DOM.audioGame.onerror = (e) => console.warn("Cannot load Game Music. Check path ./music/game.mp3", e);
             },
 
             // 1. Logic Reset + Fade (Helper)
@@ -1324,7 +1327,12 @@
             SFX.resume();
             
             // 2. Unlock HTML5 Audio (Load & Try Play)
+            // Explicitly set path and load Lobby music
+            DOM.audioLobby.src = "./music/lobby.mp3"; 
             DOM.audioLobby.load();
+            
+            // Explicitly set path and load Game music (safety for 404s)
+            DOM.audioGame.src = "./music/game.mp3"; 
             DOM.audioGame.load();
 
             // Hide Start Overlay
@@ -1335,15 +1343,14 @@
                 DOM.lobbyScreen.classList.remove('hidden');
                 if(SETTINGS.lobbyMusic) {
                     try {
-                        // FORCE PLAY LOBBY MUSIC
+                        DOM.audioLobby.currentTime = 0;
                         await DOM.audioLobby.play();
                         console.log("Lobby music started successfully.");
                     } catch (e) {
-                        console.log("Lobby music blocked:", e);
+                        console.error("Lobby music play blocked or failed:", e);
                     }
                 }
             } else {
-                // Determine if we need to start game music
                 AudioCtrl.switchToGame();
             }
         });
