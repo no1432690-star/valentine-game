@@ -422,9 +422,10 @@
 </head>
 <body>
 
-    <!-- Audio Elements: SRC removed to prevent auto-404. Loaded via JS. -->
-    <audio id="bgm-lobby" loop preload="none"></audio>
-    <audio id="bgm-game" loop preload="none"></audio>
+    <!-- Audio Elements -->
+    <!-- Added type to help browser identify format -->
+    <audio id="bgm-lobby" loop preload="none" type="audio/mpeg"></audio>
+    <audio id="bgm-game" loop preload="none" type="audio/mpeg"></audio>
 
     <!-- Floating Background Particles -->
     <div id="particles-container"></div>
@@ -897,52 +898,55 @@
             return dialogues[Math.floor(Math.random() * dialogues.length)];
         }
 
-        /* --- AUDIO CONTROL (ROBUST VERSION) --- */
+        /* --- AUDIO CONTROL (ROBUST DEBUG VERSION) --- */
         const AudioCtrl = {
             init() {
                 DOM.audioLobby.volume = 0.5;
                 DOM.audioGame.volume = 0.4;
                 
-                // FALLBACK STRATEGY: List of potential paths to try
-                // 1. Standard relative path
-                // 2. Music folder capitalized (sometimes happens)
-                // 3. Absolute path for GitHub Pages (repo name hardcoded)
-                const paths = [
-                    "./music/lobby.mp3",
-                    "music/lobby.mp3",
-                    "/valentine-game/music/lobby.mp3", 
-                    "../music/lobby.mp3"
-                ];
-
-                // Load Lobby Music with fallback
-                this.tryLoadAudio(DOM.audioLobby, [...paths], "Lobby Music");
+                // Construct absolute path to avoid relative path issues on GitHub Pages
+                const basePath = this.getBasePath();
+                console.log("🎵 Audio Base Path:", basePath);
                 
-                // Load Game Music: Point to lobby.mp3 since game.mp3 is missing
-                this.tryLoadAudio(DOM.audioGame, [...paths], "Game Music");
+                this.assignSource(DOM.audioLobby, basePath, "lobby.mp3");
+                this.assignSource(DOM.audioGame, basePath, "lobby.mp3"); // Use lobby as fallback
             },
 
-            tryLoadAudio(audioEl, pathList, label) {
-                if(pathList.length === 0) {
-                    console.error(`❌ [${label}] All paths failed. File missing? Check 'music' folder.`);
-                    return;
+            getBasePath() {
+                // Returns: https://user.github.io/repo/music/
+                const path = window.location.pathname;
+                // Remove 'index.html' if present, and ensure trailing slash
+                let cleanPath = path.substring(0, path.lastIndexOf('/'));
+                if (cleanPath.endsWith('/index.html')) {
+                    cleanPath = cleanPath.replace('/index.html', '');
                 }
-
-                const path = pathList.shift();
-                
-                // Remove old listeners to prevent stacking
-                const errorHandler = (e) => {
-                    // console.warn(`⚠️ [${label}] Failed to load: ${path}. Trying next...`);
-                    audioEl.removeEventListener('error', errorHandler);
-                    this.tryLoadAudio(audioEl, pathList, label); // Recursive try
-                };
-
-                audioEl.addEventListener('error', errorHandler);
-                audioEl.src = path;
-                // We call load() only when user clicks start to avoid auto-play blocking errors being spammy,
-                // but setting src here prepares it.
+                return window.location.origin + cleanPath + '/music/';
             },
 
-            // 1. Logic Reset + Fade (Helper)
+            assignSource(audioEl, basePath, filename) {
+                // Set source
+                audioEl.src = basePath + filename;
+                
+                // Detailed Error Logging
+                audioEl.onerror = (e) => {
+                    const err = audioEl.error;
+                    console.error(`❌ Audio Error (${filename}):`, {
+                        src: audioEl.src,
+                        networkState: audioEl.networkState,
+                        readyState: audioEl.readyState,
+                        code: err ? err.code : 'unknown',
+                        message: err ? err.message : 'unknown'
+                    });
+                    
+                    // Fallback: Disable music setting to prevent issues
+                    if(filename === 'lobby.mp3') {
+                        SETTINGS.lobbyMusic = false;
+                        DOM.toggleLobby.checked = false;
+                        console.warn("⚠️ Disabling Lobby Music due to load failure.");
+                    }
+                };
+            },
+
             fadeOut(audio, callback) {
                 if(audio.paused) { callback(); return; }
                 const originalVol = audio.volume;
@@ -953,43 +957,37 @@
                         clearInterval(fade);
                         audio.pause();
                         audio.volume = originalVol;
-                        audio.currentTime = 0; // Reset as requested
+                        audio.currentTime = 0;
                         callback();
                     }
-                }, 50); // 50ms * 10 steps = ~0.5s fade
+                }, 50);
             },
 
-            // 2. Switch Functions (Strict Logic)
             switchToGame() {
-                // Pause Lobby first
                 this.fadeOut(DOM.audioLobby, () => {
-                    // Play Game Music
                     DOM.audioGame.currentTime = 0;
-                    if(SETTINGS.gameMusic) {
-                        DOM.audioGame.play().catch(e => console.log("Game Play Error:", e));
+                    if(SETTINGS.gameMusic && DOM.audioGame.readyState >= 2) {
+                        DOM.audioGame.play().catch(e => console.log("Game Play blocked:", e));
                     }
                 });
             },
 
             switchToLobby() {
-                // Pause Game first
                 this.fadeOut(DOM.audioGame, () => {
-                    // Play Lobby Music
                     DOM.audioLobby.currentTime = 0;
-                    if(SETTINGS.lobbyMusic) {
-                        DOM.audioLobby.play().catch(e => console.log("Lobby Play Error:", e));
+                    if(SETTINGS.lobbyMusic && DOM.audioLobby.readyState >= 2) {
+                        DOM.audioLobby.play().catch(e => console.log("Lobby Play blocked:", e));
                     }
                 });
             },
 
             update() {
-                // Generic update for toggle switches
                 if(STATE.inLobby) {
                     if(!SETTINGS.lobbyMusic) DOM.audioLobby.pause();
-                    else if(DOM.audioLobby.paused) DOM.audioLobby.play().catch(e=>{});
+                    else if(DOM.audioLobby.paused && DOM.audioLobby.readyState >= 2) DOM.audioLobby.play().catch(e=>{});
                 } else {
                     if(!SETTINGS.gameMusic) DOM.audioGame.pause();
-                    else if(DOM.audioGame.paused) DOM.audioGame.play().catch(e=>{});
+                    else if(DOM.audioGame.paused && DOM.audioGame.readyState >= 2) DOM.audioGame.play().catch(e=>{});
                 }
             }
         };
@@ -1356,33 +1354,35 @@
         }
 
         /* --- START OVERLAY INTERACTION (CRITICAL FIX) --- */
-        DOM.btnStartGame.addEventListener('click', async () => {
+        async function unlockAudio() {
             // 1. Resume Web Audio Context
             SFX.resume();
             
-            // 2. Unlock HTML5 Audio (Try load)
+            // 2. Try to load and play music (User Interaction Event)
             try {
-                // Must call load() in a user event handler
+                // Force load to verify format support
                 DOM.audioLobby.load();
                 DOM.audioGame.load();
-            } catch(e) { console.warn("Load failed", e); }
+                
+                if(SETTINGS.lobbyMusic) {
+                    await DOM.audioLobby.play();
+                    console.log("✅ Lobby Music Playing");
+                }
+            } catch (e) {
+                console.warn("⚠️ Audio Unlock Warning:", e);
+                // We don't alert the user, just log it.
+            }
+        }
+
+        DOM.btnStartGame.addEventListener('click', () => {
+            unlockAudio();
 
             // Hide Start Overlay
             DOM.startOverlay.classList.add('hidden');
             
-            // 3. Play Music
+            // 3. Show Lobby
             if(STATE.inLobby) {
                 DOM.lobbyScreen.classList.remove('hidden');
-                if(SETTINGS.lobbyMusic) {
-                    try {
-                        DOM.audioLobby.currentTime = 0;
-                        await DOM.audioLobby.play();
-                        console.log("Lobby music started.");
-                    } catch (e) {
-                        console.error("Autoplay blocked/failed:", e);
-                        // Optional: Show a small toast to user "Tap to play music"
-                    }
-                }
             } else {
                 AudioCtrl.switchToGame();
             }
