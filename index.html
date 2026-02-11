@@ -249,7 +249,7 @@
 
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* --- OVERLAY SCREENS (LOBBY / SETTINGS / WIN) --- */
+        /* --- OVERLAY SCREENS (START / LOBBY / SETTINGS / WIN) --- */
         .overlay-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -268,12 +268,38 @@
             display: none !important;
         }
 
+        /* Start Overlay - Highest Z-Index */
+        #start-overlay {
+            background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
+            z-index: 2000;
+            flex-direction: column;
+        }
+        .start-btn {
+            font-size: 2rem;
+            padding: 20px 50px;
+            border-radius: 50px;
+            border: 4px solid white;
+            background: rgba(255,255,255,0.3);
+            color: white;
+            cursor: pointer;
+            font-family: 'Fredoka', cursive;
+            animation: pulse 1.5s infinite;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
         /* Lobby Specifics */
         .lobby-card {
             max-width: 450px;
             padding: 40px;
             z-index: 1002;
-            background: rgba(255,255,255,0.85); /* Slightly more opaque */
+            background: rgba(255,255,255,0.9); /* Slightly more opaque */
         }
         .subtitle {
             font-size: 1.1rem;
@@ -397,9 +423,15 @@
 </head>
 <body>
 
-    <!-- Audio Elements -->
-    <audio id="bgm-lobby" loop src="music/lobby.mp3"></audio>
-    <audio id="bgm-game" loop src="music/game.mp3"></audio>
+    <!-- Audio Elements: Use ./ to be safe with relative paths on servers -->
+    <audio id="bgm-lobby" loop preload="auto">
+        <source src="./music/lobby.mp3" type="audio/mpeg">
+        <source src="music/lobby.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="bgm-game" loop preload="auto">
+        <source src="./music/game.mp3" type="audio/mpeg">
+        <source src="music/game.mp3" type="audio/mpeg">
+    </audio>
 
     <!-- Floating Background Particles -->
     <div id="particles-container"></div>
@@ -446,8 +478,13 @@
         </div>
     </div>
 
+    <!-- START OVERLAY (To force audio unlock) -->
+    <div id="start-overlay" class="overlay-screen">
+        <button id="btn-start-game" class="start-btn">Tap to Start 💘</button>
+    </div>
+
     <!-- LOBBY SCREEN OVERLAY -->
-    <div id="lobby-screen" class="overlay-screen">
+    <div id="lobby-screen" class="overlay-screen hidden">
         <div class="glass-card lobby-card">
             <h1 class="title" id="lobby-title">Will you be my valentine? 💘</h1>
             <p class="subtitle" id="lobby-subtitle">You must say YES 101 times to win 😈</p>
@@ -777,6 +814,9 @@
             confettiCanvas: document.getElementById('confetti-canvas'),
             
             // New DOM Elements
+            startOverlay: document.getElementById('start-overlay'),
+            btnStartGame: document.getElementById('btn-start-game'),
+            
             lobbyScreen: document.getElementById('lobby-screen'),
             lobbyBtnYes: document.getElementById('lobby-btn-yes'),
             lobbyBtnNo: document.getElementById('lobby-btn-no'),
@@ -867,32 +907,28 @@
         /* --- AUDIO CONTROL --- */
         const AudioCtrl = {
             init() {
-                // Set initial volume
                 DOM.audioLobby.volume = 0.5;
                 DOM.audioGame.volume = 0.4;
+                
+                // Debug listeners
+                DOM.audioLobby.addEventListener('error', (e) => console.error("Lobby Audio Error:", e));
+                DOM.audioGame.addEventListener('error', (e) => console.error("Game Audio Error:", e));
             },
             playLobby() {
                 if(SETTINGS.lobbyMusic && STATE.inLobby) {
-                    const playPromise = DOM.audioLobby.play();
-                    if (playPromise !== undefined) {
-                        playPromise.catch(error => {
-                            console.log("Autoplay blocked. Waiting for interaction.");
-                            // Audio unlocker will handle this
-                        });
-                    }
+                    DOM.audioLobby.play().catch(e => console.log("Lobby music blocked:", e));
                 } else {
                     DOM.audioLobby.pause();
                 }
             },
             playGame() {
                 if(SETTINGS.gameMusic && !STATE.inLobby) {
-                    DOM.audioGame.play().catch(e=>{});
+                    DOM.audioGame.play().catch(e => console.log("Game music blocked:", e));
                 } else {
                     DOM.audioGame.pause();
                 }
             },
             update() {
-                // Handle transitions based on state
                 if(STATE.inLobby) {
                     this.playLobby();
                     DOM.audioGame.pause();
@@ -904,12 +940,18 @@
             }
         };
 
-        /* --- WEB AUDIO API (SFX) & UNLOCKER --- */
+        /* --- WEB AUDIO API (SFX) --- */
         const SFX = {
             ctx: new (window.AudioContext || window.webkitAudioContext)(),
             
+            resume() {
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume().catch(e => console.log("AudioContext resume failed:", e));
+                }
+            },
+
             playTone(freq, type, duration, vol = 0.1) {
-                if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
+                this.resume();
                 try {
                     const osc = this.ctx.createOscillator();
                     const gain = this.ctx.createGain();
@@ -928,29 +970,6 @@
             playNo() { this.playTone(150, 'sawtooth', 0.3, 0.15); },
             playWin() { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => this.playTone(f, 'sine', 0.5, 0.2), i*100)); }
         };
-
-        /* --- GLOBAL AUDIO UNLOCK --- */
-        function unlockAudio() {
-            // 1. Resume Web Audio API
-            if (SFX.ctx.state === 'suspended') {
-                SFX.ctx.resume().catch(e => console.log(e));
-            }
-            
-            // 2. Force start lobby music if it should be playing but is paused
-            if(STATE.inLobby && SETTINGS.lobbyMusic && DOM.audioLobby.paused) {
-                DOM.audioLobby.play().catch(e => console.log("Unlock play failed:", e));
-            }
-
-            // 3. Remove listeners once unlocked
-            ['click', 'touchstart', 'keydown'].forEach(evt => 
-                document.removeEventListener(evt, unlockAudio)
-            );
-        }
-
-        // Add unlock listeners to document
-        ['click', 'touchstart', 'keydown'].forEach(evt => 
-            document.addEventListener(evt, unlockAudio)
-        );
 
         /* --- UTILITIES --- */
         function formatTime(ms) {
@@ -1150,11 +1169,15 @@
             // Apply translations
             updateTexts();
 
-            // Setup Lobby
-            if (STATE.inLobby) {
-                DOM.lobbyScreen.classList.remove('hidden');
-                DOM.mainCard.style.pointerEvents = 'none'; // Disable game interactions
+            // Start Logic with Overlay
+            if (STATE.inLobby || !STATE.startTime) {
+                // Show Start Overlay first to force audio unlock
+                DOM.startOverlay.classList.remove('hidden');
+                DOM.lobbyScreen.classList.add('hidden'); // Hide lobby until start clicked
+                DOM.mainCard.style.pointerEvents = 'none';
             } else {
+                // Game in progress (reload), try to resume
+                DOM.startOverlay.classList.add('hidden');
                 DOM.lobbyScreen.classList.add('hidden');
                 AudioCtrl.update();
             }
@@ -1271,6 +1294,23 @@
                 SETTINGS = JSON.parse(saved);
             }
         }
+
+        /* --- START OVERLAY INTERACTION --- */
+        DOM.btnStartGame.addEventListener('click', () => {
+            // UNLOCK AUDIO HERE
+            SFX.resume();
+            
+            // Hide Start Overlay
+            DOM.startOverlay.classList.add('hidden');
+            
+            // Show Lobby if needed
+            if(STATE.inLobby) {
+                DOM.lobbyScreen.classList.remove('hidden');
+                AudioCtrl.playLobby();
+            } else {
+                AudioCtrl.playGame();
+            }
+        });
 
         /* --- LOBBY INTERACTIONS --- */
         DOM.lobbyBtnYes.addEventListener('click', () => {
