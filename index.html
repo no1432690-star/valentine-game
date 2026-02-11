@@ -866,12 +866,20 @@
 
         /* --- AUDIO CONTROL --- */
         const AudioCtrl = {
-            setVolume(audio, vol) {
-                audio.volume = vol;
+            init() {
+                // Set initial volume
+                DOM.audioLobby.volume = 0.5;
+                DOM.audioGame.volume = 0.4;
             },
             playLobby() {
                 if(SETTINGS.lobbyMusic && STATE.inLobby) {
-                    DOM.audioLobby.play().catch(e=>{});
+                    const playPromise = DOM.audioLobby.play();
+                    if (playPromise !== undefined) {
+                        playPromise.catch(error => {
+                            console.log("Autoplay blocked. Waiting for interaction.");
+                            // Audio unlocker will handle this
+                        });
+                    }
                 } else {
                     DOM.audioLobby.pause();
                 }
@@ -896,7 +904,7 @@
             }
         };
 
-        /* --- WEB AUDIO API (SFX) --- */
+        /* --- WEB AUDIO API (SFX) & UNLOCKER --- */
         const SFX = {
             ctx: new (window.AudioContext || window.webkitAudioContext)(),
             
@@ -920,6 +928,29 @@
             playNo() { this.playTone(150, 'sawtooth', 0.3, 0.15); },
             playWin() { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => this.playTone(f, 'sine', 0.5, 0.2), i*100)); }
         };
+
+        /* --- GLOBAL AUDIO UNLOCK --- */
+        function unlockAudio() {
+            // 1. Resume Web Audio API
+            if (SFX.ctx.state === 'suspended') {
+                SFX.ctx.resume().catch(e => console.log(e));
+            }
+            
+            // 2. Force start lobby music if it should be playing but is paused
+            if(STATE.inLobby && SETTINGS.lobbyMusic && DOM.audioLobby.paused) {
+                DOM.audioLobby.play().catch(e => console.log("Unlock play failed:", e));
+            }
+
+            // 3. Remove listeners once unlocked
+            ['click', 'touchstart', 'keydown'].forEach(evt => 
+                document.removeEventListener(evt, unlockAudio)
+            );
+        }
+
+        // Add unlock listeners to document
+        ['click', 'touchstart', 'keydown'].forEach(evt => 
+            document.addEventListener(evt, unlockAudio)
+        );
 
         /* --- UTILITIES --- */
         function formatTime(ms) {
@@ -1109,6 +1140,7 @@
             loadSettings();
             loadGame();
             generateStages();
+            AudioCtrl.init();
             
             // Apply Settings
             DOM.toggleLobby.checked = SETTINGS.lobbyMusic;
