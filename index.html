@@ -422,9 +422,9 @@
 </head>
 <body>
 
-    <!-- Audio Elements: FIXED PATHS -->
+    <!-- Audio Elements: POINT BOTH TO LOBBY.MP3 TO FIX 404 -->
     <audio id="bgm-lobby" src="./music/lobby.mp3" loop></audio>
-    <audio id="bgm-game" src="./music/game.mp3" loop></audio>
+    <audio id="bgm-game" src="./music/lobby.mp3" loop></audio>
 
     <!-- Floating Background Particles -->
     <div id="particles-container"></div>
@@ -905,7 +905,8 @@
 
                 // LOG ERRORS FOR DEBUGGING
                 DOM.audioLobby.onerror = (e) => console.warn("Cannot load Lobby Music. Check path ./music/lobby.mp3", e);
-                DOM.audioGame.onerror = (e) => console.warn("Cannot load Game Music. Check path ./music/game.mp3", e);
+                // Replaced logic for game music to avoid 404 spam if it's just lobby.mp3
+                DOM.audioGame.onerror = (e) => console.warn("Cannot load Game Music (pointing to lobby.mp3).", e);
             },
 
             // 1. Logic Reset + Fade (Helper)
@@ -1331,8 +1332,8 @@
             DOM.audioLobby.src = "./music/lobby.mp3"; 
             DOM.audioLobby.load();
             
-            // Explicitly set path and load Game music (safety for 404s)
-            DOM.audioGame.src = "./music/game.mp3"; 
+            // Explicitly set path to LOBBY music for game to avoid 404 on game.mp3
+            DOM.audioGame.src = "./music/lobby.mp3"; 
             DOM.audioGame.load();
 
             // Hide Start Overlay
