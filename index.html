@@ -422,9 +422,9 @@
 </head>
 <body>
 
-    <!-- Audio Elements: POINT BOTH TO LOBBY.MP3 TO FIX 404 -->
-    <audio id="bgm-lobby" src="./music/lobby.mp3" loop></audio>
-    <audio id="bgm-game" src="./music/lobby.mp3" loop></audio>
+    <!-- Audio Elements: SRC removed to prevent auto-404. Loaded via JS. -->
+    <audio id="bgm-lobby" loop preload="none"></audio>
+    <audio id="bgm-game" loop preload="none"></audio>
 
     <!-- Floating Background Particles -->
     <div id="particles-container"></div>
@@ -902,11 +902,19 @@
             init() {
                 DOM.audioLobby.volume = 0.5;
                 DOM.audioGame.volume = 0.4;
+                
+                // Fallback Logic: Point both to lobby.mp3 since game.mp3 is missing
+                const musicPath = "./music/lobby.mp3";
+                
+                DOM.audioLobby.src = musicPath;
+                DOM.audioGame.src = musicPath;
 
                 // LOG ERRORS FOR DEBUGGING
-                DOM.audioLobby.onerror = (e) => console.warn("Cannot load Lobby Music. Check path ./music/lobby.mp3", e);
-                // Replaced logic for game music to avoid 404 spam if it's just lobby.mp3
-                DOM.audioGame.onerror = (e) => console.warn("Cannot load Game Music (pointing to lobby.mp3).", e);
+                DOM.audioLobby.onerror = (e) => {
+                    console.error("Audio Load Error (Lobby):", e);
+                    console.warn("Please check if 'music/lobby.mp3' exists in your repo.");
+                };
+                DOM.audioGame.onerror = (e) => console.warn("Audio Load Error (Game):", e);
             },
 
             // 1. Logic Reset + Fade (Helper)
@@ -1328,27 +1336,26 @@
             SFX.resume();
             
             // 2. Unlock HTML5 Audio (Load & Try Play)
-            // Explicitly set path and load Lobby music
-            DOM.audioLobby.src = "./music/lobby.mp3"; 
-            DOM.audioLobby.load();
-            
-            // Explicitly set path to LOBBY music for game to avoid 404 on game.mp3
-            DOM.audioGame.src = "./music/lobby.mp3"; 
-            DOM.audioGame.load();
+            try {
+                // Must call load() in a user event handler
+                DOM.audioLobby.load();
+                DOM.audioGame.load();
+            } catch(e) { console.warn("Load failed", e); }
 
             // Hide Start Overlay
             DOM.startOverlay.classList.add('hidden');
             
-            // 3. Determine flow
+            // 3. Play Music
             if(STATE.inLobby) {
                 DOM.lobbyScreen.classList.remove('hidden');
                 if(SETTINGS.lobbyMusic) {
                     try {
                         DOM.audioLobby.currentTime = 0;
                         await DOM.audioLobby.play();
-                        console.log("Lobby music started successfully.");
+                        console.log("Lobby music started.");
                     } catch (e) {
-                        console.error("Lobby music play blocked or failed:", e);
+                        console.error("Autoplay blocked/failed:", e);
+                        // Optional: Show a small toast to user "Tap to play music"
                     }
                 }
             } else {
