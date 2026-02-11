@@ -897,24 +897,49 @@
             return dialogues[Math.floor(Math.random() * dialogues.length)];
         }
 
-        /* --- AUDIO CONTROL --- */
+        /* --- AUDIO CONTROL (ROBUST VERSION) --- */
         const AudioCtrl = {
             init() {
                 DOM.audioLobby.volume = 0.5;
                 DOM.audioGame.volume = 0.4;
                 
-                // Fallback Logic: Point both to lobby.mp3 since game.mp3 is missing
-                const musicPath = "./music/lobby.mp3";
-                
-                DOM.audioLobby.src = musicPath;
-                DOM.audioGame.src = musicPath;
+                // FALLBACK STRATEGY: List of potential paths to try
+                // 1. Standard relative path
+                // 2. Music folder capitalized (sometimes happens)
+                // 3. Absolute path for GitHub Pages (repo name hardcoded)
+                const paths = [
+                    "./music/lobby.mp3",
+                    "music/lobby.mp3",
+                    "/valentine-game/music/lobby.mp3", 
+                    "../music/lobby.mp3"
+                ];
 
-                // LOG ERRORS FOR DEBUGGING
-                DOM.audioLobby.onerror = (e) => {
-                    console.error("Audio Load Error (Lobby):", e);
-                    console.warn("Please check if 'music/lobby.mp3' exists in your repo.");
+                // Load Lobby Music with fallback
+                this.tryLoadAudio(DOM.audioLobby, [...paths], "Lobby Music");
+                
+                // Load Game Music: Point to lobby.mp3 since game.mp3 is missing
+                this.tryLoadAudio(DOM.audioGame, [...paths], "Game Music");
+            },
+
+            tryLoadAudio(audioEl, pathList, label) {
+                if(pathList.length === 0) {
+                    console.error(`❌ [${label}] All paths failed. File missing? Check 'music' folder.`);
+                    return;
+                }
+
+                const path = pathList.shift();
+                
+                // Remove old listeners to prevent stacking
+                const errorHandler = (e) => {
+                    // console.warn(`⚠️ [${label}] Failed to load: ${path}. Trying next...`);
+                    audioEl.removeEventListener('error', errorHandler);
+                    this.tryLoadAudio(audioEl, pathList, label); // Recursive try
                 };
-                DOM.audioGame.onerror = (e) => console.warn("Audio Load Error (Game):", e);
+
+                audioEl.addEventListener('error', errorHandler);
+                audioEl.src = path;
+                // We call load() only when user clicks start to avoid auto-play blocking errors being spammy,
+                // but setting src here prepares it.
             },
 
             // 1. Logic Reset + Fade (Helper)
@@ -1335,7 +1360,7 @@
             // 1. Resume Web Audio Context
             SFX.resume();
             
-            // 2. Unlock HTML5 Audio (Load & Try Play)
+            // 2. Unlock HTML5 Audio (Try load)
             try {
                 // Must call load() in a user event handler
                 DOM.audioLobby.load();
