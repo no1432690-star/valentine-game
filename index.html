@@ -490,7 +490,7 @@
             <p id="lobby-msg" class="lobby-msg"></p>
             
             <!-- Music Credit -->
-            <p class="music-credit">🎵 "GAME START A"- @Koya-youtuber</p>
+            <p id="music-credit-text" class="music-credit">🎵 "GAME START A"- @Koya-youtuber</p>
         </div>
     </div>
 
@@ -786,7 +786,8 @@
             startTime: null,
             isWin: false,
             effects: [],
-            inLobby: true // Start in Lobby
+            inLobby: true, // Start in Lobby
+            usingSynth: false // Fallback mode
         };
 
         /* --- DOM CACHE --- */
@@ -815,6 +816,7 @@
             lobbyBtnYes: document.getElementById('lobby-btn-yes'),
             lobbyBtnNo: document.getElementById('lobby-btn-no'),
             lobbyMsg: document.getElementById('lobby-msg'),
+            musicCredit: document.getElementById('music-credit-text'),
             
             settingsBtn: document.getElementById('settings-btn'),
             settingsModal: document.getElementById('settings-modal'),
@@ -898,120 +900,7 @@
             return dialogues[Math.floor(Math.random() * dialogues.length)];
         }
 
-        /* --- AUDIO CONTROL (SMART PATH DETECTOR) --- */
-        const AudioCtrl = {
-            async init() {
-                DOM.audioLobby.volume = 0.5;
-                DOM.audioGame.volume = 0.4;
-                
-                // GitHub Pages Case Sensitivity Fix
-                // We will try to fetch multiple variations. The first one that returns 200 OK is the winner.
-                const basePath = this.getBasePath();
-                const validUrl = await this.findValidAudioUrl(basePath);
-                
-                if (validUrl) {
-                    console.log("✅ Found valid audio:", validUrl);
-                    this.assignSource(DOM.audioLobby, validUrl);
-                    this.assignSource(DOM.audioGame, validUrl);
-                } else {
-                    console.error("❌ Could not find 'lobby.mp3' or 'Lobby.mp3'. Disabling music.");
-                    SETTINGS.lobbyMusic = false;
-                    SETTINGS.gameMusic = false;
-                    DOM.toggleLobby.checked = false;
-                    DOM.toggleGame.checked = false;
-                }
-            },
-
-            getBasePath() {
-                // Returns base directory: https://user.github.io/repo/
-                const path = window.location.pathname;
-                let cleanPath = path.substring(0, path.lastIndexOf('/'));
-                if (cleanPath.endsWith('/index.html')) {
-                    cleanPath = cleanPath.replace('/index.html', '');
-                }
-                return window.location.origin + cleanPath + '/';
-            },
-
-            async findValidAudioUrl(basePath) {
-                // Candidates to try
-                const candidates = [
-                    basePath + 'music/lobby.mp3', // Lowercase
-                    basePath + 'music/Lobby.mp3', // Capitalized
-                    'music/lobby.mp3',            // Relative Lower
-                    'music/Lobby.mp3'             // Relative Upper
-                ];
-
-                for (const url of candidates) {
-                    try {
-                        // Use HEAD request to check without downloading full body
-                        const response = await fetch(url, { method: 'HEAD' });
-                        if (response.ok) {
-                            // Verify Content-Type to ensure it's not an HTML 404 page
-                            const type = response.headers.get('content-type');
-                            if (type && (type.includes('audio') || type.includes('octet-stream'))) {
-                                return url;
-                            }
-                        }
-                    } catch (e) {
-                        // Ignore fetch errors and try next
-                    }
-                }
-                return null;
-            },
-
-            assignSource(audioEl, url) {
-                audioEl.src = url;
-                audioEl.onerror = (e) => {
-                    console.warn("⚠️ Error loading verified URL:", url);
-                };
-            },
-
-            fadeOut(audio, callback) {
-                if(audio.paused) { callback(); return; }
-                const originalVol = audio.volume;
-                const fade = setInterval(() => {
-                    if(audio.volume > 0.05) {
-                        audio.volume -= 0.05;
-                    } else {
-                        clearInterval(fade);
-                        audio.pause();
-                        audio.volume = originalVol;
-                        audio.currentTime = 0;
-                        callback();
-                    }
-                }, 50);
-            },
-
-            switchToGame() {
-                this.fadeOut(DOM.audioLobby, () => {
-                    DOM.audioGame.currentTime = 0;
-                    if(SETTINGS.gameMusic && DOM.audioGame.readyState >= 1) { // 1 = HAVE_METADATA
-                        DOM.audioGame.play().catch(e => console.log("Game Play blocked:", e));
-                    }
-                });
-            },
-
-            switchToLobby() {
-                this.fadeOut(DOM.audioGame, () => {
-                    DOM.audioLobby.currentTime = 0;
-                    if(SETTINGS.lobbyMusic && DOM.audioLobby.readyState >= 1) {
-                        DOM.audioLobby.play().catch(e => console.log("Lobby Play blocked:", e));
-                    }
-                });
-            },
-
-            update() {
-                if(STATE.inLobby) {
-                    if(!SETTINGS.lobbyMusic) DOM.audioLobby.pause();
-                    else if(DOM.audioLobby.paused && DOM.audioLobby.readyState >= 1) DOM.audioLobby.play().catch(e=>{});
-                } else {
-                    if(!SETTINGS.gameMusic) DOM.audioGame.pause();
-                    else if(DOM.audioGame.paused && DOM.audioGame.readyState >= 1) DOM.audioGame.play().catch(e=>{});
-                }
-            }
-        };
-
-        /* --- WEB AUDIO API (SFX) --- */
+        /* --- WEB AUDIO API (SFX + SYNTH BACKUP) --- */
         const SFX = {
             ctx: new (window.AudioContext || window.webkitAudioContext)(),
             
@@ -1040,6 +929,167 @@
             playYes() { this.playTone(800 + Math.random()*200, 'sine', 0.15, 0.2); },
             playNo() { this.playTone(150, 'sawtooth', 0.3, 0.15); },
             playWin() { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => this.playTone(f, 'sine', 0.5, 0.2), i*100)); }
+        };
+
+        /* --- SYNTH MUSIC (8-BIT FALLBACK) --- */
+        const SynthMusic = {
+            loopId: null,
+            isPlaying: false,
+            // Simple Cute Melody: C5, E5, G5, C6, G5, E5
+            notes: [523.25, 659.25, 783.99, 1046.50, 783.99, 659.25], 
+            currentNote: 0,
+            
+            start() {
+                if(this.isPlaying) return;
+                this.isPlaying = true;
+                this.playNext();
+            },
+            
+            stop() {
+                this.isPlaying = false;
+                if(this.loopId) clearTimeout(this.loopId);
+            },
+            
+            playNext() {
+                if(!this.isPlaying) return;
+                
+                // Play soft sine wave tone
+                const note = this.notes[this.currentNote];
+                SFX.playTone(note, 'sine', 0.3, 0.03); // Very quiet (0.03 volume)
+                
+                this.currentNote = (this.currentNote + 1) % this.notes.length;
+                
+                // Rhythm: 400ms per note
+                this.loopId = setTimeout(() => this.playNext(), 400);
+            }
+        };
+
+        /* --- AUDIO CONTROL (SMART PATH DETECTOR) --- */
+        const AudioCtrl = {
+            async init() {
+                DOM.audioLobby.volume = 0.5;
+                DOM.audioGame.volume = 0.4;
+                
+                const basePath = this.getBasePath();
+                const validUrl = await this.findValidAudioUrl(basePath);
+                
+                if (validUrl) {
+                    console.log("✅ Audio file found:", validUrl);
+                    this.assignSource(DOM.audioLobby, validUrl);
+                    this.assignSource(DOM.audioGame, validUrl);
+                    STATE.usingSynth = false;
+                } else {
+                    console.log("⚠️ No MP3 found. Switching to 8-bit Synth Mode.");
+                    STATE.usingSynth = true;
+                    // Update UI credit
+                    DOM.musicCredit.innerText = "🎵 Music: 8-bit Mode (Fallback)";
+                }
+            },
+
+            getBasePath() {
+                // Returns: https://user.github.io/repo/
+                const path = window.location.pathname;
+                let cleanPath = path.substring(0, path.lastIndexOf('/'));
+                // Ensure no double slashes or index.html mess
+                if (cleanPath.endsWith('/index.html')) cleanPath = cleanPath.replace('/index.html', '');
+                return window.location.origin + cleanPath + '/';
+            },
+
+            async findValidAudioUrl(basePath) {
+                // Try lowercase, uppercase, and just music/ (relative)
+                const candidates = [
+                    basePath + 'music/lobby.mp3', 
+                    basePath + 'music/Lobby.mp3', 
+                    'music/lobby.mp3'
+                ];
+
+                for (const url of candidates) {
+                    try {
+                        // Use fetch HEAD to verify existence without downloading
+                        const res = await fetch(url, { method: 'HEAD' });
+                        if (res.ok) {
+                            // Check if it's actual audio, not a 404 HTML page
+                            const type = res.headers.get('content-type');
+                            if (type && (type.includes('audio') || type.includes('octet'))) {
+                                return url;
+                            }
+                        }
+                    } catch (e) {
+                        // Silent fail, try next
+                    }
+                }
+                return null;
+            },
+
+            assignSource(audioEl, url) {
+                audioEl.src = url;
+                // Silent error handler to avoid red console spam
+                audioEl.onerror = () => {}; 
+            },
+
+            fadeOut(audio, callback) {
+                if(audio.paused) { callback(); return; }
+                const originalVol = audio.volume;
+                const fade = setInterval(() => {
+                    if(audio.volume > 0.05) {
+                        audio.volume -= 0.05;
+                    } else {
+                        clearInterval(fade);
+                        audio.pause();
+                        audio.volume = originalVol;
+                        audio.currentTime = 0;
+                        callback();
+                    }
+                }, 50);
+            },
+
+            // Unified Play Logic (MP3 or Synth)
+            playMusic(isLobby) {
+                const isEnabled = isLobby ? SETTINGS.lobbyMusic : SETTINGS.gameMusic;
+                if (!isEnabled) return;
+
+                if (STATE.usingSynth) {
+                    SynthMusic.start();
+                } else {
+                    const audio = isLobby ? DOM.audioLobby : DOM.audioGame;
+                    if(audio.src && audio.readyState >= 1) {
+                        audio.play().catch(()=>{});
+                    }
+                }
+            },
+
+            stopMusic(isLobby) {
+                if (STATE.usingSynth) {
+                    // Only stop synth if we are switching contexts completely or muting
+                    // But synth is single channel here, so we just stop it
+                    SynthMusic.stop();
+                } else {
+                    const audio = isLobby ? DOM.audioLobby : DOM.audioGame;
+                    this.fadeOut(audio, () => {});
+                }
+            },
+
+            switchToGame() {
+                this.stopMusic(true); // Stop Lobby
+                setTimeout(() => this.playMusic(false), 500); // Play Game
+            },
+
+            switchToLobby() {
+                this.stopMusic(false); // Stop Game
+                setTimeout(() => this.playMusic(true), 500); // Play Lobby
+            },
+
+            update() {
+                // Called when toggles change
+                const target = STATE.inLobby ? 'lobby' : 'game';
+                const enabled = STATE.inLobby ? SETTINGS.lobbyMusic : SETTINGS.gameMusic;
+                
+                if (enabled) {
+                    this.playMusic(STATE.inLobby);
+                } else {
+                    this.stopMusic(STATE.inLobby);
+                }
+            }
         };
 
         /* --- UTILITIES --- */
@@ -1251,9 +1301,6 @@
                 // Game in progress (reload), try to resume
                 DOM.startOverlay.classList.add('hidden');
                 DOM.lobbyScreen.classList.add('hidden');
-                // Don't call play here automatically to avoid errors, user must interact first
-                // But usually reload means they already interacted with page.
-                // We'll let AudioCtrl.update() try.
                 AudioCtrl.update();
             }
             
@@ -1373,21 +1420,19 @@
             }
         }
 
-        /* --- START OVERLAY INTERACTION (CRITICAL FIX) --- */
+        /* --- START OVERLAY INTERACTION --- */
         async function unlockAudio() {
             // 1. Resume Web Audio Context
             SFX.resume();
             
             // 2. Try to load and play music (User Interaction Event)
             try {
-                // We only try to play if a valid src was assigned by AudioCtrl.init()
-                if (DOM.audioLobby.src) {
+                if (!STATE.usingSynth && DOM.audioLobby.src) {
                      // Check if ready state is enough to play
                      if (DOM.audioLobby.readyState >= 1) { // HAVE_METADATA
                          if(SETTINGS.lobbyMusic) await DOM.audioLobby.play();
                      } else {
                          DOM.audioLobby.load(); // Force load
-                         // We don't await play here to avoid blocking, let oncanplay handle it if needed
                      }
                      
                      if (DOM.audioGame.src && DOM.audioGame.readyState < 1) {
@@ -1395,7 +1440,7 @@
                      }
                 }
             } catch (e) {
-                console.warn("⚠️ Audio Unlock Warning:", e);
+                // Silent catch
             }
         }
 
@@ -1408,8 +1453,7 @@
             // 3. Show Lobby
             if(STATE.inLobby) {
                 DOM.lobbyScreen.classList.remove('hidden');
-                // Try play again in case init finished late
-                if(SETTINGS.lobbyMusic && DOM.audioLobby.src) DOM.audioLobby.play().catch(()=>{});
+                AudioCtrl.playMusic(true);
             } else {
                 AudioCtrl.switchToGame();
             }
