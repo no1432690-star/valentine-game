@@ -27,7 +27,7 @@
             --theme-4-bg: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; touch-action: manipulation; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
         body {
             font-family: 'Nunito', 'Noto Sans', sans-serif;
@@ -401,7 +401,7 @@
             roomProgress: { tulip: false, letter: false, diary: false } // For Ending 3
         };
 
-        /* --- LANGUAGE DATA (OLD + NEW MERGED) --- */
+        /* --- LANGUAGE DATA --- */
         const LANG = {
             en: {
                 title: "Will you be my valentine? 💘",
@@ -410,28 +410,19 @@
                 dialogues: ["Please say yes! 🥺", "Don't be mean... 💔", "I'll make cookies! 🍪", "Misclick? 🤨", "Are you sure? 🧐", "Stop it 😭", "I won't give up! 💪", "Just one click... 🤏"],
                 lobbyNo: ["Wrong answer 😏", "Try again...", "You can't escape!", "No is not an option 💀"],
                 settings: "Settings ⚙️", lblLobby: "Lobby Music", lblGame: "Game Music", lblLang: "Language", close: "Close",
-                
-                // Endings
                 end1_title: "TRUE LOVE", end1_sub: "YES: 101/101",
                 end1_lines: ["101 times...", "You didn't hesitate.", "You chose me...", "over and over again.", "Maybe...", "true love...", "is just that simple."],
-                
                 end2_title: "HESITANT HEART", end2_sub: "YES: 51 - NO: 50",
                 end2_lines: ["You said 'NO'...", "so many times I thought...", "I would disappear.", "But in the end...", "you still chose 'YES'.", "Even once more...", "is enough.", "Thank you."],
-
                 end3_title: "THE EMPTY ROOM", end3_sub: "NO: 100/100",
                 end3_lines: ["You left...", "from the very start.", "It just took me 100 times...", "to believe it."],
-                
                 end4_title: "THE SECRET YES", end4_sub: "SECRET ENDING FOUND",
                 end4_lines: ["You found the secret.", "Not just the game's secret...", "but mine.", "You proved that...", "I am worth choosing.", "This Valentine...", "I am yours."],
-
-                // Room Objects
                 room_window: "The moon is cold tonight.",
                 room_lamp: "A fading light...",
                 room_tulip: ["Tulip.", "The flower of deep love.", "But this one is fake.", "It never lived."],
                 room_letter: ["I wrote it...", "tore it...", "wrote it again.", "Scared of one 'NO'.", "You gave me 100."],
                 room_diary: ["Page 1: I saw you today...", "Page 2: I wanted to ask...", "Page 3: The answer existed before the question."],
-
-                // Secret
                 secret_q: ["You think this is enough?", "If you truly want it...", "Say YES one last time."]
             },
             vi: {
@@ -441,25 +432,19 @@
                 dialogues: ["Đi mà, đồng ý đi! 🥺", "Đừng phũ vậy chứ... 💔", "Tớ nấu cơm cho cậu! 🍪", "Trượt tay hả? 🤨", "Chắc chưa? 🧐", "Đau tim quá 😭", "Tớ lì lắm! 💪", "Một cái thôi... 🤏"],
                 lobbyNo: ["Sai rồi nha 😏", "Thử lại đê...", "Không thoát được đâu!", "Không được chọn cái này 💀"],
                 settings: "Cài đặt ⚙️", lblLobby: "Nhạc chờ", lblGame: "Nhạc game", lblLang: "Ngôn ngữ", close: "Đóng",
-
                 end1_title: "TÌNH YÊU ĐÍCH THỰC", end1_sub: "CÓ: 101/101",
                 end1_lines: ["101 lần...", "Cậu không hề do dự.", "Cậu đã chọn tớ...", "hết lần này đến lần khác.", "Có lẽ...", "tình yêu thật sự...", "đơn giản chỉ là vậy."],
-
                 end2_title: "TRÁI TIM DO DỰ", end2_sub: "CÓ: 51 - KHÔNG: 50",
                 end2_lines: ["Cậu đã nói 'KHÔNG'...", "nhiều đến mức tớ tưởng...", "tớ sẽ biến mất.", "Nhưng cuối cùng...", "cậu vẫn chọn 'CÓ'.", "Dù chỉ hơn một lần...", "cũng đủ rồi.", "Cảm ơn vì đã quay lại."],
-
                 end3_title: "CĂN PHÒNG TRỐNG", end3_sub: "KHÔNG: 100/100",
                 end3_lines: ["Cậu đã rời đi...", "ngay từ lần đầu tiên.", "Chỉ là...", "tớ mất 100 lần...", "mới chịu tin."],
-
                 end4_title: "LỜI ĐỒNG Ý BÍ MẬT", end4_sub: "ĐÃ TÌM THẤY BÍ MẬT",
                 end4_lines: ["Cậu tìm thấy bí mật rồi.", "Không phải bí mật của game...", "mà là của tớ.", "Cậu chứng minh rằng...", "tớ đáng được chọn.", "Valentine này...", "tớ thuộc về cậu."],
-
                 room_window: "Ánh trăng đêm nay lạnh lẽo quá.",
                 room_lamp: "Ngọn đèn sắp tắt...",
                 room_tulip: ["Tulip.", "Loài hoa của tình yêu.", "Nhưng bông hoa này là giả.", "Nó chưa từng sống."],
                 room_letter: ["Tớ đã viết...", "rồi xé...", "rồi viết lại.", "Sợ nhận lại một chữ 'KHÔNG'.", "Cậu đã cho tớ 100 chữ."],
                 room_diary: ["Trang 1: Hôm nay tớ thấy cậu...", "Trang 2: Tớ muốn hỏi...", "Trang 3: Câu trả lời đã có trước khi tớ kịp hỏi."],
-
                 secret_q: ["Cậu nghĩ thế là đủ sao?", "Nếu cậu thật sự muốn...", "Hãy nói CÓ một lần nữa."]
             },
             es: {
@@ -469,127 +454,113 @@
                 dialogues: ["¡Por favor di que sí! 🥺", "No seas malo... 💔", "¿Te hago galletas? 🍪", "¿Clic incorrecto? 🤨", "¿Seguro? 🧐", "No rompas mi corazón 😭", "¡No me rindo! 💪", "Solo un clic... 🤏"],
                 lobbyNo: ["Incorrecto 😏", "Intenta de nuevo...", "¡No puedes escapar!", "No es una opción 💀"],
                 settings: "Ajustes ⚙️", lblLobby: "Música Lobby", lblGame: "Música Juego", lblLang: "Idioma", close: "Cerrar",
-
                 end1_title: "AMOR VERDADERO", end1_sub: "SÍ: 101/101",
                 end1_lines: ["101 veces...", "No dudaste.", "Me elegiste...", "una y otra vez.", "Quizás...", "el amor verdadero...", "es así de simple."],
-                
                 end2_title: "CORAZÓN DUDOSO", end2_sub: "SÍ: 51 - NO: 50",
                 end2_lines: ["Dijiste 'NO'...", "tantas veces que pensé...", "que desaparecería.", "Pero al final...", "elegiste 'SÍ'.", "Aunque sea una vez más...", "es suficiente.", "Gracias."],
-
                 end3_title: "LA HABITACIÓN VACÍA", end3_sub: "NO: 100/100",
                 end3_lines: ["Te fuiste...", "desde el principio.", "Solo me tomó 100 veces...", "creerlo."],
-                
                 end4_title: "EL SÍ SECRETO", end4_sub: "FINAL SECRETO ENCONTRADO",
                 end4_lines: ["Encontraste el secreto.", "No del juego...", "sino el mío.", "Demostraste que...", "valgo la pena.", "Este San Valentín...", "soy tuyo."],
-
                 room_window: "La luna está fría esta noche.",
                 room_lamp: "Una luz que se apaga...",
                 room_tulip: ["Tulipán.", "La flor del amor profundo.", "Pero este es falso.", "Nunca vivió."],
                 room_letter: ["La escribí...", "la rompí...", "la escribí de nuevo.", "Miedo a un 'NO'.", "Me diste 100."],
                 room_diary: ["Página 1: Te vi hoy...", "Página 2: Quería preguntar...", "Página 3: La respuesta existía antes de la pregunta."],
-
                 secret_q: ["¿Crees que es suficiente?", "Si realmente lo quieres...", "Di SÍ una última vez."]
             }
         };
 
         /* --- DOM CACHE --- */
-        const DOM = {
-            // Audio
-            audioLobby: document.getElementById('bgm-lobby'),
-            audioGame: document.getElementById('bgm-game'),
-            audioEnd: document.getElementById('bgm-end'),
-            
-            // Screens
-            gameView: document.getElementById('game-view'),
-            startOverlay: document.getElementById('start-overlay'),
-            lobbyScreen: document.getElementById('lobby-screen'),
-            endingOverlay: document.getElementById('ending-overlay'),
-            roomScene: document.getElementById('room-scene'),
-            secretModal: document.getElementById('secret-modal'),
-            settingsModal: document.getElementById('settings-modal'),
+        let DOM = {};
 
-            // Game UI
-            yesBtn: document.getElementById('btn-yes'),
-            noBtn: document.getElementById('btn-no'),
-            mainCard: document.getElementById('main-card'),
-            dialogue: document.getElementById('dialogue-text'),
-            stageIndicator: document.getElementById('stage-indicator'),
-            fakeContainer: document.getElementById('fake-container'),
-            
-            // Stats
-            lblYesTrigger: document.getElementById('lbl-yes-trigger'),
-            valYes: document.getElementById('val-yes'),
-            valNo: document.getElementById('val-no'),
-            valChoice: document.getElementById('val-choice'),
-            barYes: document.getElementById('bar-yes'),
-            barNo: document.getElementById('bar-no'),
-            barChoice: document.getElementById('bar-choice'),
-
-            // Ending Elements
-            endTitle: document.getElementById('end-title'),
-            endSub: document.getElementById('end-sub'),
-            endText: document.getElementById('end-text'),
-
-            // Settings
-            langSelect: document.getElementById('lang-select'),
-            toggleLobby: document.getElementById('toggle-lobby-music'),
-            toggleGame: document.getElementById('toggle-game-music')
-        };
+        function cacheDOM() {
+            DOM = {
+                audioLobby: document.getElementById('bgm-lobby'),
+                audioGame: document.getElementById('bgm-game'),
+                audioEnd: document.getElementById('bgm-end'),
+                gameView: document.getElementById('game-view'),
+                startOverlay: document.getElementById('start-overlay'),
+                lobbyScreen: document.getElementById('lobby-screen'),
+                endingOverlay: document.getElementById('ending-overlay'),
+                roomScene: document.getElementById('room-scene'),
+                secretModal: document.getElementById('secret-modal'),
+                settingsModal: document.getElementById('settings-modal'),
+                yesBtn: document.getElementById('btn-yes'),
+                noBtn: document.getElementById('btn-no'),
+                mainCard: document.getElementById('main-card'),
+                dialogue: document.getElementById('dialogue-text'),
+                stageIndicator: document.getElementById('stage-indicator'),
+                fakeContainer: document.getElementById('fake-container'),
+                lblYesTrigger: document.getElementById('lbl-yes-trigger'),
+                valYes: document.getElementById('val-yes'),
+                valNo: document.getElementById('val-no'),
+                valChoice: document.getElementById('val-choice'),
+                barYes: document.getElementById('bar-yes'),
+                barNo: document.getElementById('bar-no'),
+                barChoice: document.getElementById('bar-choice'),
+                endTitle: document.getElementById('end-title'),
+                endSub: document.getElementById('end-sub'),
+                endText: document.getElementById('end-text'),
+                langSelect: document.getElementById('lang-select'),
+                toggleLobby: document.getElementById('toggle-lobby-music'),
+                toggleGame: document.getElementById('toggle-game-music')
+            };
+        }
 
         /* --- AUDIO MANAGER --- */
         const AudioCtrl = {
             async init() {
+                if (!DOM.audioLobby) return;
                 DOM.audioLobby.volume = 0.5;
                 DOM.audioGame.volume = 0.4;
                 DOM.audioEnd.volume = 0.5;
-                
-                // Add version to bust cache
                 const v = "?v=2";
                 DOM.audioLobby.src = "music/lobby.mp3" + v;
                 DOM.audioGame.src = "music/game.mp3" + v;
-                
-                // Try to validate paths (Simplified)
                 try {
                     await fetch(DOM.audioLobby.src, {method:'HEAD'});
                     STATE.usingSynth = false;
                 } catch(e) {
-                    STATE.usingSynth = true; // Fallback to synth if needed (kept from old code logic)
+                    STATE.usingSynth = true; 
                 }
             },
             
             playLobby() {
                 if(!SETTINGS.lobbyMusic) return;
-                DOM.audioGame.pause(); DOM.audioEnd.pause();
-                if(!STATE.usingSynth) DOM.audioLobby.play().catch(()=>{});
+                if(DOM.audioGame) DOM.audioGame.pause(); 
+                if(DOM.audioEnd) DOM.audioEnd.pause();
+                if(!STATE.usingSynth && DOM.audioLobby) DOM.audioLobby.play().catch(()=>{});
                 else SynthMusic.start();
             },
 
             playGame() {
                 if(!SETTINGS.gameMusic) return;
-                DOM.audioLobby.pause(); DOM.audioEnd.pause();
-                SynthMusic.stop(); // Synth only for lobby in this version
-                DOM.audioGame.play().catch(()=>{});
+                if(DOM.audioLobby) DOM.audioLobby.pause(); 
+                if(DOM.audioEnd) DOM.audioEnd.pause();
+                SynthMusic.stop(); 
+                if(DOM.audioGame) DOM.audioGame.play().catch(()=>{});
             },
 
             playEnding(type) {
-                if(!SETTINGS.gameMusic) return; // Use game music setting for ending
-                DOM.audioLobby.pause(); DOM.audioGame.pause();
-                
+                if(!SETTINGS.gameMusic) return; 
+                if(DOM.audioLobby) DOM.audioLobby.pause(); 
+                if(DOM.audioGame) DOM.audioGame.pause();
                 let src = "";
-                // Mapping music
                 if(type === 1) src = "music/victory_love.mp3?v=2";
                 if(type === 2) src = "music/ending_bittersweet.mp3?v=2";
-                if(type === 3) src = ""; // Room = Silence
+                if(type === 3) src = ""; 
                 if(type === 4) src = "music/music_box.mp3?v=2";
-                
-                if(src) {
+                if(src && DOM.audioEnd) {
                     DOM.audioEnd.src = src;
                     DOM.audioEnd.play().catch(()=>{});
                 }
             },
             
             stopAll() {
-                DOM.audioLobby.pause(); DOM.audioGame.pause(); DOM.audioEnd.pause();
+                if(DOM.audioLobby) DOM.audioLobby.pause(); 
+                if(DOM.audioGame) DOM.audioGame.pause(); 
+                if(DOM.audioEnd) DOM.audioEnd.pause();
                 SynthMusic.stop();
             },
             
@@ -624,140 +595,136 @@
 
         /* --- LOGIC MERGE --- */
         function initGame() {
-            loadSettings();
-            loadGame();
-            generateStages();
-            AudioCtrl.init();
-            
-            // Sync UI
-            DOM.toggleLobby.checked = SETTINGS.lobbyMusic;
-            DOM.toggleGame.checked = SETTINGS.gameMusic;
-            DOM.langSelect.value = SETTINGS.lang;
-            updateTexts();
-            updateStatsUI();
+            try {
+                cacheDOM(); 
+                loadSettings();
+                loadGame();
+                generateStages();
+                AudioCtrl.init().catch(err => console.warn("Audio Init Warning:", err));
+                
+                if(DOM.toggleLobby) DOM.toggleLobby.checked = SETTINGS.lobbyMusic;
+                if(DOM.toggleGame) DOM.toggleGame.checked = SETTINGS.gameMusic;
+                if(DOM.langSelect) DOM.langSelect.value = SETTINGS.lang;
+                
+                updateTexts();
+                updateStatsUI();
 
-            // Bind Events
-            document.getElementById('btn-start-game').onclick = () => {
-                DOM.startOverlay.classList.add('hidden');
-                SFX.ctx.resume();
-                if(STATE.inLobby) {
-                    DOM.lobbyScreen.classList.remove('hidden');
-                    AudioCtrl.playLobby();
-                } else {
+                // Bind Events
+                const btnStart = document.getElementById('btn-start-game');
+                if(btnStart) btnStart.onclick = () => {
+                    if(DOM.startOverlay) DOM.startOverlay.classList.add('hidden');
+                    SFX.ctx.resume();
+                    if(STATE.inLobby) {
+                        if(DOM.lobbyScreen) DOM.lobbyScreen.classList.remove('hidden');
+                        AudioCtrl.playLobby();
+                    } else {
+                        AudioCtrl.playGame();
+                    }
+                };
+
+                const btnLobbyYes = document.getElementById('lobby-btn-yes');
+                const btnLobbyNo = document.getElementById('lobby-btn-no');
+                if(btnLobbyYes) btnLobbyYes.onclick = () => {
+                    SFX.playYes();
+                    STATE.inLobby = false;
+                    if(DOM.lobbyScreen) DOM.lobbyScreen.classList.add('hidden');
                     AudioCtrl.playGame();
-                }
-            };
+                };
+                if(btnLobbyNo) btnLobbyNo.onclick = () => {
+                    SFX.playNo();
+                    const L = getLang();
+                    const msgEl = document.querySelector('.lobby-msg');
+                    if(msgEl) msgEl.innerText = L.lobbyNo[Math.floor(Math.random()*L.lobbyNo.length)];
+                };
 
-            // Lobby
-            document.getElementById('lobby-btn-yes').onclick = () => {
-                SFX.playYes();
-                STATE.inLobby = false;
-                DOM.lobbyScreen.classList.add('hidden');
-                AudioCtrl.playGame();
-            };
-            document.getElementById('lobby-btn-no').onclick = () => {
-                SFX.playNo();
-                const L = getLang();
-                document.querySelector('.lobby-msg').innerText = L.lobbyNo[Math.floor(Math.random()*L.lobbyNo.length)];
-            };
+                if(DOM.yesBtn) DOM.yesBtn.onclick = handleYes; 
+                if(DOM.noBtn) DOM.noBtn.onclick = handleNo;
+                
+                if(DOM.lblYesTrigger) DOM.lblYesTrigger.onclick = () => {
+                    if(!STATE.scoreClicked) {
+                        STATE.scoreClicked = true;
+                        DOM.lblYesTrigger.style.color = "gold";
+                        DOM.lblYesTrigger.style.textShadow = "0 0 5px gold";
+                        showTooltip("✨ Secret Found!");
+                        saveGame();
+                    }
+                };
 
-            // Game
-            DOM.yesBtn.onpointerdown = handleYes;
-            DOM.noBtn.onpointerdown = handleNo;
-            
-            // Score Easter Egg
-            DOM.lblYesTrigger.onclick = () => {
-                if(!STATE.scoreClicked) {
-                    STATE.scoreClicked = true;
-                    DOM.lblYesTrigger.style.color = "gold";
-                    DOM.lblYesTrigger.style.textShadow = "0 0 5px gold";
-                    showTooltip("✨ Secret Found!");
-                }
-            };
+                const btnReplay = document.getElementById('btn-end-replay');
+                const btnLobby = document.getElementById('btn-end-lobby');
+                const btnShare = document.getElementById('btn-end-share');
+                
+                if(btnReplay) btnReplay.onclick = resetGame;
+                if(btnLobby) btnLobby.onclick = () => location.reload();
+                if(btnShare) btnShare.onclick = () => alert("Share Card coming soon! 💌");
 
-            // Endings
-            document.getElementById('btn-end-replay').onclick = resetGame;
-            document.getElementById('btn-end-lobby').onclick = () => location.reload();
-            document.getElementById('btn-end-share').onclick = () => alert("Share Card coming soon! 💌");
+                const btnSettings = document.getElementById('settings-btn');
+                const btnCloseSettings = document.getElementById('close-settings');
+                const btnReset = document.getElementById('reset-btn');
 
-            // Settings
-            document.getElementById('settings-btn').onclick = () => DOM.settingsModal.classList.remove('hidden');
-            document.getElementById('close-settings').onclick = () => DOM.settingsModal.classList.add('hidden');
-            DOM.toggleLobby.onchange = (e) => { SETTINGS.lobbyMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
-            DOM.toggleGame.onchange = (e) => { SETTINGS.gameMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
-            DOM.langSelect.onchange = (e) => { SETTINGS.lang = e.target.value; saveSettings(); updateTexts(); };
-            document.getElementById('reset-btn').onclick = () => { if(confirm(getLang().reset + "?")) resetGame(); };
+                if(btnSettings) btnSettings.onclick = () => DOM.settingsModal && DOM.settingsModal.classList.remove('hidden');
+                if(btnCloseSettings) btnCloseSettings.onclick = () => DOM.settingsModal && DOM.settingsModal.classList.add('hidden');
+                
+                if(DOM.toggleLobby) DOM.toggleLobby.onchange = (e) => { SETTINGS.lobbyMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
+                if(DOM.toggleGame) DOM.toggleGame.onchange = (e) => { SETTINGS.gameMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
+                if(DOM.langSelect) DOM.langSelect.onchange = (e) => { SETTINGS.lang = e.target.value; saveSettings(); updateTexts(); };
+                
+                if(btnReset) btnReset.onclick = () => { if(confirm(getLang().reset + "?")) resetGame(); };
 
-            createParticles();
+                createParticles();
+
+            } catch (err) {
+                console.error("Critical Init Error:", err);
+                alert("Game failed to load. Please refresh.");
+            }
         }
 
         function handleYes() {
             if(STATE.isEnding || STATE.inLobby) return;
-            
             STATE.yesCount++;
             SFX.playYes();
             updateStatsUI();
-            
-            // TRIGGER CHECK
             if(checkEndingTriggers()) return;
-
-            // Normal Gameplay
-            spawnFloatingHeart(DOM.yesBtn);
-            DOM.dialogue.innerText = "Yay! 💘";
+            if(DOM.yesBtn) spawnFloatingHeart(DOM.yesBtn);
+            if(DOM.dialogue) DOM.dialogue.innerText = "Yay! 💘";
             saveGame();
             applyCurrentStage();
         }
 
         function handleNo() {
             if(STATE.isEnding || STATE.inLobby) return;
-            
             STATE.noCount++;
             SFX.playNo();
             updateStatsUI();
-
             if(checkEndingTriggers()) return;
-
-            DOM.mainCard.classList.remove('shake');
-            void DOM.mainCard.offsetWidth;
-            DOM.mainCard.classList.add('shake');
-            DOM.dialogue.innerText = getLang().dialogues[Math.floor(Math.random()*getLang().dialogues.length)];
+            if(DOM.mainCard) {
+                DOM.mainCard.classList.remove('shake');
+                void DOM.mainCard.offsetWidth;
+                DOM.mainCard.classList.add('shake');
+            }
+            if(DOM.dialogue) DOM.dialogue.innerText = getLang().dialogues[Math.floor(Math.random()*getLang().dialogues.length)];
             saveGame();
         }
 
         function checkEndingTriggers() {
-            // Ending 4: Secret
-            if(STATE.yesCount === 100 && STATE.scoreClicked) {
-                triggerSecretModal();
-                return true;
-            }
-            // Ending 1: True Love
-            if(STATE.yesCount >= CONFIG.YES_GOAL) {
-                enterEnding(1);
-                return true;
-            }
-            // Ending 2: Hesitant
-            if(STATE.yesCount === 51 && STATE.noCount === 50) {
-                enterEnding(2);
-                return true;
-            }
-            // Ending 3: Empty Room
-            if(STATE.noCount >= CONFIG.NO_GOAL) {
-                enterEnding(3);
-                return true;
-            }
+            if(STATE.yesCount === 100 && STATE.scoreClicked) { triggerSecretModal(); return true; }
+            if(STATE.yesCount >= CONFIG.YES_GOAL) { enterEnding(1); return true; }
+            if(STATE.yesCount === 51 && STATE.noCount === 50) { enterEnding(2); return true; }
+            if(STATE.noCount >= CONFIG.NO_GOAL) { enterEnding(3); return true; }
             return false;
         }
 
         function enterEnding(id) {
             STATE.isEnding = true;
-            DOM.gameView.style.opacity = '0';
-            DOM.gameView.style.pointerEvents = 'none';
-            saveGame(); // Save state
-
+            if(DOM.gameView) {
+                DOM.gameView.style.opacity = '0';
+                DOM.gameView.style.pointerEvents = 'none';
+            }
+            saveGame(); 
             if(id === 3) {
                 AudioCtrl.stopAll();
                 setTimeout(() => {
-                    DOM.roomScene.classList.add('visible');
+                    if(DOM.roomScene) DOM.roomScene.classList.add('visible');
                     initRoomScene();
                 }, 1000);
             } else {
@@ -766,127 +733,121 @@
             }
         }
 
-        /* --- UI UPDATES --- */
         function updateStatsUI() {
             const fmt = n => n.toString().padStart(2, '0');
             const total = STATE.yesCount + STATE.noCount;
-            
-            DOM.valYes.innerText = `${fmt(STATE.yesCount)}/${CONFIG.YES_GOAL}`;
-            DOM.valNo.innerText = `${fmt(STATE.noCount)}/${CONFIG.NO_GOAL}`;
-            DOM.valChoice.innerText = `${fmt(total)}/${CONFIG.YES_GOAL}`;
-
-            DOM.barYes.style.width = Math.min((STATE.yesCount/CONFIG.YES_GOAL)*100, 100) + "%";
-            DOM.barNo.style.width = Math.min((STATE.noCount/CONFIG.NO_GOAL)*100, 100) + "%";
-            DOM.barChoice.style.width = Math.min((total/CONFIG.YES_GOAL)*100, 100) + "%";
-            
+            if(DOM.valYes) DOM.valYes.innerText = `${fmt(STATE.yesCount)}/${CONFIG.YES_GOAL}`;
+            if(DOM.valNo) DOM.valNo.innerText = `${fmt(STATE.noCount)}/${CONFIG.NO_GOAL}`;
+            if(DOM.valChoice) DOM.valChoice.innerText = `${fmt(total)}/${CONFIG.YES_GOAL}`;
+            if(DOM.barYes) DOM.barYes.style.width = Math.min((STATE.yesCount/CONFIG.YES_GOAL)*100, 100) + "%";
+            if(DOM.barNo) DOM.barNo.style.width = Math.min((STATE.noCount/CONFIG.NO_GOAL)*100, 100) + "%";
+            if(DOM.barChoice) DOM.barChoice.style.width = Math.min((total/CONFIG.YES_GOAL)*100, 100) + "%";
             const L = getLang();
-            DOM.stageIndicator.innerText = `${L.stage}: ${STATE.yesCount + 1}`;
+            if(DOM.stageIndicator) DOM.stageIndicator.innerText = `${L.stage || 'Stage'}: ${STATE.yesCount + 1}`;
         }
 
         function renderEndingOverlay(id) {
             const L = getLang();
             let title="", sub="", lines=[], theme="theme-1";
-
             if(id===1) { title=L.end1_title; sub=L.end1_sub; lines=L.end1_lines; theme="theme-1"; }
             if(id===2) { title=L.end2_title; sub=L.end2_sub; lines=L.end2_lines; theme="theme-2"; }
             if(id===4) { title=L.end4_title; sub=L.end4_sub; lines=L.end4_lines; theme="theme-4"; }
-            
-            // Special Case: Final Ending 3 (called from Room)
             if(id==='3_final') { title=L.end3_title; sub=L.end3_sub; lines=L.end3_lines; theme="theme-3"; }
-
-            DOM.endingOverlay.className = ""; // Reset
-            DOM.endingOverlay.classList.add(theme);
-            DOM.endTitle.innerText = title;
-            DOM.endSub.innerText = sub;
-            DOM.endingOverlay.classList.add('visible');
-            
+            if(DOM.endingOverlay) {
+                DOM.endingOverlay.className = ""; 
+                DOM.endingOverlay.classList.add(theme);
+                DOM.endingOverlay.classList.add('visible');
+            }
+            if(DOM.endTitle) DOM.endTitle.innerText = title;
+            if(DOM.endSub) DOM.endSub.innerText = sub;
             startTypewriter(lines);
             if(id===1 || id===4) startConfetti();
         }
 
-        /* --- ROOM SCENE LOGIC (ENDING 3) --- */
         function initRoomScene() {
             const L = getLang();
             const modal = document.getElementById('room-modal');
             const tooltip = document.getElementById('room-tooltip');
             const txt = document.getElementById('room-modal-text');
-
-            // Setup Objects
             const bindObj = (id, textKey, isMain, keyName) => {
                 const el = document.getElementById(id);
+                if(!el) return;
                 el.onclick = () => {
                     if(isMain) {
                         STATE.roomProgress[keyName] = true;
-                        modal.style.display = 'block';
+                        if(modal) modal.style.display = 'block';
                         let content = L[textKey];
                         if(Array.isArray(content)) content = content.join("<br><br>");
-                        txt.innerHTML = content;
+                        if(txt) txt.innerHTML = content;
                         checkRoomComplete();
                     } else {
-                        tooltip.innerText = L[textKey];
-                        tooltip.style.opacity = 1;
-                        setTimeout(()=>tooltip.style.opacity=0, 2000);
+                        if(tooltip) {
+                            tooltip.innerText = L[textKey];
+                            tooltip.style.opacity = 1;
+                            setTimeout(()=>tooltip.style.opacity=0, 2000);
+                        }
                     }
                 };
             };
-
             bindObj('obj-window', 'room_window', false);
             bindObj('obj-lamp', 'room_lamp', false);
             bindObj('obj-tulip', 'room_tulip', true, 'tulip');
             bindObj('obj-letter', 'room_letter', true, 'letter');
             bindObj('obj-diary', 'room_diary', true, 'diary');
-
-            document.getElementById('btn-room-close').onclick = () => modal.style.display = 'none';
+            const closeBtn = document.getElementById('btn-room-close');
+            if(closeBtn) closeBtn.onclick = () => { if(modal) modal.style.display = 'none'; };
         }
 
         function checkRoomComplete() {
             if(STATE.roomProgress.tulip && STATE.roomProgress.letter && STATE.roomProgress.diary) {
                 setTimeout(() => {
-                    DOM.roomScene.style.opacity = 0;
-                    setTimeout(() => {
-                        DOM.roomScene.classList.remove('visible');
-                        renderEndingOverlay('3_final');
-                    }, 1500);
+                    if(DOM.roomScene) {
+                        DOM.roomScene.style.opacity = 0;
+                        setTimeout(() => {
+                            DOM.roomScene.classList.remove('visible');
+                            renderEndingOverlay('3_final');
+                        }, 1500);
+                    }
                 }, 1000);
             }
         }
 
-        /* --- SECRET MODAL (ENDING 4) --- */
         function triggerSecretModal() {
-            STATE.isEnding = true; // Temporary lock
+            STATE.isEnding = true; 
             const L = getLang();
-            DOM.secretModal.classList.add('visible');
+            if(DOM.secretModal) DOM.secretModal.classList.add('visible');
             const qBox = document.getElementById('secret-text');
             const btn = document.getElementById('btn-secret-yes');
-            btn.style.display = 'none';
-            
+            if(btn) btn.style.display = 'none';
             let i = 0;
             const seq = () => {
                 if(i < L.secret_q.length) {
-                    qBox.innerText = L.secret_q[i++];
-                    qBox.style.opacity = 0;
-                    setTimeout(() => qBox.style.opacity=1, 100);
+                    if(qBox) {
+                        qBox.innerText = L.secret_q[i++];
+                        qBox.style.opacity = 0;
+                        setTimeout(() => qBox.style.opacity=1, 100);
+                    }
                     setTimeout(seq, 2000);
                 } else {
-                    btn.innerText = L.yesBtn;
-                    btn.style.display = 'block';
+                    if(btn) {
+                        btn.innerText = L.yesBtn;
+                        btn.style.display = 'block';
+                    }
                 }
             };
             seq();
-
-            btn.onclick = () => {
-                DOM.secretModal.classList.remove('visible');
+            if(btn) btn.onclick = () => {
+                if(DOM.secretModal) DOM.secretModal.classList.remove('visible');
                 enterEnding(4);
             };
         }
 
-        /* --- UTILS --- */
         let typeTimer;
         function startTypewriter(lines) {
             let l = 0, c = 0;
             const el = DOM.endText;
+            if(!el) return;
             el.innerText = "";
-            
             function type() {
                 if(l >= lines.length) return;
                 el.innerText = lines[l].substring(0, c);
@@ -914,20 +875,24 @@
         
         function updateTexts() {
             const L = getLang();
-            DOM.mainTitle.innerText = L.title;
-            DOM.yesBtn.innerText = L.yesBtn; DOM.noBtn.innerText = L.noBtn;
-            document.getElementById('lobby-title').innerText = L.title;
-            document.getElementById('lobby-subtitle').innerText = L.subtitle;
-            document.getElementById('lobby-btn-yes').innerText = L.yesBtn;
-            document.getElementById('lobby-btn-no').innerText = L.noBtn;
-            document.getElementById('st-title').innerText = L.settings;
-            document.getElementById('st-lobby-music').innerText = L.lblLobby;
-            document.getElementById('st-game-music').innerText = L.lblGame;
-            document.getElementById('st-language').innerText = L.lblLang;
-            document.getElementById('close-settings').innerText = L.close;
+            const setText = (id, txt) => { const el = document.getElementById(id); if(el) el.innerText = txt; };
+            if(DOM.mainTitle) DOM.mainTitle.innerText = L.title;
+            if(DOM.yesBtn) DOM.yesBtn.innerText = L.yesBtn; 
+            if(DOM.noBtn) DOM.noBtn.innerText = L.noBtn;
+            setText('lobby-title', L.title);
+            setText('lobby-subtitle', L.subtitle);
+            setText('lobby-btn-yes', L.yesBtn);
+            setText('lobby-btn-no', L.noBtn);
+            setText('st-title', L.settings);
+            setText('st-lobby-music', L.lblLobby);
+            setText('st-game-music', L.lblGame);
+            setText('st-language', L.lblLang);
+            setText('close-settings', L.close);
         }
 
         function createParticles() {
+            const container = document.getElementById('particles-container');
+            if(!container) return;
             for(let i=0; i<20; i++) {
                 const p = document.createElement('div');
                 p.className = 'heart-particle';
@@ -935,7 +900,7 @@
                 p.style.left = Math.random()*100+'vw';
                 p.style.animationDuration = (Math.random()*5+5)+'s';
                 p.style.fontSize = (Math.random()*20+10)+'px';
-                document.getElementById('particles-container').appendChild(p);
+                container.appendChild(p);
             }
         }
         
@@ -955,19 +920,24 @@
         }
 
         function startConfetti() {
-            const c=document.getElementById('confetti-canvas'), x=c.getContext('2d');
+            const c=document.getElementById('confetti-canvas');
+            if(!c) return;
+            const x=c.getContext('2d');
             c.width=window.innerWidth; c.height=window.innerHeight;
             const p=[]; for(let i=0;i<100;i++) p.push({x:Math.random()*c.width,y:-10,c:['gold','pink','white'][Math.floor(Math.random()*3)],s:Math.random()*5+2});
             function draw(){ if(!STATE.isEnding) return; x.clearRect(0,0,c.width,c.height); p.forEach(o=>{x.fillStyle=o.c;x.fillRect(o.x,o.y,o.s,o.s);o.y+=o.s;if(o.y>c.height)o.y=-10}); requestAnimationFrame(draw); }
             draw();
         }
 
-        /* --- STAGE EFFECTS (KEEPING OLD LOGIC) --- */
         const EffectGen = {
             static: () => ({ init: ()=>{} }),
-            wiggle: (i) => ({ init: ()=>{ DOM.yesBtn.style.position='relative'; let t=0; const l=()=>{ if(STATE.yesCount>15)return; DOM.yesBtn.style.transform=`translate(${Math.sin(t++)*i}px,0)`; requestAnimationFrame(l); }; l(); } }),
-            run: () => ({ init: ()=>{ DOM.yesBtn.style.position='absolute'; DOM.yesBtn.onmouseenter=()=>{ DOM.yesBtn.style.left=Math.random()*80+'%'; DOM.yesBtn.style.top=Math.random()*80+'%'; } } }),
-            clone: () => { for(let i=0;i<5;i++){ const b=DOM.yesBtn.cloneNode(true); b.className='game-btn btn-yes fake-btn'; b.style.left=Math.random()*80+'%'; b.style.top=Math.random()*80+'%'; b.onclick=()=>{SFX.playNo();handleNo();b.remove()}; document.getElementById('fake-container').appendChild(b); } }
+            wiggle: (i) => ({ init: ()=>{ if(DOM.yesBtn) { DOM.yesBtn.style.position='relative'; let t=0; const l=()=>{ if(STATE.yesCount>15)return; DOM.yesBtn.style.transform=`translate(${Math.sin(t++)*i}px,0)`; requestAnimationFrame(l); }; l(); } } }),
+            run: () => ({ init: ()=>{ if(DOM.yesBtn) { DOM.yesBtn.style.position='absolute'; DOM.yesBtn.onmouseenter=()=>{ DOM.yesBtn.style.left=Math.random()*80+'%'; DOM.yesBtn.style.top=Math.random()*80+'%'; } } } }),
+            clone: () => { 
+                const container = document.getElementById('fake-container');
+                if(!container || !DOM.yesBtn) return;
+                for(let i=0;i<5;i++){ const b=DOM.yesBtn.cloneNode(true); b.className='game-btn btn-yes fake-btn'; b.style.left=Math.random()*80+'%'; b.style.top=Math.random()*80+'%'; b.onclick=()=>{SFX.playNo();handleNo();b.remove()}; container.appendChild(b); } 
+            }
         };
 
         function generateStages() {
@@ -976,7 +946,7 @@
                 if(i<10) STATE.effects.push(EffectGen.static());
                 else if(i<20) STATE.effects.push(EffectGen.wiggle(2));
                 else if(i<30) STATE.effects.push(EffectGen.run());
-                else if(i<40) STATE.effects.push({init:()=>DOM.yesBtn.style.opacity=0.5});
+                else if(i<40) STATE.effects.push({init:()=>{ if(DOM.yesBtn) DOM.yesBtn.style.opacity=0.5 }});
                 else if(i<50) STATE.effects.push({init:()=>EffectGen.clone()});
                 else STATE.effects.push(EffectGen.static());
             }
@@ -984,21 +954,41 @@
 
         function applyCurrentStage() {
             if(STATE.yesCount >= 100) return; 
-            // Reset btn style
-            DOM.yesBtn.style.position='relative'; DOM.yesBtn.style.left='auto'; DOM.yesBtn.style.top='auto'; DOM.yesBtn.style.opacity=1; DOM.yesBtn.onmouseenter=null;
-            document.getElementById('fake-container').innerHTML = "";
-            
+            if(DOM.yesBtn) {
+                DOM.yesBtn.style.position='relative'; DOM.yesBtn.style.left='auto'; DOM.yesBtn.style.top='auto'; DOM.yesBtn.style.opacity=1; DOM.yesBtn.onmouseenter=null;
+            }
+            const container = document.getElementById('fake-container');
+            if(container) container.innerHTML = "";
             const ef = STATE.effects[STATE.yesCount];
             if(ef && ef.init) ef.init();
         }
 
         function saveGame() { localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({yes: STATE.yesCount, no: STATE.noCount, click: STATE.scoreClicked, room: STATE.roomProgress})); }
         function loadGame() {
-            const d = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEY));
-            if(d) { STATE.yesCount=d.yes||0; STATE.noCount=d.no||0; STATE.scoreClicked=d.click||false; STATE.roomProgress=d.room||{tulip:false,letter:false,diary:false}; if(STATE.yesCount>0) STATE.inLobby=false; }
+            try {
+                const d = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEY));
+                if(d) { 
+                    STATE.yesCount=d.yes||0; 
+                    STATE.noCount=d.no||0; 
+                    STATE.scoreClicked=d.click||false; 
+                    STATE.roomProgress=d.room||{tulip:false,letter:false,diary:false}; 
+                    if(STATE.yesCount > 0 || STATE.noCount > 0) STATE.inLobby=false; 
+                }
+            } catch(e) {
+                console.error("Save file corrupted, resetting");
+                localStorage.removeItem(CONFIG.STORAGE_KEY);
+            }
         }
         function saveSettings() { localStorage.setItem(CONFIG.SETTINGS_KEY, JSON.stringify(SETTINGS)); }
-        function loadSettings() { const s=JSON.parse(localStorage.getItem(CONFIG.SETTINGS_KEY)); if(s) SETTINGS=s; }
+        function loadSettings() { 
+            try {
+                const s=JSON.parse(localStorage.getItem(CONFIG.SETTINGS_KEY)); 
+                if(s) SETTINGS=s; 
+            } catch(e) { console.error("Settings corrupted"); }
+        }
+
+        if(document.readyState !== 'loading') initGame();
+        else document.addEventListener('DOMContentLoaded', initGame);
 
     </script>
 </body>
