@@ -5,1600 +5,748 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Will You Be My Valentine? 💘</title>
     
-    <!-- Fonts for Multi-language Support -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;700&family=Noto+Sans:wght@400;700&family=Noto+Sans+JP:wght@400;700&family=Noto+Sans+KR:wght@400;700&family=Noto+Sans+Devanagari:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&family=Nunito:wght@400;700&family=VT323&display=swap" rel="stylesheet">
     
     <style>
         :root {
-            --bg-gradient: linear-gradient(135deg, #fdfbfb 0%, #ebedee 100%);
             --primary-pink: #ff758c;
             --secondary-pink: #ff7eb3;
             --dark-text: #4a4a4a;
-            --glass-bg: rgba(255, 255, 255, 0.65);
-            --glass-border: rgba(255, 255, 255, 0.8);
-            --btn-shadow: 0 4px 15px rgba(255, 117, 140, 0.4);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.9);
+            
+            /* Ending Themes */
+            --theme-1-bg: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            --theme-2-bg: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --theme-3-bg: #1a1a1a;
+            --theme-4-bg: linear-gradient(135deg, #f6d365 0%, #fda085 100%);
         }
 
-        * {
-            margin: 0; padding: 0; box-sizing: border-box;
-            user-select: none; -webkit-user-select: none;
-            touch-action: manipulation;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; touch-action: manipulation; }
 
         body {
-            font-family: 'Nunito', 'Noto Sans', 'Noto Sans JP', 'Noto Sans KR', 'Noto Sans Devanagari', sans-serif;
+            font-family: 'Nunito', sans-serif;
             background: linear-gradient(120deg, #a18cd1 0%, #fbc2eb 100%);
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            height: 100vh; width: 100vw; overflow: hidden;
+            display: flex; align-items: center; justify-content: center;
         }
 
-        /* Background Particles */
-        #particles-container {
-            position: absolute;
-            width: 100%; height: 100%;
-            z-index: 0;
-            pointer-events: none;
-        }
-        .heart-particle {
-            position: absolute;
-            color: rgba(255, 255, 255, 0.6);
-            animation: floatUp linear infinite;
-        }
-
+        /* Particles */
+        #particles-container { position: absolute; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+        .heart-particle { position: absolute; animation: floatUp linear infinite; }
         @keyframes floatUp {
             0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
             50% { opacity: 0.8; }
             100% { transform: translateY(-10vh) scale(1); opacity: 0; }
         }
 
-        /* UI Controls (Reset + Settings) */
-        .top-controls {
-            position: absolute;
-            top: 20px; right: 20px;
-            z-index: 100;
-            display: flex;
-            gap: 10px;
-        }
-
+        /* Top Controls */
+        .top-controls { position: absolute; top: 20px; right: 20px; z-index: 500; display: flex; gap: 10px; }
         .ui-btn {
-            background: rgba(255,255,255,0.5);
-            border: 1px solid white;
-            padding: 8px 15px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-family: 'Fredoka', sans-serif;
-            color: #555;
-            backdrop-filter: blur(5px);
-            transition: background 0.2s;
+            background: rgba(255,255,255,0.6); border: 1px solid white;
+            padding: 8px 15px; border-radius: 20px; cursor: pointer;
+            font-family: 'Fredoka', sans-serif; color: #555;
+            transition: 0.2s; backdrop-filter: blur(4px);
         }
+        .ui-btn:hover { background: white; transform: translateY(-2px); }
 
-        .ui-btn:hover { background: rgba(255,255,255,0.8); }
+        /* --- GAME CONTAINER --- */
+        .game-container { position: relative; z-index: 10; width: 95%; max-width: 480px; }
 
-        .icon-btn {
-            font-size: 1.2rem;
-            padding: 6px 12px;
-        }
-
-        /* Game Container */
-        .game-container {
-            position: relative;
-            z-index: 10;
-            width: 90%;
-            max-width: 500px;
-            perspective: 1000px;
-        }
-
-        /* Glass Card */
         .glass-card {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 2px solid var(--glass-border);
-            border-radius: 24px;
-            padding: 20px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2);
+            background: var(--glass-bg); backdrop-filter: blur(16px);
+            border: 2px solid var(--glass-border); border-radius: 24px;
+            padding: 25px 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
             text-align: center;
-            transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transition: opacity 0.3s;
         }
 
-        .glass-card.shake {
-            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
-        }
+        /* --- STATS BARS (UPDATED) --- */
+        .stats-container { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+        .stat-row { display: flex; align-items: center; gap: 10px; font-size: 0.85rem; color: #666; font-weight: 700; }
+        .stat-label { width: 60px; text-align: right; cursor: pointer; } /* YES clickable here */
+        .progress-track { flex-grow: 1; height: 10px; background: rgba(0,0,0,0.1); border-radius: 5px; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; transition: width 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .stat-val { width: 50px; text-align: left; font-family: 'Fredoka', monospace; }
 
-        @keyframes shake {
-            10%, 90% { transform: translate3d(-2px, 0, 0); }
-            20%, 80% { transform: translate3d(4px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
-            40%, 60% { transform: translate3d(6px, 0, 0); }
-        }
+        #bar-yes { background: linear-gradient(90deg, #ff9a9e, #ff758c); }
+        #bar-no { background: linear-gradient(90deg, #a18cd1, #bc4e9c); }
+        #bar-choice { background: linear-gradient(90deg, #fbc2eb, #a6c1ee); }
 
-        /* Stats Bar */
-        .stats-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 0.9rem;
-            color: #666;
-            margin-bottom: 10px;
-            font-weight: 700;
-        }
-
-        .progress-wrapper {
-            flex-grow: 1;
-            height: 8px;
-            background: rgba(0,0,0,0.1);
-            border-radius: 10px;
-            margin: 0 10px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%);
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        /* Content */
-        #stage-indicator {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #888;
-            margin-bottom: 5px;
-        }
-
-        .title {
-            font-family: 'Fredoka', cursive;
-            color: var(--primary-pink);
-            font-size: 2rem;
-            margin-bottom: 15px;
-            text-shadow: 2px 2px 0px rgba(255,255,255,0.8);
-            line-height: 1.2;
-        }
-
-        .dialogue-box {
-            min-height: 40px;
-            margin-bottom: 20px;
-            color: #555;
-            font-style: italic;
-            font-size: 1.1rem;
-        }
-
-        /* Button Area */
-        .button-area {
-            position: relative;
-            height: 300px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            gap: 20px;
-            padding-top: 10px;
-        }
-
+        /* Main Game Elements */
+        .title { font-family: 'Fredoka', cursive; color: var(--primary-pink); font-size: 2rem; margin-bottom: 10px; line-height: 1.1; }
+        .dialogue-box { min-height: 50px; margin-bottom: 20px; color: #555; font-style: italic; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+        
+        .button-area { position: relative; height: 280px; width: 100%; display: flex; justify-content: center; gap: 20px; padding-top: 10px; }
         .game-btn {
-            font-family: 'Fredoka', 'Noto Sans', sans-serif;
-            font-size: 1.2rem;
-            padding: 12px 30px;
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
-            transition: transform 0.1s, box-shadow 0.2s, background 0.3s;
-            outline: none;
-            position: relative;
-            white-space: nowrap;
-            z-index: 10;
+            font-family: 'Fredoka', sans-serif; font-size: 1.2rem;
+            padding: 12px 32px; border: none; border-radius: 50px;
+            cursor: pointer; transition: 0.2s; position: relative; z-index: 20;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .btn-yes { background: linear-gradient(45deg, #ff758c, #ff7eb3); color: white; }
+        .btn-no { background: #e0e0e0; color: #666; }
+        .btn-yes:active, .btn-no:active { transform: scale(0.95); }
+
+        /* Clone/Effect Container */
+        #fake-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 15; overflow: hidden; border-radius: 10px; }
+        .fake-btn { position: absolute; pointer-events: auto; opacity: 0.9; }
+
+        /* --- ENDING OVERLAY (SHARED) --- */
+        #ending-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 2000; opacity: 0; pointer-events: none;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            transition: opacity 1s ease;
+            color: white; padding: 20px;
+            text-align: center;
+        }
+        #ending-overlay.visible { opacity: 1; pointer-events: auto; }
+        
+        /* Themes */
+        .theme-1 { background: var(--theme-1-bg); }
+        .theme-2 { background: var(--theme-2-bg); }
+        .theme-3 { background: var(--theme-3-bg); }
+        .theme-4 { background: var(--theme-4-bg); }
+
+        .ending-content { max-width: 500px; width: 100%; }
+        .ending-title { font-family: 'Fredoka', cursive; font-size: 3rem; margin-bottom: 5px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        .ending-sub { font-size: 1rem; opacity: 0.8; margin-bottom: 30px; letter-spacing: 2px; text-transform: uppercase; }
+        
+        .cinematic-text {
+            font-family: 'Nunito', sans-serif; font-size: 1.3rem; min-height: 120px;
+            background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px;
+            margin-bottom: 30px; display: flex; align-items: center; justify-content: center;
+            line-height: 1.5; cursor: pointer;
         }
 
-        .btn-yes {
-            background: linear-gradient(45deg, var(--primary-pink), var(--secondary-pink));
-            color: white;
-            box-shadow: var(--btn-shadow);
+        .ending-actions { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        .end-btn {
+            background: rgba(255,255,255,0.2); border: 2px solid white; color: white;
+            padding: 10px 25px; border-radius: 30px; cursor: pointer; font-weight: bold;
+            transition: 0.2s; font-size: 1rem;
         }
-        .btn-yes:active { transform: scale(0.95); }
+        .end-btn:hover { background: white; color: #333; }
 
-        .btn-no {
-            background: #e0e0e0;
-            color: #666;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        }
-        .btn-no:active {
-            transform: scale(0.95);
-            background: #d6d6d6;
-        }
-
-        /* --- CLONE & BLUR STAGE SPECIALS --- */
-        #fake-container {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
-            z-index: 8;
+        /* --- ENDING 3: ROOM SCENE --- */
+        #room-scene {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #0d0d0d; z-index: 1500;
+            display: none; opacity: 0; transition: opacity 1.5s;
             overflow: hidden;
-            border-radius: 20px;
+            font-family: 'VT323', monospace; /* Pixel/Horror font */
+        }
+        #room-scene.visible { display: block; opacity: 1; pointer-events: auto; }
+        
+        .room-bg {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 100%; height: 100%; max-width: 800px;
+            background: radial-gradient(circle at 70% 30%, #2a2a2a 0%, #000000 80%);
+        }
+        
+        /* Objects */
+        .room-obj { position: absolute; cursor: pointer; transition: 0.3s; font-size: 3rem; filter: grayscale(0.6); }
+        .room-obj:hover { filter: grayscale(0) drop-shadow(0 0 10px rgba(255,255,255,0.3)); transform: scale(1.05); }
+        
+        #obj-tulip { bottom: 20%; left: 20%; } /* Tulip */
+        #obj-letter { bottom: 35%; left: 45%; font-size: 2.5rem; } /* Letter on bed */
+        #obj-diary { bottom: 25%; right: 25%; } /* Diary on table */
+        #obj-window { top: 15%; right: 15%; font-size: 4rem; opacity: 0.7; }
+        #obj-lamp { bottom: 35%; right: 15%; font-size: 2.5rem; color: #fdcb6e; }
+
+        /* Room UI */
+        #room-tooltip {
+            position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%);
+            background: rgba(0,0,0,0.8); color: #ccc; padding: 10px 20px;
+            border-radius: 5px; font-size: 1.2rem; pointer-events: none; opacity: 0; transition: 0.3s;
+        }
+        #room-modal {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            width: 80%; max-width: 400px; background: #111; border: 1px solid #444;
+            padding: 20px; color: #eee; text-align: center; display: none;
+            box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+        #room-modal-text { font-size: 1.4rem; min-height: 80px; margin-bottom: 20px; }
+        .room-close-btn { background: #333; color: white; border: 1px solid #666; padding: 5px 15px; cursor: pointer; }
+
+        /* --- SECRET MODAL (ENDING 4) --- */
+        #secret-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2500;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: 0.5s;
+        }
+        #secret-modal.visible { opacity: 1; pointer-events: auto; }
+        .secret-btn {
+            font-size: 2rem; padding: 15px 40px; margin-top: 30px;
+            background: gold; color: black; border: none; border-radius: 50px;
+            cursor: pointer; box-shadow: 0 0 20px gold; animation: pulse 1s infinite;
         }
 
-        .fake-btn {
-            position: absolute;
-            opacity: 0.8;
-            filter: brightness(0.95);
-            pointer-events: auto;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            transition: transform 0.1s, opacity 0.2s;
-        }
-
-        /* Blur Modes */
-        .blur-heavy { filter: blur(4px); }
-        .spin-fast { animation: spin 0.8s linear infinite; }
-        .blur-mode {
-            filter: blur(3.5px) !important;
-            background: #a29bfe !important;
-            color: white !important;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1) !important;
-            transform: scale(0.95);
-            transition: transform 0.1s !important;
-        }
-
-        @keyframes spin { 100% { transform: rotate(360deg); } }
-
-        /* --- OVERLAY SCREENS (START / LOBBY / SETTINGS / WIN) --- */
-        .overlay-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.4); /* Slight tint for lobby */
-            z-index: 1000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 1;
-            transition: opacity 0.5s ease;
-        }
-
-        .hidden {
-            opacity: 0;
-            pointer-events: none;
-            display: none !important;
-        }
-
-        /* Start Overlay - Highest Z-Index */
+        /* Helpers */
+        .hidden { display: none !important; }
+        .visible { display: flex !important; }
+        
+        /* Start Overlay */
         #start-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-            z-index: 2000;
-            flex-direction: column;
+            z-index: 3000; display: flex; align-items: center; justify-content: center;
         }
         .start-btn {
-            font-size: 2rem;
-            padding: 20px 50px;
-            border-radius: 50px;
-            border: 4px solid white;
-            background: rgba(255,255,255,0.3);
-            color: white;
-            cursor: pointer;
-            font-family: 'Fredoka', cursive;
-            animation: pulse 1.5s infinite;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
-        }
-
-        /* Lobby Specifics */
-        .lobby-card {
-            max-width: 450px;
-            padding: 40px;
-            z-index: 1002;
-            background: rgba(255,255,255,0.9); /* Slightly more opaque */
-        }
-        .subtitle {
-            font-size: 1.1rem;
-            color: #666;
-            margin-bottom: 30px;
-        }
-        .lobby-actions {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-            margin-bottom: 15px;
-        }
-        .lobby-msg {
-            height: 24px;
-            font-size: 0.95rem;
-            color: #ff5252;
-            font-weight: bold;
-            margin-top: 10px;
-        }
-        /* Music Credit Style */
-        .music-credit {
-            margin-top: 20px;
-            font-size: 0.85rem;
-            color: #888;
-            font-style: italic;
-            opacity: 0.8;
-            letter-spacing: 0.5px;
-        }
-
-        /* Settings Specifics */
-        .settings-card {
-            width: 350px;
-            z-index: 1005;
-            text-align: left;
-        }
-        .settings-card h2 {
-            text-align: center;
-            color: #555;
-            margin-bottom: 25px;
-        }
-        .setting-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            font-size: 1.1rem;
-            color: #444;
-        }
-        .setting-item.column {
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 10px;
-        }
-        .lang-dropdown {
-            width: 100%;
-            padding: 10px;
-            border-radius: 10px;
-            border: 1px solid #ccc;
-            background: rgba(255,255,255,0.8);
-            font-size: 1rem;
-        }
-
-        /* Toggle Switch */
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
-        }
-        .switch input { opacity: 0; width: 0; height: 0; }
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background-color: #ccc;
-            transition: .4s;
-        }
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 18px; width: 18px;
-            left: 4px; bottom: 4px;
-            background-color: white;
-            transition: .4s;
-        }
-        input:checked + .slider { background-color: var(--primary-pink); }
-        input:checked + .slider:before { transform: translateX(24px); }
-        .slider.round { border-radius: 34px; }
-        .slider.round:before { border-radius: 50%; }
-
-        /* Win Content */
-        .win-content {
-            background: rgba(255,255,255,0.95);
-            max-width: 400px;
-            z-index: 1002;
-            padding: 40px 20px;
-        }
-        .win-content h1 { color: var(--primary-pink); font-size: 2.5rem; }
-        .win-content h2 { color: #555; font-size: 1.2rem; margin-bottom: 20px; }
-        .win-stats { font-size: 1.2rem; margin: 20px 0; color: #444; }
-        .win-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
-
-        .action-btn {
-            padding: 12px;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: bold;
-            cursor: pointer;
-            background: var(--secondary-pink);
-            color: white;
-        }
-
-        #confetti-canvas {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1001;
-            pointer-events: none;
+            font-size: 2rem; padding: 20px 40px; border-radius: 50px;
+            border: 4px solid white; background: rgba(255,255,255,0.3); color: white;
+            cursor: pointer; font-family: 'Fredoka', cursive; text-transform: uppercase;
         }
     </style>
 </head>
 <body>
 
-    <!-- Audio Elements -->
-    <!-- Removed 'src' entirely. Loaded via JS Check -->
-    <audio id="bgm-lobby" loop preload="auto" type="audio/mpeg"></audio>
-    <audio id="bgm-game" loop preload="auto" type="audio/mpeg"></audio>
+    <!-- AUDIO -->
+    <audio id="bgm-game" loop></audio>
+    <audio id="bgm-end" loop></audio>
 
-    <!-- Floating Background Particles -->
+    <!-- BACKGROUND -->
     <div id="particles-container"></div>
 
-    <!-- UI Controls -->
+    <!-- UI -->
     <div class="top-controls">
-        <button id="settings-btn" class="ui-btn icon-btn" title="Settings">⚙️</button>
-        <button id="reset-btn" class="ui-btn" title="Reset Progress">↻ Reset</button>
+        <button id="btn-lobby-back" class="ui-btn hidden">🏠 Lobby</button>
+        <button id="btn-reset" class="ui-btn">↻ Reset</button>
     </div>
 
-    <!-- MAIN GAME CONTAINER -->
-    <div class="game-container">
+    <!-- MAIN GAMEPLAY -->
+    <div class="game-container" id="game-view">
         <div class="glass-card" id="main-card">
             
-            <!-- Header Stats -->
-            <div class="stats-bar">
-                <div class="timer">⏱ <span id="time-display">00:00.00</span></div>
-                <div class="progress-wrapper">
-                    <div class="progress-fill" id="progress-fill"></div>
+            <!-- PROGRESS STATS -->
+            <div class="stats-container">
+                <!-- YES BAR -->
+                <div class="stat-row">
+                    <div class="stat-label" id="lbl-yes-trigger">YES</div>
+                    <div class="progress-track"><div class="progress-bar" id="bar-yes"></div></div>
+                    <div class="stat-val" id="val-yes">00/101</div>
                 </div>
-                <div class="counter"><span id="lbl-yes">YES</span>: <span id="yes-count">0</span>/101</div>
+                <!-- NO BAR -->
+                <div class="stat-row">
+                    <div class="stat-label">NO</div>
+                    <div class="progress-track"><div class="progress-bar" id="bar-no"></div></div>
+                    <div class="stat-val" id="val-no">00/100</div>
+                </div>
+                <!-- CHOICE BAR -->
+                <div class="stat-row">
+                    <div class="stat-label">CHOICE</div>
+                    <div class="progress-track"><div class="progress-bar" id="bar-choice"></div></div>
+                    <div class="stat-val" id="val-choice">00/101</div>
+                </div>
             </div>
 
-            <!-- Stage Indicator -->
-            <div id="stage-indicator" class="stage-text">Stage: 1 / 101</div>
+            <!-- CONTENT -->
+            <h1 class="title">Will you be my valentine? 💘</h1>
+            <div class="dialogue-box"><p id="dialogue-text">Please say yes! 🥺</p></div>
 
-            <!-- Main Title & Dialogue -->
-            <h1 class="title" id="main-title">Will you be my valentine? 💘</h1>
-            <div class="dialogue-box">
-                <p id="dialogue-text">Please say yes! 🥺</p>
-            </div>
-
-            <!-- Interaction Area -->
+            <!-- BUTTONS -->
             <div class="button-area" id="button-area">
-                <!-- YES Button -->
                 <button id="btn-yes" class="game-btn btn-yes">YES 💖</button>
-                <!-- NO Button -->
                 <button id="btn-no" class="game-btn btn-no">NO 💔</button>
-                
-                <!-- Container for Clones -->
                 <div id="fake-container"></div>
             </div>
-            
         </div>
     </div>
 
-    <!-- START OVERLAY (To force audio unlock) -->
-    <div id="start-overlay" class="overlay-screen">
-        <button id="btn-start-game" class="start-btn">Tap to Start 💘</button>
+    <!-- START SCREEN -->
+    <div id="start-overlay">
+        <button id="btn-start" class="start-btn">Tap to Start 💘</button>
     </div>
 
-    <!-- LOBBY SCREEN OVERLAY -->
-    <div id="lobby-screen" class="overlay-screen hidden">
-        <div class="glass-card lobby-card">
-            <h1 class="title" id="lobby-title">Will you be my valentine? 💘</h1>
-            <p class="subtitle" id="lobby-subtitle">You must say YES 101 times to win 😈</p>
+    <!-- ENDING OVERLAY (Generic for Ending 1, 2, 4) -->
+    <div id="ending-overlay">
+        <div class="ending-content">
+            <h1 class="ending-title" id="end-title">TRUE LOVE</h1>
+            <p class="ending-sub" id="end-sub">YES: 101/101</p>
             
-            <div class="lobby-actions">
-                <button id="lobby-btn-yes" class="game-btn btn-yes">YES 💖</button>
-                <button id="lobby-btn-no" class="game-btn btn-no">NO 💔</button>
-            </div>
-            <p id="lobby-msg" class="lobby-msg"></p>
-            
-            <!-- Music Credit -->
-            <p id="music-credit-text" class="music-credit">🎵 "GAME START A"- @Koya-youtuber</p>
-        </div>
-    </div>
-
-    <!-- SETTINGS MODAL -->
-    <div id="settings-modal" class="overlay-screen hidden">
-        <div class="glass-card settings-card">
-            <h2 id="st-title">Settings ⚙️</h2>
-            
-            <div class="setting-item">
-                <span id="st-lobby-music">Lobby Music</span>
-                <label class="switch">
-                    <input type="checkbox" id="toggle-lobby-music" checked>
-                    <span class="slider round"></span>
-                </label>
+            <div class="cinematic-text" id="end-text">
+                <!-- Typewriter text goes here -->
             </div>
 
-            <div class="setting-item">
-                <span id="st-game-music">Game Music</span>
-                <label class="switch">
-                    <input type="checkbox" id="toggle-game-music" checked>
-                    <span class="slider round"></span>
-                </label>
-            </div>
-
-            <div class="setting-item column">
-                <span id="st-language">Language</span>
-                <select id="lang-select" class="lang-dropdown">
-                    <option value="en">English 🇺🇸</option>
-                    <option value="vi">Tiếng Việt 🇻🇳</option>
-                    <option value="es">Español 🇪🇸</option>
-                    <option value="pt">Português 🇧🇷</option>
-                    <option value="hi">Hindi 🇮🇳</option>
-                    <option value="id">Indonesian 🇮🇩</option>
-                    <option value="ru">Russian 🇷🇺</option>
-                    <option value="ja">Japanese 🇯🇵</option>
-                    <option value="ko">Korean 🇰🇷</option>
-                </select>
-            </div>
-
-            <button id="close-settings" class="action-btn">Close</button>
-        </div>
-    </div>
-
-    <!-- WIN SCREEN OVERLAY -->
-    <div id="win-screen" class="overlay-screen hidden">
-        <div class="win-content glass-card">
-            <h1 id="win-title">YAYYY!!! 💍</h1>
-            <h2 id="win-subtitle">YOU SAID YES 101 TIMES! 💘</h2>
-            <div class="win-stats">
-                <p><span id="win-time-lbl">Time</span>: <span id="final-time">00:00</span></p>
-                <p><span id="win-no-lbl">NO Clicks</span>: <span id="final-no">0</span></p>
-            </div>
-            <p class="win-note" id="win-note">You are officially my valentine now! 🥰</p>
-            <div class="win-actions">
-                <button id="btn-share" class="action-btn">Share Result 💌</button>
-                <button id="btn-replay" class="action-btn">Play Again 🔄</button>
+            <div class="ending-actions">
+                <button class="end-btn" id="btn-end-replay">↻ Replay</button>
+                <button class="end-btn" id="btn-end-lobby">🏠 Lobby</button>
+                <button class="end-btn" id="btn-end-share">💌 Share</button>
             </div>
         </div>
         <canvas id="confetti-canvas"></canvas>
     </div>
 
-    <script>
-        /* --- MULTI-LANGUAGE SYSTEM --- */
-        const LANG = {
-            en: {
-                title: "Will you be my valentine? 💘",
-                subtitle: "You must say YES 101 times to win 😈",
-                yesBtn: "YES 💖",
-                noBtn: "NO 💔",
-                stage: "Stage",
-                reset: "↻ Reset",
-                dialogues: [
-                    "Please say yes! 🥺", "Don't be mean... 💔", "I'll make you cookies! 🍪",
-                    "Is that a misclick? 🤨", "Are you sure? 🧐", "Stop breaking my heart 😭",
-                    "I'm not giving up! 💪", "Just one little click... 🤏", "Love is patient... 🕊️",
-                    "You're testing me... 😤", "Okay, now it's war 😈", "Click YES to win 🏆",
-                    "Why are you running? 🏃‍♂️", "Pretty please? 🍒", "I know you want to 😏"
-                ],
-                lobbyNo: ["Wrong answer 😏", "Try again...", "You can't escape!", "No is not an option 💀"],
-                winTitle: "YAYYY!!! 💍",
-                winSub: "YOU SAID YES 101 TIMES! 💘",
-                winTime: "Time",
-                winNo: "NO Clicks",
-                winNote: "You are officially my valentine now! 🥰",
-                share: "Share Result 💌",
-                playAgain: "Play Again 🔄",
-                settings: "Settings ⚙️",
-                lblLobbyMusic: "Lobby Music",
-                lblGameMusic: "Game Music",
-                lblLang: "Language",
-                close: "Close"
-            },
-            vi: {
-                title: "Làm Valentine của tớ nhé? 💘",
-                subtitle: "Phải bấm YES 101 lần mới thắng nha 😈",
-                yesBtn: "CÓ 💖",
-                noBtn: "KHÔNG 💔",
-                stage: "Màn",
-                reset: "↻ Chơi lại",
-                dialogues: [
-                    "Đi mà, đồng ý đi! 🥺", "Đừng phũ vậy chứ... 💔", "Tớ sẽ nấu cơm cho cậu! 🍪",
-                    "Trượt tay hả? 🤨", "Chắc chưa dợ? 🧐", "Đau tim quá nha 😭",
-                    "Tớ lì lắm đó! 💪", "Bấm một cái thôi mà... 🤏", "Yêu là phải kiên nhẫn... 🕊️",
-                    "Thử thách tớ hả... 😤", "Chiến tới cùng luôn 😈", "Bấm CÓ để thắng nè 🏆",
-                    "Chạy đi đâu con sâu này? 🏃‍♂️", "Năn nỉ đó... 🍒", "Biết thừa là thích rồi 😏"
-                ],
-                lobbyNo: ["Sai rồi nha 😏", "Thử lại đê...", "Không thoát được đâu!", "Không được chọn cái này 💀"],
-                winTitle: "YAYYY!!! 💍",
-                winSub: "CẬU ĐÃ BẤM CÓ 101 LẦN! 💘",
-                winTime: "Thời gian",
-                winNo: "Số lần từ chối",
-                winNote: "Giờ cậu chính thức là của tớ rồi! 🥰",
-                share: "Khoe kết quả 💌",
-                playAgain: "Chơi lại 🔄",
-                settings: "Cài đặt ⚙️",
-                lblLobbyMusic: "Nhạc chờ",
-                lblGameMusic: "Nhạc game",
-                lblLang: "Ngôn ngữ",
-                close: "Đóng"
-            },
-            es: {
-                title: "¿Quieres ser mi San Valentín? 💘",
-                subtitle: "Debes decir SÍ 101 veces para ganar 😈",
-                yesBtn: "SÍ 💖",
-                noBtn: "NO 💔",
-                stage: "Nivel",
-                reset: "↻ Reiniciar",
-                dialogues: ["¡Por favor di que sí! 🥺", "No seas malo... 💔", "¿Te hago galletas? 🍪", "¿Clic incorrecto? 🤨", "No rompas mi corazón 😭", "¡No me rindo! 💪", "El amor es paciente... 🕊️"],
-                lobbyNo: ["Respuesta incorrecta 😏", "Intenta de nuevo...", "¡No puedes escapar!", "No es una opción 💀"],
-                winTitle: "¡¡¡YAYYY!!! 💍",
-                winSub: "¡DIJISTE SÍ 101 VECES! 💘",
-                winTime: "Tiempo",
-                winNo: "Clics en NO",
-                winNote: "¡Oficialmente eres mi San Valentín! 🥰",
-                share: "Compartir 💌",
-                playAgain: "Jugar de nuevo 🔄",
-                settings: "Ajustes ⚙️",
-                lblLobbyMusic: "Música Lobby",
-                lblGameMusic: "Música Juego",
-                lblLang: "Idioma",
-                close: "Cerrar"
-            },
-            pt: {
-                title: "Quer ser meu namorado(a)? 💘",
-                subtitle: "Você deve dizer SIM 101 vezes para ganhar 😈",
-                yesBtn: "SIM 💖",
-                noBtn: "NÃO 💔",
-                stage: "Fase",
-                reset: "↻ Reiniciar",
-                dialogues: ["Por favor diz sim! 🥺", "Não seja mau... 💔", "Faço biscoitos! 🍪", "Clicou errado? 🤨", "Não quebre meu coração 😭", "Não vou desistir! 💪", "O amor é paciente... 🕊️"],
-                lobbyNo: ["Resposta errada 😏", "Tente de novo...", "Não pode escapar!", "Não é opção 💀"],
-                winTitle: "AEEE!!! 💍",
-                winSub: "VOCÊ DISSE SIM 101 VEZES! 💘",
-                winTime: "Tempo",
-                winNo: "Cliques em NÃO",
-                winNote: "Agora você é oficialmente meu amor! 🥰",
-                share: "Compartilhar 💌",
-                playAgain: "Jogar de novo 🔄",
-                settings: "Configurações ⚙️",
-                lblLobbyMusic: "Música Lobby",
-                lblGameMusic: "Música Jogo",
-                lblLang: "Idioma",
-                close: "Fechar"
-            },
-            hi: {
-                title: "क्या आप मेरे वेलेंटाइन बनेंगे? 💘",
-                subtitle: "जीतने के लिए आपको 101 बार हाँ कहना होगा 😈",
-                yesBtn: "हाँ 💖",
-                noBtn: "नहीं 💔",
-                stage: "चरण",
-                reset: "↻ रीसेट",
-                dialogues: ["कृपया हाँ कहो! 🥺", "मतलबी मत बनो... 💔", "मैं तुम्हारे लिए कुकीज़ बनाऊँगा! 🍪", "क्या वो गलती थी? 🤨", "मेरा दिल मत तोड़ो 😭", "मैं हार नहीं मानूँगा! 💪", "प्यार धैर्यवान है... 🕊️"],
-                lobbyNo: ["गलत जवाब 😏", "पुनः प्रयास करें...", "आप बच नहीं सकते!", "नहीं कोई विकल्प नहीं है 💀"],
-                winTitle: "यये!!! 💍",
-                winSub: "आपने 101 बार हाँ कहा! 💘",
-                winTime: "समय",
-                winNo: "नहीं क्लिक्स",
-                winNote: "अब आप आधिकारिक तौर पर मेरे वेलेंटाइन हैं! 🥰",
-                share: "परिणाम साझा करें 💌",
-                playAgain: "फिर से खेलें 🔄",
-                settings: "सेटिंग्स ⚙️",
-                lblLobbyMusic: "लॉबी संगीत",
-                lblGameMusic: "खेल संगीत",
-                lblLang: "भाषा",
-                close: "बंद करें"
-            },
-            id: {
-                title: "Maukah kamu jadi Valentineku? 💘",
-                subtitle: "Kamu harus bilang YA 101 kali untuk menang 😈",
-                yesBtn: "YA 💖",
-                noBtn: "TIDAK 💔",
-                stage: "Tahap",
-                reset: "↻ Ulang",
-                dialogues: ["Please bilang ya! 🥺", "Jangan jahat dong... 💔", "Aku buatin kue deh! 🍪", "Salah klik ya? 🤨", "Jangan patahkan hatiku 😭", "Aku gak nyerah! 💪", "Cinta itu sabar... 🕊️"],
-                lobbyNo: ["Jawaban salah 😏", "Coba lagi...", "Gak bisa kabur!", "Tidak bukan pilihan 💀"],
-                winTitle: "YEYYY!!! 💍",
-                winSub: "KAMU BILANG YA 101 KALI! 💘",
-                winTime: "Waktu",
-                winNo: "Klik TIDAK",
-                winNote: "Kamu resmi jadi Valentineku! 🥰",
-                share: "Bagikan 💌",
-                playAgain: "Main Lagi 🔄",
-                settings: "Pengaturan ⚙️",
-                lblLobbyMusic: "Musik Lobi",
-                lblGameMusic: "Musik Game",
-                lblLang: "Bahasa",
-                close: "Tutup"
-            },
-            ru: {
-                title: "Будешь моим Валентином? 💘",
-                subtitle: "Ты должен сказать ДА 101 раз, чтобы выиграть 😈",
-                yesBtn: "ДА 💖",
-                noBtn: "НЕТ 💔",
-                stage: "Уровень",
-                reset: "↻ Сброс",
-                dialogues: ["Пожалуйста, скажи да! 🥺", "Не будь злым... 💔", "Я испеку тебе печенье! 🍪", "Ты уверен? 🤨", "Не разбивай мне сердце 😭", "Я не сдамся! 💪", "Любовь терпелива... 🕊️"],
-                lobbyNo: ["Неправильный ответ 😏", "Попробуй снова...", "Тебе не сбежать!", "Нет - это не вариант 💀"],
-                winTitle: "УРА!!! 💍",
-                winSub: "ТЫ СКАЗАЛ ДА 101 РАЗ! 💘",
-                winTime: "Время",
-                winNo: "Клики НЕТ",
-                winNote: "Теперь ты официально мой Валентин! 🥰",
-                share: "Поделиться 💌",
-                playAgain: "Играть снова 🔄",
-                settings: "Настройки ⚙️",
-                lblLobbyMusic: "Музыка лобби",
-                lblGameMusic: "Музыка игры",
-                lblLang: "Язык",
-                close: "Закрыть"
-            },
-            ja: {
-                title: "私のバレンタインになって？ 💘",
-                subtitle: "勝つには101回「はい」と言ってね 😈",
-                yesBtn: "はい 💖",
-                noBtn: "いいえ 💔",
-                stage: "ステージ",
-                reset: "↻ リセット",
-                dialogues: ["お願い、はいと言って！ 🥺", "意地悪しないで... 💔", "クッキー作るから！ 🍪", "今のミスクリック？ 🤨", "私の心を壊さないで 😭", "諦めないよ！ 💪", "愛は忍耐... 🕊️"],
-                lobbyNo: ["不正解 😏", "もう一度...", "逃げられないよ！", "いいえは選択肢にないよ 💀"],
-                winTitle: "やったー！！！ 💍",
-                winSub: "101回「はい」と言ってくれた！ 💘",
-                winTime: "時間",
-                winNo: "「いいえ」の回数",
-                winNote: "これで正式に私のバレンタインだね！ 🥰",
-                share: "結果をシェア 💌",
-                playAgain: "もう一度遊ぶ 🔄",
-                settings: "設定 ⚙️",
-                lblLobbyMusic: "ロビー音楽",
-                lblGameMusic: "ゲーム音楽",
-                lblLang: "言語",
-                close: "閉じる"
-            },
-            ko: {
-                title: "나의 발렌타인이 되어줄래? 💘",
-                subtitle: "이기려면 101번 YES를 눌러야 해 😈",
-                yesBtn: "YES 💖",
-                noBtn: "NO 💔",
-                stage: "스테이지",
-                reset: "↻ 리셋",
-                dialogues: ["제발 예라고 해줘! 🥺", "너무해... 💔", "쿠키 만들어줄게! 🍪", "잘못 누른거지? 🤨", "내 마음 아프게 하지마 😭", "포기 안 해! 💪", "사랑은 인내하는 것... 🕊️"],
-                lobbyNo: ["오답입니다 😏", "다시 시도해...", "도망칠 수 없어!", "NO는 선택지에 없어 💀"],
-                winTitle: "만세!!! 💍",
-                winSub: "101번이나 YES라고 했어! 💘",
-                winTime: "시간",
-                winNo: "NO 클릭 수",
-                winNote: "이제 넌 공식적으로 내 발렌타인이야! 🥰",
-                share: "결과 공유 💌",
-                playAgain: "다시 하기 🔄",
-                settings: "설정 ⚙️",
-                lblLobbyMusic: "로비 음악",
-                lblGameMusic: "게임 음악",
-                lblLang: "언어",
-                close: "닫기"
-            }
-        };
+    <!-- ENDING 3: THE ROOM SCENE -->
+    <div id="room-scene">
+        <div class="room-bg">
+            <!-- Decorative -->
+            <div class="room-obj" id="obj-window" title="Window">🪟</div>
+            <div class="room-obj" id="obj-lamp" title="Lamp">🏮</div>
+            
+            <!-- Interactive -->
+            <div class="room-obj" id="obj-tulip" title="Tulip">🌷</div>
+            <div class="room-obj" id="obj-letter" title="Letter">✉️</div>
+            <div class="room-obj" id="obj-diary" title="Diary">📓</div>
+        </div>
+        <div id="room-tooltip">A tulip...</div>
+        
+        <!-- Room Item Modal -->
+        <div id="room-modal">
+            <div id="room-modal-text"></div>
+            <button class="room-close-btn" id="btn-room-close">Close</button>
+        </div>
+    </div>
 
+    <!-- ENDING 4: SECRET QUESTION -->
+    <div id="secret-modal">
+        <h1 style="color:white; font-family:'Fredoka';">One last question...</h1>
+        <div class="cinematic-text" id="secret-text" style="color:white; font-size: 1.5rem; margin:20px;"></div>
+        <button id="btn-secret-yes" class="secret-btn">YES</button>
+    </div>
+
+    <script>
         /* --- CONFIG & STATE --- */
         const CONFIG = {
-            TOTAL_STAGES: 101,
-            STORAGE_KEY: 'valentine_game_state_v1',
-            SETTINGS_KEY: 'valentine_settings_v1'
-        };
-
-        let SETTINGS = {
-            lobbyMusic: true,
-            gameMusic: true,
-            lang: 'en'
+            YES_GOAL: 101,
+            NO_GOAL: 100,
+            STORAGE_KEY: 'v_game_save_v2'
         };
 
         const STATE = {
             yesCount: 0,
             noCount: 0,
-            startTime: null,
-            isWin: false,
-            effects: [],
-            inLobby: true, // Start in Lobby
-            usingSynth: false // Fallback mode
+            scoreClicked: false,
+            isEnding: false,
+            currentEnding: 0, // 0=none, 1=True, 2=Hesitant, 3=Room, 4=Secret
+            roomProgress: { tulip: false, letter: false, diary: false }
         };
 
-        /* --- DOM CACHE --- */
+        const ENDING_DATA = {
+            1: {
+                id: 1, title: "TRUE LOVE", subtitle: "YES: 101/101", theme: "theme-1",
+                text: ["101 times...", "You didn't hesitate.", "You chose me...", "over and over again.", "Maybe...", "true love...", "is just that simple."]
+            },
+            2: {
+                id: 2, title: "HESITANT HEART", subtitle: "YES: 51 - NO: 50", theme: "theme-2",
+                text: ["You said 'NO'...", "so many times I thought...", "I would disappear.", "But in the end...", "you still chose 'YES'.", "Even once more...", "is enough.", "Thank you for coming back."]
+            },
+            4: {
+                id: 4, title: "THE SECRET YES", subtitle: "SECRET ENDING FOUND", theme: "theme-4",
+                text: ["You found the secret.", "Not just the game's secret...", "but mine.", "You proved that...", "I am worth choosing.", "This Valentine...", "I am yours."]
+            }
+        };
+
+        /* --- DOM ELEMENTS --- */
         const DOM = {
+            gameView: document.getElementById('game-view'),
+            mainCard: document.getElementById('main-card'),
             yesBtn: document.getElementById('btn-yes'),
             noBtn: document.getElementById('btn-no'),
-            mainCard: document.getElementById('main-card'),
-            buttonArea: document.getElementById('button-area'),
             dialogue: document.getElementById('dialogue-text'),
-            yesCount: document.getElementById('yes-count'),
-            timeDisplay: document.getElementById('time-display'),
-            progressFill: document.getElementById('progress-fill'),
-            stageIndicator: document.getElementById('stage-indicator'),
-            resetBtn: document.getElementById('reset-btn'),
-            winScreen: document.getElementById('win-screen'),
-            finalTime: document.getElementById('final-time'),
-            finalNo: document.getElementById('final-no'),
-            fakeContainer: document.getElementById('fake-container'),
-            confettiCanvas: document.getElementById('confetti-canvas'),
             
-            // New DOM Elements
+            // Stats
+            lblYes: document.getElementById('lbl-yes-trigger'),
+            barYes: document.getElementById('bar-yes'),
+            barNo: document.getElementById('bar-no'),
+            barChoice: document.getElementById('bar-choice'),
+            valYes: document.getElementById('val-yes'),
+            valNo: document.getElementById('val-no'),
+            valChoice: document.getElementById('val-choice'),
+
+            // Overlays
             startOverlay: document.getElementById('start-overlay'),
-            btnStartGame: document.getElementById('btn-start-game'),
-            
-            lobbyScreen: document.getElementById('lobby-screen'),
-            lobbyBtnYes: document.getElementById('lobby-btn-yes'),
-            lobbyBtnNo: document.getElementById('lobby-btn-no'),
-            lobbyMsg: document.getElementById('lobby-msg'),
-            musicCredit: document.getElementById('music-credit-text'),
-            
-            settingsBtn: document.getElementById('settings-btn'),
-            settingsModal: document.getElementById('settings-modal'),
-            closeSettings: document.getElementById('close-settings'),
-            toggleLobby: document.getElementById('toggle-lobby-music'),
-            toggleGame: document.getElementById('toggle-game-music'),
-            langSelect: document.getElementById('lang-select'),
-            
-            audioLobby: document.getElementById('bgm-lobby'),
-            audioGame: document.getElementById('bgm-game'),
+            endingOverlay: document.getElementById('ending-overlay'),
+            roomScene: document.getElementById('room-scene'),
+            secretModal: document.getElementById('secret-modal'),
 
-            // Text Elements for translation
-            mainTitle: document.getElementById('main-title'),
-            lobbyTitle: document.getElementById('lobby-title'),
-            lobbySubtitle: document.getElementById('lobby-subtitle'),
-            lblYes: document.getElementById('lbl-yes'),
+            // Ending UI
+            endTitle: document.getElementById('end-title'),
+            endSub: document.getElementById('end-sub'),
+            endText: document.getElementById('end-text'),
             
-            // Win Text
-            winTitle: document.getElementById('win-title'),
-            winSubtitle: document.getElementById('win-subtitle'),
-            winTimeLbl: document.getElementById('win-time-lbl'),
-            winNoLbl: document.getElementById('win-no-lbl'),
-            winNote: document.getElementById('win-note'),
-            btnShare: document.getElementById('btn-share'),
-            btnReplay: document.getElementById('btn-replay'),
-
-            // Settings Labels
-            stTitle: document.getElementById('st-title'),
-            stLobby: document.getElementById('st-lobby-music'),
-            stGame: document.getElementById('st-game-music'),
-            stLang: document.getElementById('st-language')
+            // Audio
+            bgmGame: document.getElementById('bgm-game'),
+            bgmEnd: document.getElementById('bgm-end')
         };
 
-        /* --- LANGUAGE SYSTEM --- */
-        function getLang() {
-            return LANG[SETTINGS.lang] || LANG['en'];
-        }
-
-        function updateTexts() {
-            const L = getLang();
-            
-            // Main Game
-            DOM.mainTitle.innerText = L.title;
-            DOM.yesBtn.innerText = L.yesBtn;
-            DOM.noBtn.innerText = L.noBtn;
-            DOM.resetBtn.innerText = L.reset;
-            DOM.lblYes.innerText = L.yesBtn.split(' ')[0]; // Just "YES" part
-            
-            // Update Dialogue if currently standard
-            if (!STATE.isWin) DOM.dialogue.innerText = getRandomDialogue();
-
-            // Lobby
-            DOM.lobbyTitle.innerText = L.title;
-            DOM.lobbySubtitle.innerText = L.subtitle;
-            DOM.lobbyBtnYes.innerText = L.yesBtn;
-            DOM.lobbyBtnNo.innerText = L.noBtn;
-            
-            // Settings
-            DOM.stTitle.innerText = L.settings;
-            DOM.stLobby.innerText = L.lblLobbyMusic;
-            DOM.stGame.innerText = L.lblGameMusic;
-            DOM.stLang.innerText = L.lblLang;
-            DOM.closeSettings.innerText = L.close;
-            DOM.settingsBtn.title = L.settings;
-            
-            // Win Screen
-            DOM.winTitle.innerText = L.winTitle;
-            DOM.winSubtitle.innerText = L.winSub;
-            DOM.winTimeLbl.innerText = L.winTime;
-            DOM.winNoLbl.innerText = L.winNo;
-            DOM.winNote.innerText = L.winNote;
-            DOM.btnShare.innerText = L.share;
-            DOM.btnReplay.innerText = L.playAgain;
-            
-            updateUI(); // Refresh numbers and stage text
-        }
-
-        function getRandomDialogue() {
-            const L = getLang();
-            const dialogues = L.dialogues || LANG['en'].dialogues;
-            return dialogues[Math.floor(Math.random() * dialogues.length)];
-        }
-
-        /* --- WEB AUDIO API (SFX + SYNTH BACKUP) --- */
-        const SFX = {
-            ctx: new (window.AudioContext || window.webkitAudioContext)(),
-            
-            resume() {
-                if (this.ctx.state === 'suspended') {
-                    this.ctx.resume().catch(e => console.log("AudioContext resume failed:", e));
+        /* --- AUDIO MANAGER --- */
+        const AudioMgr = {
+            init() {
+                // Try to load default placeholder paths. 
+                // Add ?v=2 to bust cache as requested previously
+                DOM.bgmGame.src = 'music/lobby.mp3?v=2'; 
+                DOM.bgmGame.volume = 0.4;
+                DOM.bgmEnd.volume = 0.5;
+            },
+            playGame() {
+                if(DOM.bgmGame.paused) DOM.bgmGame.play().catch(()=>{});
+            },
+            playEnding(id) {
+                DOM.bgmGame.pause();
+                let src = '';
+                if(id === 1) src = 'music/victory_love.mp3?v=2';
+                if(id === 2) src = 'music/ending_bittersweet.mp3?v=2';
+                if(id === 4) src = 'music/music_box.mp3?v=2';
+                
+                if(src) {
+                    DOM.bgmEnd.src = src;
+                    DOM.bgmEnd.play().catch(()=>{});
                 }
             },
-
-            playTone(freq, type, duration, vol = 0.1) {
-                this.resume();
-                try {
-                    const osc = this.ctx.createOscillator();
-                    const gain = this.ctx.createGain();
-                    osc.type = type;
-                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime);
-                    gain.gain.setValueAtTime(vol, this.ctx.currentTime);
-                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + duration);
-                    osc.connect(gain);
-                    gain.connect(this.ctx.destination);
-                    osc.start();
-                    osc.stop(this.ctx.currentTime + duration);
-                } catch (e) {}
-            },
-
-            playYes() { this.playTone(800 + Math.random()*200, 'sine', 0.15, 0.2); },
-            playNo() { this.playTone(150, 'sawtooth', 0.3, 0.15); },
-            playWin() { [440, 554, 659, 880].forEach((f, i) => setTimeout(() => this.playTone(f, 'sine', 0.5, 0.2), i*100)); }
-        };
-
-        /* --- SYNTH MUSIC (8-BIT FALLBACK) --- */
-        const SynthMusic = {
-            loopId: null,
-            isPlaying: false,
-            // Simple Cute Melody: C5, E5, G5, C6, G5, E5
-            notes: [523.25, 659.25, 783.99, 1046.50, 783.99, 659.25], 
-            currentNote: 0,
-            
-            start() {
-                if(this.isPlaying) return;
-                this.isPlaying = true;
-                this.playNext();
-            },
-            
-            stop() {
-                this.isPlaying = false;
-                if(this.loopId) clearTimeout(this.loopId);
-            },
-            
-            playNext() {
-                if(!this.isPlaying) return;
-                
-                // Play soft sine wave tone
-                const note = this.notes[this.currentNote];
-                SFX.playTone(note, 'sine', 0.3, 0.03); // Very quiet (0.03 volume)
-                
-                this.currentNote = (this.currentNote + 1) % this.notes.length;
-                
-                // Rhythm: 400ms per note
-                this.loopId = setTimeout(() => this.playNext(), 400);
+            stopAll() {
+                DOM.bgmGame.pause();
+                DOM.bgmEnd.pause();
             }
         };
 
-        /* --- AUDIO CONTROL (SMART PATH DETECTOR) --- */
-        const AudioCtrl = {
-            async init() {
-                DOM.audioLobby.volume = 0.5;
-                DOM.audioGame.volume = 0.4;
-                
-                const basePath = this.getBasePath();
-                const validUrl = await this.findValidAudioUrl(basePath);
-                
-                if (validUrl) {
-                    console.log("✅ Audio file found:", validUrl);
-                    this.assignSource(DOM.audioLobby, validUrl);
-                    this.assignSource(DOM.audioGame, validUrl);
-                    STATE.usingSynth = false;
-                } else {
-                    console.log("⚠️ No MP3 found. Switching to 8-bit Synth Mode.");
-                    STATE.usingSynth = true;
-                    // Update UI credit
-                    DOM.musicCredit.innerText = "🎵 Music: 8-bit Mode (Fallback)";
-                }
-            },
+        /* --- GAME LOGIC --- */
 
-            getBasePath() {
-                // Returns: https://user.github.io/repo/
-                const path = window.location.pathname;
-                let cleanPath = path.substring(0, path.lastIndexOf('/'));
-                // Ensure no double slashes or index.html mess
-                if (cleanPath.endsWith('/index.html')) cleanPath = cleanPath.replace('/index.html', '');
-                return window.location.origin + cleanPath + '/';
-            },
-
-            async findValidAudioUrl(basePath) {
-                // Try lowercase, uppercase, and just music/ (relative)
-                const candidates = [
-                    basePath + 'music/lobby.mp3', 
-                    basePath + 'music/Lobby.mp3', 
-                    'music/lobby.mp3'
-                ];
-
-                for (const url of candidates) {
-                    try {
-                        // Use fetch HEAD to verify existence without downloading
-                        const res = await fetch(url, { method: 'HEAD' });
-                        if (res.ok) {
-                            // Check if it's actual audio, not a 404 HTML page
-                            const type = res.headers.get('content-type');
-                            if (type && (type.includes('audio') || type.includes('octet'))) {
-                                return url;
-                            }
-                        }
-                    } catch (e) {
-                        // Silent fail, try next
-                    }
-                }
-                return null;
-            },
-
-            assignSource(audioEl, url) {
-                audioEl.src = url;
-                // Silent error handler to avoid red console spam
-                audioEl.onerror = () => {}; 
-            },
-
-            fadeOut(audio, callback) {
-                if(audio.paused) { callback(); return; }
-                const originalVol = audio.volume;
-                const fade = setInterval(() => {
-                    if(audio.volume > 0.05) {
-                        audio.volume -= 0.05;
-                    } else {
-                        clearInterval(fade);
-                        audio.pause();
-                        audio.volume = originalVol;
-                        audio.currentTime = 0;
-                        callback();
-                    }
-                }, 50);
-            },
-
-            // Unified Play Logic (MP3 or Synth)
-            playMusic(isLobby) {
-                const isEnabled = isLobby ? SETTINGS.lobbyMusic : SETTINGS.gameMusic;
-                if (!isEnabled) return;
-
-                if (STATE.usingSynth) {
-                    SynthMusic.start();
-                } else {
-                    const audio = isLobby ? DOM.audioLobby : DOM.audioGame;
-                    if(audio.src && audio.readyState >= 1) {
-                        audio.play().catch(()=>{});
-                    }
-                }
-            },
-
-            stopMusic(isLobby) {
-                if (STATE.usingSynth) {
-                    // Only stop synth if we are switching contexts completely or muting
-                    // But synth is single channel here, so we just stop it
-                    SynthMusic.stop();
-                } else {
-                    const audio = isLobby ? DOM.audioLobby : DOM.audioGame;
-                    this.fadeOut(audio, () => {});
-                }
-            },
-
-            switchToGame() {
-                this.stopMusic(true); // Stop Lobby
-                setTimeout(() => this.playMusic(false), 500); // Play Game
-            },
-
-            switchToLobby() {
-                this.stopMusic(false); // Stop Game
-                setTimeout(() => this.playMusic(true), 500); // Play Lobby
-            },
-
-            update() {
-                // Called when toggles change
-                const target = STATE.inLobby ? 'lobby' : 'game';
-                const enabled = STATE.inLobby ? SETTINGS.lobbyMusic : SETTINGS.gameMusic;
-                
-                if (enabled) {
-                    this.playMusic(STATE.inLobby);
-                } else {
-                    this.stopMusic(STATE.inLobby);
-                }
-            }
-        };
-
-        /* --- UTILITIES --- */
-        function formatTime(ms) {
-            const totalSec = Math.floor(ms / 1000);
-            const m = Math.floor(totalSec / 60).toString().padStart(2, '0');
-            const s = (totalSec % 60).toString().padStart(2, '0');
-            const centi = Math.floor((ms % 1000) / 10).toString().padStart(2, '0');
-            return `${m}:${s}.${centi}`;
-        }
-
-        function resetButtons() {
-            const btns = [DOM.yesBtn, DOM.noBtn];
-            const L = getLang();
+        function init() {
+            AudioMgr.init();
+            resetGameUI();
             
-            btns.forEach(b => {
-                if (!b) return;
-                b.style.transform = 'none';
-                b.style.position = 'relative';
-                b.style.left = 'auto';
-                b.style.top = 'auto';
-                b.style.opacity = '1';
-                b.style.filter = 'none';
-                b.style.transition = '0.2s';
-                b.style.pointerEvents = 'auto';
-                b.classList.remove('blur-heavy', 'spin-fast', 'blur-mode');
-                
-                // Update text content during reset to ensure lang is correct
-                if(b.id === 'btn-yes') b.innerText = L.yesBtn;
-                if(b.id === 'btn-no') b.innerText = L.noBtn;
-
-                const newB = b.cloneNode(true);
-                if (b.parentNode) b.parentNode.replaceChild(newB, b);
-            });
-            
-            DOM.yesBtn = document.getElementById('btn-yes');
-            DOM.noBtn = document.getElementById('btn-no');
-
-            if (DOM.yesBtn) DOM.yesBtn.addEventListener('pointerdown', handleYes);
-            if (DOM.noBtn) DOM.noBtn.addEventListener('pointerdown', handleNo);
-
-            if (DOM.fakeContainer) DOM.fakeContainer.innerHTML = '';
-            if (DOM.buttonArea) DOM.buttonArea.style.flexDirection = 'row';
-        }
-
-        function getNonOverlappingPosition(width, height, existingPositions) {
-            if (!DOM.buttonArea) return { x: 0, y: 0 };
-            const area = DOM.buttonArea.getBoundingClientRect();
-            const padding = 10;
-            const safeTop = area.height * 0.25; 
-            const maxY = area.height - height - padding;
-            const maxX = area.width - width - padding;
-            const maxAttempts = 50; 
-            const minDistance = 75; 
-
-            for (let i = 0; i < maxAttempts; i++) {
-                const x = Math.random() * (maxX - padding) + padding;
-                const y = Math.random() * (maxY - safeTop) + safeTop;
-                let overlap = false;
-                for (const pos of existingPositions) {
-                    const dx = (x + width/2) - (pos.x + width/2);
-                    const dy = (y + height/2) - (pos.y + height/2);
-                    if (Math.sqrt(dx*dx + dy*dy) < minDistance) { overlap = true; break; }
-                }
-                if (!overlap) return { x, y };
-            }
-            return { x: Math.random() * (maxX - padding) + padding, y: Math.random() * (maxY - safeTop) + safeTop };
-        }
-
-        /* --- EFFECT GENERATORS --- */
-        const EffectGen = {
-            static: () => ({ name: "Normal", init: () => {} }),
-            wiggle: (intensity) => ({
-                name: "Wiggle",
-                init: () => {
-                    DOM.yesBtn.style.position = 'relative';
-                    const tick = () => {
-                        const x = (Math.random() - 0.5) * intensity;
-                        const y = (Math.random() - 0.5) * intensity;
-                        DOM.yesBtn.style.transform = `translate(${x}px, ${y}px)`;
-                        requestAnimationFrame(tick);
-                    };
-                }
-            }),
-            runAway: (speed) => ({
-                name: "RunAway",
-                init: () => {
-                    DOM.yesBtn.style.position = 'absolute';
-                    DOM.yesBtn.style.transition = `top ${0.3/speed}s, left ${0.3/speed}s`;
-                    const move = () => {
-                        const area = DOM.buttonArea.getBoundingClientRect();
-                        const btn = DOM.yesBtn.getBoundingClientRect();
-                        const x = Math.random() * (area.width - btn.width);
-                        const y = Math.random() * (area.height - btn.height); 
-                        DOM.yesBtn.style.left = x + 'px';
-                        DOM.yesBtn.style.top = y + 'px';
-                    };
-                    move();
-                    DOM.yesBtn.onpointerover = move; 
-                }
-            }),
-            visual: (type, val) => ({
-                name: "Visual",
-                init: () => {
-                    if (type === 'scale') DOM.yesBtn.style.transform = `scale(${val})`;
-                    if (type === 'opacity') {
-                        DOM.yesBtn.style.opacity = Math.min(Math.max(val, 0.18), 0.28);
-                        DOM.dialogue.innerText = "Where is it? 👻";
-                    }
-                    if (type === 'blur') {
-                        DOM.yesBtn.classList.add('blur-mode');
-                        DOM.noBtn.classList.add('blur-mode');
-                        DOM.buttonArea.style.flexDirection = Math.random() > 0.5 ? 'row-reverse' : 'row';
-                        DOM.dialogue.innerText = "Read carefully... 🌫️";
-                    }
-                }
-            }),
-            clones: (count) => ({
-                name: "Clones",
-                init: () => {
-                    DOM.yesBtn.style.position = 'absolute';
-                    DOM.yesBtn.style.zIndex = '20';
-                    DOM.dialogue.innerText = "Which one is real? 🤔";
-                    const btnW = DOM.yesBtn.offsetWidth || 110;
-                    const btnH = DOM.yesBtn.offsetHeight || 50;
-                    const usedPositions = [];
-                    
-                    const pReal = getNonOverlappingPosition(btnW, btnH, usedPositions);
-                    usedPositions.push(pReal);
-                    DOM.yesBtn.style.left = pReal.x + 'px';
-                    DOM.yesBtn.style.top = pReal.y + 'px';
-
-                    const L = getLang();
-
-                    for(let i=0; i<count; i++){
-                        const clone = document.createElement('button');
-                        clone.className = 'game-btn btn-yes fake-btn';
-                        clone.innerText = L.yesBtn; // Use Translated Text
-                        clone.style.opacity = (Math.random() * 0.05 + 0.75).toString(); 
-                        
-                        const p = getNonOverlappingPosition(btnW, btnH, usedPositions);
-                        usedPositions.push(p);
-                        clone.style.left = p.x + 'px';
-                        clone.style.top = p.y + 'px';
-
-                        clone.onpointerdown = (e) => {
-                            e.stopPropagation(); e.preventDefault();
-                            SFX.playNo();
-                            STATE.noCount++;
-                            DOM.mainCard.classList.remove('shake');
-                            void DOM.mainCard.offsetWidth;
-                            DOM.mainCard.classList.add('shake');
-                            DOM.dialogue.innerText = getRandomDialogue();
-                            updateUI();
-                            saveGame();
-                            clone.innerText = "NOPE 💀";
-                            clone.style.background = "#57606f";
-                            clone.style.transform = "scale(0.8)";
-                            setTimeout(() => clone.remove(), 400);
-                        };
-                        DOM.fakeContainer.appendChild(clone);
-                    }
-                }
-            })
-        };
-
-        function generateStages() {
-            const ef = [];
-            for(let i=0; i<=101; i++) {
-                if(i < 5) ef.push(EffectGen.static());
-                else if(i < 15) ef.push(EffectGen.wiggle(i * 2));
-                else if(i < 25) ef.push(EffectGen.runAway(1));
-                else if(i < 35) ef.push(EffectGen.visual('scale', 0.8));
-                else if(i < 45) ef.push(EffectGen.runAway(2));
-                else if(i < 55) ef.push(EffectGen.visual('opacity', 0.2)); 
-                else if(i < 65) ef.push(EffectGen.clones(Math.floor(i/10)));
-                else if(i < 75) ef.push(EffectGen.visual('blur', 0)); 
-                else if(i < 85) ef.push(EffectGen.clones(10));
-                else if(i < 95) ef.push(EffectGen.runAway(3)); 
-                else if(i < 101) ef.push(EffectGen.visual('scale', 0.5));
-                else ef.push(EffectGen.static()); 
-            }
-            STATE.effects = ef;
-        }
-
-        /* --- MAIN LOGIC --- */
-        function initGame() {
-            loadSettings();
-            loadGame();
-            generateStages();
-            // AudioCtrl.init() is now async, but we don't await it here to not block UI
-            AudioCtrl.init(); 
-            
-            // Apply Settings
-            DOM.toggleLobby.checked = SETTINGS.lobbyMusic;
-            DOM.toggleGame.checked = SETTINGS.gameMusic;
-            DOM.langSelect.value = SETTINGS.lang;
-
-            // Apply translations
-            updateTexts();
-
-            // Start Logic with Overlay
-            if (STATE.inLobby || !STATE.startTime) {
-                // Show Start Overlay first to force audio unlock
-                DOM.startOverlay.classList.remove('hidden');
-                DOM.lobbyScreen.classList.add('hidden'); // Hide lobby until start clicked
-                DOM.mainCard.style.pointerEvents = 'none';
-            } else {
-                // Game in progress (reload), try to resume
+            document.getElementById('btn-start').onclick = () => {
                 DOM.startOverlay.classList.add('hidden');
-                DOM.lobbyScreen.classList.add('hidden');
-                AudioCtrl.update();
-            }
+                AudioMgr.playGame();
+            };
             
-            // Timer
-            setInterval(() => {
-                if(STATE.startTime && !STATE.isWin && !STATE.inLobby) {
-                    const now = Date.now();
-                    DOM.timeDisplay.innerText = formatTime(now - STATE.startTime);
+            // Score Click Easter Egg
+            DOM.lblYes.onclick = () => {
+                if(!STATE.scoreClicked) {
+                    STATE.scoreClicked = true;
+                    showTooltip("Something sparkled... ✨");
+                    DOM.lblYes.style.color = "gold";
+                    DOM.lblYes.style.textShadow = "0 0 5px gold";
                 }
-            }, 30);
+            };
             
-            createParticles();
-        }
-
-        function enterGame() {
-            STATE.inLobby = false;
-            DOM.lobbyScreen.classList.add('hidden');
-            DOM.mainCard.style.pointerEvents = 'auto';
+            // Button handlers
+            DOM.yesBtn.onpointerdown = handleYes;
+            DOM.noBtn.onpointerdown = handleNo;
             
-            // Switch Audio safely
-            AudioCtrl.switchToGame();
-            
-            applyCurrentStage(); // Only now allow effects to start
+            // Global Buttons
+            document.getElementById('btn-reset').onclick = resetGame;
+            document.getElementById('btn-end-replay').onclick = resetGame;
+            document.getElementById('btn-end-lobby').onclick = () => location.reload();
+            document.getElementById('btn-end-share').onclick = () => alert("Share Card coming soon! 💌");
         }
 
         function handleYes() {
-            if(STATE.isWin || STATE.inLobby) return;
+            if(STATE.isEnding) return;
             
-            if(STATE.yesCount === 0) {
-                STATE.startTime = Date.now();
-            }
-
-            SFX.playYes();
             STATE.yesCount++;
-            spawnFloatingHeart(DOM.yesBtn);
-            DOM.dialogue.innerText = "Yay! 💘";
+            updateUI();
             
-            if(STATE.yesCount >= CONFIG.TOTAL_STAGES) {
-                winGame();
-            } else {
-                saveGame();
-                applyCurrentStage();
-                updateUI();
-            }
+            // Check Endings
+            checkEndings();
+            
+            // Effects
+            createParticle();
+            if(!STATE.isEnding) DOM.dialogue.innerText = getRandomDialogue();
         }
 
         function handleNo() {
-            if(STATE.inLobby) return;
-            SFX.playNo();
+            if(STATE.isEnding) return;
+            
             STATE.noCount++;
-            DOM.mainCard.classList.remove('shake');
-            void DOM.mainCard.offsetWidth; 
-            DOM.mainCard.classList.add('shake');
-            DOM.dialogue.innerText = getRandomDialogue();
             updateUI();
-            saveGame();
-        }
-
-        function applyCurrentStage() {
-            if(STATE.yesCount >= 101 || STATE.inLobby) return;
-            resetButtons();
-            const effectFn = STATE.effects[STATE.yesCount];
-            if(effectFn && effectFn.init) effectFn.init();
+            
+            checkEndings();
+            
+            // Shake Effect
+            DOM.mainCard.classList.remove('shake');
+            void DOM.mainCard.offsetWidth;
+            DOM.mainCard.classList.add('shake');
+            DOM.dialogue.innerText = "Don't break my heart... 💔";
         }
 
         function updateUI() {
-            DOM.yesCount.innerText = STATE.yesCount;
-            DOM.progressFill.style.width = `${(STATE.yesCount / CONFIG.TOTAL_STAGES) * 100}%`;
-            const L = getLang();
-            DOM.stageIndicator.innerText = `${L.stage}: ${STATE.yesCount + 1} / ${CONFIG.TOTAL_STAGES}`;
-        }
-
-        function winGame() {
-            STATE.isWin = true;
-            DOM.winScreen.classList.remove('hidden');
-            const duration = Date.now() - STATE.startTime;
-            DOM.finalTime.innerText = formatTime(duration);
-            DOM.finalNo.innerText = STATE.noCount;
-            SFX.playWin();
-            startConfetti();
-            saveGame();
-        }
-
-        /* --- SAVE/LOAD --- */
-        function saveGame() {
-            const data = {
-                yesCount: STATE.yesCount,
-                noCount: STATE.noCount,
-                startTime: STATE.startTime,
-                isWin: STATE.isWin,
-                inLobby: false // Once saved, never go back to lobby on reload usually
-            };
-            localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
-        }
-
-        function loadGame() {
-            const saved = localStorage.getItem(CONFIG.STORAGE_KEY);
-            if(saved) {
-                const parsed = JSON.parse(saved);
-                STATE.yesCount = parsed.yesCount || 0;
-                STATE.noCount = parsed.noCount || 0;
-                STATE.startTime = parsed.startTime;
-                STATE.isWin = parsed.isWin || false;
-                // If loaded a game in progress, skip lobby
-                if(STATE.yesCount > 0) STATE.inLobby = false;
-            }
-        }
-
-        function saveSettings() {
-            localStorage.setItem(CONFIG.SETTINGS_KEY, JSON.stringify(SETTINGS));
-        }
-
-        function loadSettings() {
-            const saved = localStorage.getItem(CONFIG.SETTINGS_KEY);
-            if(saved) {
-                SETTINGS = JSON.parse(saved);
-            }
-        }
-
-        /* --- START OVERLAY INTERACTION --- */
-        async function unlockAudio() {
-            // 1. Resume Web Audio Context
-            SFX.resume();
+            // Format 01/101
+            const fmt = (n) => n.toString().padStart(2, '0');
             
-            // 2. Try to load and play music (User Interaction Event)
-            try {
-                if (!STATE.usingSynth && DOM.audioLobby.src) {
-                     // Check if ready state is enough to play
-                     if (DOM.audioLobby.readyState >= 1) { // HAVE_METADATA
-                         if(SETTINGS.lobbyMusic) await DOM.audioLobby.play();
-                     } else {
-                         DOM.audioLobby.load(); // Force load
-                     }
-                     
-                     if (DOM.audioGame.src && DOM.audioGame.readyState < 1) {
-                         DOM.audioGame.load();
-                     }
-                }
-            } catch (e) {
-                // Silent catch
+            DOM.valYes.innerText = `${fmt(STATE.yesCount)}/${CONFIG.YES_GOAL}`;
+            DOM.valNo.innerText = `${fmt(STATE.noCount)}/${CONFIG.NO_GOAL}`;
+            
+            const total = STATE.yesCount + STATE.noCount;
+            // Choice goal logic: just showing progress relative to YES goal for leading
+            DOM.valChoice.innerText = `${fmt(total)}/${CONFIG.YES_GOAL}`;
+
+            // Widths
+            DOM.barYes.style.width = Math.min((STATE.yesCount / CONFIG.YES_GOAL) * 100, 100) + '%';
+            DOM.barNo.style.width = Math.min((STATE.noCount / CONFIG.NO_GOAL) * 100, 100) + '%';
+            DOM.barChoice.style.width = Math.min((total / CONFIG.YES_GOAL) * 100, 100) + '%';
+        }
+
+        function checkEndings() {
+            // ENDING 4 CHECK (Before Ending 1)
+            if (STATE.yesCount === 100 && STATE.scoreClicked) {
+                triggerSecretQuestion();
+                return;
+            }
+
+            // ENDING 1: TRUE LOVE
+            if (STATE.yesCount >= CONFIG.YES_GOAL) {
+                enterEnding(1);
+                return;
+            }
+
+            // ENDING 2: HESITANT HEART
+            if (STATE.yesCount === 51 && STATE.noCount === 50) {
+                enterEnding(2);
+                return;
+            }
+
+            // ENDING 3: EMPTY ROOM
+            if (STATE.noCount >= CONFIG.NO_GOAL) {
+                enterEnding(3);
+                return;
             }
         }
 
-        DOM.btnStartGame.addEventListener('click', () => {
-            unlockAudio();
+        /* --- ENDING LOGIC --- */
 
-            // Hide Start Overlay
-            DOM.startOverlay.classList.add('hidden');
+        function enterEnding(id) {
+            STATE.isEnding = true;
+            STATE.currentEnding = id;
             
-            // 3. Show Lobby
-            if(STATE.inLobby) {
-                DOM.lobbyScreen.classList.remove('hidden');
-                AudioCtrl.playMusic(true);
+            // Disable Game UI
+            DOM.gameView.style.opacity = '0';
+            DOM.gameView.style.pointerEvents = 'none';
+
+            if (id === 3) {
+                // Room Scene Logic
+                AudioMgr.stopAll(); // Silence for room
+                setTimeout(() => {
+                    DOM.roomScene.classList.add('visible');
+                    initRoomScene();
+                }, 1000);
             } else {
-                AudioCtrl.switchToGame();
+                // Standard Overlay Logic (1, 2, 4)
+                AudioMgr.playEnding(id);
+                renderEndingOverlay(id);
             }
-        });
+        }
 
-        /* --- LOBBY INTERACTIONS --- */
-        DOM.lobbyBtnYes.addEventListener('click', () => {
-            SFX.playYes();
-            enterGame();
-        });
-
-        DOM.lobbyBtnNo.addEventListener('click', () => {
-            SFX.playNo();
-            const L = getLang();
-            const msgs = L.lobbyNo || LANG['en'].lobbyNo;
-            DOM.lobbyMsg.innerText = msgs[Math.floor(Math.random() * msgs.length)];
+        function renderEndingOverlay(id) {
+            const data = ENDING_DATA[id];
+            DOM.endingOverlay.className = data.theme; // Set Theme Class
+            DOM.endTitle.innerText = data.title;
+            DOM.endSub.innerText = data.subtitle;
             
-            // Shake animation
-            DOM.lobbyBtnNo.classList.add('shake');
-            setTimeout(() => DOM.lobbyBtnNo.classList.remove('shake'), 400);
-        });
+            DOM.endingOverlay.classList.add('visible');
+            
+            // Start Typewriter
+            startTypewriter(data.text);
+            
+            if(id === 1 || id === 4) startConfetti();
+        }
 
-        /* --- SETTINGS INTERACTIONS --- */
-        DOM.settingsBtn.addEventListener('click', () => {
-            DOM.settingsModal.classList.remove('hidden');
-        });
-
-        DOM.closeSettings.addEventListener('click', () => {
-            DOM.settingsModal.classList.add('hidden');
-        });
-
-        DOM.toggleLobby.addEventListener('change', (e) => {
-            SETTINGS.lobbyMusic = e.target.checked;
-            AudioCtrl.update();
-            saveSettings();
-        });
-
-        DOM.toggleGame.addEventListener('change', (e) => {
-            SETTINGS.gameMusic = e.target.checked;
-            AudioCtrl.update();
-            saveSettings();
-        });
-
-        DOM.langSelect.addEventListener('change', (e) => {
-            SETTINGS.lang = e.target.value;
-            updateTexts();
-            saveSettings();
-        });
-
-        /* --- RESET --- */
-        if (DOM.resetBtn) {
-            DOM.resetBtn.addEventListener('click', () => {
-                if(confirm('Start over?')) {
-                    localStorage.removeItem(CONFIG.STORAGE_KEY);
-                    location.reload();
+        /* --- ENDING 4: SECRET MECHANIC --- */
+        function triggerSecretQuestion() {
+            STATE.isEnding = true; // Temporary lock
+            DOM.secretModal.classList.add('visible');
+            
+            const qLines = ["You think this is enough?", "If you truly want it...", "Say YES one last time."];
+            let qIdx = 0;
+            const qEl = document.getElementById('secret-text');
+            
+            function nextQ() {
+                if(qIdx < qLines.length) {
+                    qEl.innerText = qLines[qIdx++];
+                    qEl.style.opacity = 0;
+                    setTimeout(() => qEl.style.opacity = 1, 100);
+                    setTimeout(nextQ, 1500);
+                } else {
+                    document.getElementById('btn-secret-yes').style.display = 'block';
                 }
-            });
-        }
+            }
+            document.getElementById('btn-secret-yes').style.display = 'none';
+            nextQ();
 
-        if (DOM.btnShare) {
-            DOM.btnShare.onclick = () => {
-                const text = `I survived the Valentine YES Challenge 💘\nAttempts: ${STATE.noCount} NOs\nTime: ${DOM.finalTime.innerText}`;
-                navigator.clipboard.writeText(text).then(() => alert('Result copied! 💌'));
+            document.getElementById('btn-secret-yes').onclick = () => {
+                DOM.secretModal.classList.remove('visible');
+                enterEnding(4);
             };
         }
 
-        if (DOM.btnReplay) {
-            DOM.btnReplay.onclick = () => {
-                localStorage.removeItem(CONFIG.STORAGE_KEY);
-                location.reload();
+        /* --- ENDING 3: ROOM INTERACTION --- */
+        function initRoomScene() {
+            const toolTip = document.getElementById('room-tooltip');
+            const modal = document.getElementById('room-modal');
+            const mText = document.getElementById('room-modal-text');
+            
+            // Helper to handle object clicks
+            const setupObj = (id, flavorText, isKeyObj, keyName) => {
+                const el = document.getElementById(id);
+                el.onclick = () => {
+                    if(isKeyObj) {
+                        STATE.roomProgress[keyName] = true;
+                        // Show modal
+                        mText.innerHTML = ""; // Clear
+                        modal.style.display = 'block';
+                        
+                        // Simple typewriter for modal
+                        let txt = flavorText; // Assume string array or string
+                        if(Array.isArray(txt)) txt = txt.join("<br><br>");
+                        mText.innerHTML = txt;
+                        
+                        checkRoomCompletion();
+                    } else {
+                        // Just tooltip
+                        toolTip.innerText = flavorText;
+                        toolTip.style.opacity = 1;
+                        setTimeout(()=> toolTip.style.opacity = 0, 2000);
+                    }
+                };
+            };
+
+            setupObj('obj-window', "The moon is cold tonight.", false);
+            setupObj('obj-lamp', "A fading light...", false);
+            
+            setupObj('obj-tulip', ["Tulip.", "The flower of deep love.", "But this one is fake.", "It never lived."], true, 'tulip');
+            
+            setupObj('obj-letter', ["I wrote it...", "tore it...", "wrote it again.", "Scared of one 'NO'.", "You gave me 100."], true, 'letter');
+            
+            setupObj('obj-diary', ["Page 1: I saw you today...", "Page 2: I wanted to ask...", "Page 3: The answer existed before the question."], true, 'diary');
+            
+            document.getElementById('btn-room-close').onclick = () => {
+                modal.style.display = 'none';
             };
         }
 
-        /* --- VISUALS --- */
-        function createParticles() {
-            const container = document.getElementById('particles-container');
-            if (!container) return;
-            const colors = ['#ff758c', '#ff7eb3', '#a29bfe', '#fab1a0'];
-            for(let i=0; i<30; i++) {
-                const p = document.createElement('div');
-                p.className = 'heart-particle';
-                p.innerText = ['❤', '✨', '🌸'][Math.floor(Math.random()*3)];
-                p.style.left = Math.random() * 100 + 'vw';
-                p.style.fontSize = (Math.random() * 20 + 10) + 'px';
-                p.style.color = colors[Math.floor(Math.random()*colors.length)];
-                p.style.animationDuration = (Math.random() * 5 + 5) + 's';
-                p.style.animationDelay = (Math.random() * 5) + 's';
-                container.appendChild(p);
+        function checkRoomCompletion() {
+            const p = STATE.roomProgress;
+            if(p.tulip && p.letter && p.diary) {
+                setTimeout(() => {
+                    // Transition to final text
+                    DOM.roomScene.style.opacity = 0;
+                    setTimeout(() => {
+                        DOM.roomScene.style.display = 'none';
+                        // Reuse generic overlay logic manually for Ending 3 final state
+                        AudioMgr.stopAll();
+                        DOM.endingOverlay.className = 'theme-3';
+                        DOM.endTitle.innerText = "THE EMPTY ROOM";
+                        DOM.endSub.innerText = "NO: 100/100";
+                        DOM.endingOverlay.classList.add('visible');
+                        startTypewriter(["You left...", "from the very start.", "It just took me 100 times...", "to believe it."]);
+                    }, 1500);
+                }, 1000);
             }
         }
 
-        function spawnFloatingHeart(target) {
-            if (!target) return;
-            const rect = target.getBoundingClientRect();
-            const heart = document.createElement('div');
-            heart.innerText = "💖";
-            heart.style.position = 'fixed';
-            heart.style.left = (rect.left + rect.width/2) + 'px';
-            heart.style.top = rect.top + 'px';
-            heart.style.fontSize = '2rem';
-            heart.style.pointerEvents = 'none';
-            heart.style.zIndex = '100';
-            heart.style.transition = '1s';
-            document.body.appendChild(heart);
-            requestAnimationFrame(() => {
-                heart.style.transform = `translate(0, -100px) scale(1.5)`;
-                heart.style.opacity = '0';
-            });
-            setTimeout(() => heart.remove(), 1000);
+        /* --- UTILS --- */
+        let typeInterval;
+        function startTypewriter(lines) {
+            let lineIdx = 0;
+            let charIdx = 0;
+            const el = DOM.endText;
+            el.innerText = "";
+            
+            function type() {
+                if(lineIdx >= lines.length) return;
+                
+                const currentLine = lines[lineIdx];
+                el.innerText = currentLine.substring(0, charIdx);
+                charIdx++;
+                
+                if(charIdx > currentLine.length) {
+                    // Line finished, wait then next
+                    setTimeout(() => {
+                        lineIdx++;
+                        charIdx = 0;
+                        if(lineIdx < lines.length) type();
+                    }, 1000);
+                } else {
+                    typeInterval = setTimeout(type, 50);
+                }
+            }
+            
+            type();
+            
+            // Skip on click
+            el.onclick = () => {
+                clearTimeout(typeInterval);
+                el.innerText = lines[lineIdx]; // Finish current line
+                setTimeout(() => {
+                    lineIdx++; charIdx=0; 
+                    if(lineIdx < lines.length) type();
+                }, 500);
+            };
         }
 
+        function createParticle() {
+            const p = document.createElement('div');
+            p.innerText = ['❤','✨'][Math.floor(Math.random()*2)];
+            p.className = 'heart-particle';
+            p.style.left = Math.random()*100 + 'vw';
+            p.style.fontSize = (Math.random()*20+10)+'px';
+            p.style.color = '#ff758c';
+            document.getElementById('particles-container').appendChild(p);
+            setTimeout(()=>p.remove(), 4000);
+        }
+
+        function resetGame() {
+            STATE.yesCount = 0;
+            STATE.noCount = 0;
+            STATE.scoreClicked = false;
+            STATE.isEnding = false;
+            STATE.currentEnding = 0;
+            STATE.roomProgress = { tulip: false, letter: false, diary: false };
+            
+            resetGameUI();
+            updateUI();
+            AudioMgr.playGame();
+        }
+
+        function resetGameUI() {
+            DOM.gameView.style.opacity = '1';
+            DOM.gameView.style.pointerEvents = 'auto';
+            DOM.endingOverlay.classList.remove('visible');
+            DOM.roomScene.classList.remove('visible');
+            DOM.secretModal.classList.remove('visible');
+            DOM.lblYes.style.color = "#666";
+            DOM.lblYes.style.textShadow = "none";
+        }
+        
+        function showTooltip(msg) {
+            const t = document.createElement('div');
+            t.style.position='fixed'; t.style.top='50%'; t.style.left='50%'; t.style.transform='translate(-50%,-50%)';
+            t.style.background='rgba(0,0,0,0.8)'; t.style.color='white'; t.style.padding='10px 20px'; t.style.borderRadius='20px';
+            t.style.zIndex='9999'; t.innerText = msg;
+            document.body.appendChild(t);
+            setTimeout(()=>t.remove(), 1500);
+        }
+
+        function getRandomDialogue() {
+            const d = ["Please...", "Just one click.", "Don't be shy.", "I have cookies! 🍪", "Is that a misclick?", "Try again?"];
+            return d[Math.floor(Math.random()*d.length)];
+        }
+        
+        // Confetti Helper
         function startConfetti() {
-            const canvas = DOM.confettiCanvas;
-            if (!canvas) return;
+            const canvas = document.getElementById('confetti-canvas');
             const ctx = canvas.getContext('2d');
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            const pieces = [];
-            const colors = ['#ff758c', '#a29bfe', '#fdcb6e', '#00b894'];
-            for(let i=0; i<150; i++) {
-                pieces.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height - canvas.height,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    size: Math.random() * 10 + 5,
-                    speed: Math.random() * 5 + 2,
-                    drift: Math.random() * 2 - 1
-                });
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            const p = [];
+            for(let i=0; i<100; i++) p.push({x: Math.random()*canvas.width, y: -20, c: ['gold', 'pink', 'white'][Math.floor(Math.random()*3)], s: Math.random()*5+2, d: Math.random()*5+2});
+            function draw() {
+                if(!STATE.isEnding) return; 
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                p.forEach(o => { ctx.fillStyle=o.c; ctx.fillRect(o.x,o.y,o.s,o.s); o.y+=o.s; if(o.y>canvas.height) o.y=-10; });
+                requestAnimationFrame(draw);
             }
-            function loop() {
-                ctx.clearRect(0,0,canvas.width, canvas.height);
-                pieces.forEach(p => {
-                    ctx.fillStyle = p.color;
-                    ctx.fillRect(p.x, p.y, p.size, p.size);
-                    p.y += p.speed;
-                    p.x += p.drift;
-                    if(p.y > canvas.height) p.y = -20;
-                });
-                requestAnimationFrame(loop);
-            }
-            loop();
+            draw();
         }
 
-        // Start
-        initGame();
+        // Boot
+        init();
+
     </script>
 </body>
 </html>
