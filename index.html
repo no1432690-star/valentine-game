@@ -95,6 +95,9 @@
         #stage-indicator { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 5px; }
         .title { font-family: 'Fredoka', cursive; color: var(--primary-pink); font-size: 2rem; margin-bottom: 15px; text-shadow: 2px 2px 0px rgba(255,255,255,0.8); line-height: 1.2; }
         .dialogue-box { min-height: 40px; margin-bottom: 20px; color: #555; font-style: italic; font-size: 1.1rem; }
+        
+        /* Phase Hint (Phase 3) */
+        #phase-hint { font-size: 0.9rem; color: #888; margin-bottom: 10px; font-style: italic; min-height: 1.2em; opacity: 0; transition: opacity 0.5s; }
 
         /* Buttons */
         .button-area { position: relative; height: 300px; width: 100%; display: flex; justify-content: center; align-items: flex-start; gap: 20px; padding-top: 10px; pointer-events: none; }
@@ -109,6 +112,9 @@
         .btn-no { background: #e0e0e0; color: #666; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .btn-no:active { transform: scale(0.95); background: #d6d6d6; }
 
+        /* Phase Effects Classes */
+        .btn-blur { filter: blur(0.8px) saturate(0.8) opacity(0.9); }
+        
         /* Fake/Effects */
         #fake-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; overflow: hidden; border-radius: 20px; }
         .fake-btn { position: absolute; opacity: 0.8; pointer-events: auto; z-index: 101; }
@@ -427,6 +433,7 @@
             <h1 class="title" id="main-title">Will you be my valentine? 💘</h1>
             <div class="dialogue-box">
                 <p id="dialogue-text">Please say yes! 🥺</p>
+                <p id="phase-hint"></p>
             </div>
             <div class="button-area" id="button-area">
                 <button id="btn-yes" class="game-btn btn-yes">YES 💖</button>
@@ -585,6 +592,14 @@
                 phase3: ["I can't breathe without you.", "Don't leave me here.", "It's cold alone.", "You promised...", "I'm begging you.", "Darkness is closing in..."],
                 phase4: ["We are meant to be.", "Destiny is watching.", "Just a little more.", "I see our future.", "Almost there, my love.", "Forever starts soon."],
 
+                // PHASE MESSAGES
+                phase1_msg: "It’s starting to move…",
+                phase2_msg: "It’s trying to confuse you.",
+                phase3_msg: "You can barely tell anymore.",
+                phase4_msg: "Say YES like you mean it.",
+                phase3_hint: "The buttons look the same now…",
+                hesitate_msg: "You hesitated…",
+
                 lobbyNo: ["Wrong answer 😏", "Try again...", "You can't escape!", "No is not an option 💀"],
                 
                 // ENDING 1: TRUE LOVE
@@ -705,6 +720,14 @@
                 phase3: ["Tớ không thể sống thiếu cậu.", "Đừng bỏ tớ lại.", "Ở đây lạnh lắm.", "Đừng tàn nhẫn thế.", "Tớ xin cậu đấy.", "Bóng tối đang nuốt chửng tớ..."],
                 phase4: ["Định mệnh sắp đặt rồi.", "Chỉ một chút nữa thôi.", "Tớ thấy tương lai mình.", "Sắp đến đích rồi.", "Mãi mãi bên nhau.", "Đừng buông tay..."],
 
+                // PHASE MESSAGES
+                phase1_msg: "Nó bắt đầu di chuyển rồi…",
+                phase2_msg: "Nó đang cố đánh lừa cậu.",
+                phase3_msg: "Giờ gần như không thể phân biệt…",
+                phase4_msg: "Hãy nói CÓ như thể cậu thật lòng.",
+                phase3_hint: "Hai lựa chọn trông giống nhau quá…",
+                hesitate_msg: "Cậu đã do dự…",
+
                 lobbyNo: ["Sai rồi nha 😏", "Thử lại đê...", "Không thoát được đâu!", "Không được chọn cái này 💀"],
                 
                 // ENDING 1: TRUE LOVE
@@ -824,6 +847,14 @@
                 phase2: ["¿Por qué no?", "Me duele el corazón...", "¿No soy suficiente?", "Me estás tomando el pelo...", "Estoy esperando...", "No seas cruel 💔"],
                 phase3: ["No puedo respirar sin ti.", "No me dejes solo.", "Hace frío aquí.", "Lo prometiste.", "Te lo ruego.", "La oscuridad se acerca..."],
                 phase4: ["Estamos destinados.", "El destino nos mira.", "Solo un poco más.", "Veo nuestro futuro.", "Casi estamos, mi amor.", "Para siempre comienza pronto."],
+
+                // PHASE MESSAGES
+                phase1_msg: "Está empezando a moverse…",
+                phase2_msg: "Está intentando confundirte.",
+                phase3_msg: "Ya casi no puedes distinguirlo…",
+                phase4_msg: "Di SÍ como si lo sintieras.",
+                phase3_hint: "Los botones se ven iguales…",
+                hesitate_msg: "Dudaste…",
 
                 lobbyNo: ["Incorrecto 😏", "Intenta de nuevo...", "¡No puedes escapar!", "No es una opción 💀"],
                 
@@ -968,6 +999,8 @@
                 mainTitle: document.getElementById('main-title'),
                 lobbyTitle: document.getElementById('lobby-title'),
                 lobbySubtitle: document.getElementById('lobby-subtitle'),
+                dialogueText: document.getElementById('dialogue-text'),
+                phaseHint: document.getElementById('phase-hint'),
 
                 // Buttons
                 startBtn: document.getElementById('btn-start-game'),
@@ -998,7 +1031,238 @@
             };
         }
 
-        /* --- 4. STATE MACHINE (UI ENGINE) --- */
+        /* --- 4. PHASE MANAGER --- */
+        const PhaseManager = {
+            currentPhase: 0,
+            rafId: null,
+            holdTimer: null,
+            isHolding: false,
+            // Track if swapped order is active
+            isSwapped: false,
+
+            init() {
+                this.update();
+            },
+
+            getTotalClicks() {
+                return STATE.yes + STATE.no;
+            },
+
+            getPhase() {
+                const total = this.getTotalClicks();
+                if (total >= 71) return 4;
+                if (total >= 45) return 3;
+                if (total >= 25) return 2;
+                if (total >= 10) return 1;
+                return 0;
+            },
+
+            update() {
+                if (UI_MODE !== 'gameplay') return;
+                
+                const newPhase = this.getPhase();
+                if (newPhase !== this.currentPhase) {
+                    this.cleanup(this.currentPhase);
+                    this.currentPhase = newPhase;
+                    this.apply(newPhase);
+                    this.showPhaseMessage(newPhase);
+                } else {
+                    // Re-apply periodic effects (like swap)
+                    if (this.currentPhase === 2) this.handlePhase2Logic();
+                }
+                
+                console.log("[PHASE]", this.currentPhase);
+            },
+
+            showPhaseMessage(phase) {
+                const L = getLang();
+                let msg = "";
+                if (phase === 1) msg = L.phase1_msg;
+                else if (phase === 2) msg = L.phase2_msg;
+                else if (phase === 3) msg = L.phase3_msg;
+                else if (phase === 4) msg = L.phase4_msg;
+
+                if (msg) showTooltip(msg);
+            },
+
+            apply(phase) {
+                if (phase === 1) {
+                    this.startDrift();
+                } else if (phase === 2) {
+                    this.handlePhase2Logic();
+                } else if (phase === 3) {
+                    this.applyBlur();
+                } else if (phase === 4) {
+                    this.startHoldMode();
+                }
+            },
+
+            cleanup(prevPhase) {
+                if (prevPhase === 1) {
+                    if (this.rafId) cancelAnimationFrame(this.rafId);
+                    DOM.yesBtn.style.transform = 'none';
+                } else if (prevPhase === 2) {
+                    DOM.yesBtn.style.order = '0';
+                    DOM.noBtn.style.order = '0';
+                    this.isSwapped = false;
+                } else if (prevPhase === 3) {
+                    DOM.yesBtn.classList.remove('btn-blur');
+                    DOM.noBtn.classList.remove('btn-blur');
+                    if(DOM.phaseHint) DOM.phaseHint.style.opacity = '0';
+                } else if (prevPhase === 4) {
+                    this.stopHoldMode();
+                }
+            },
+
+            stopAll() {
+                this.cleanup(this.currentPhase);
+                this.currentPhase = 0;
+                // Double check reset
+                if (DOM.yesBtn) {
+                    DOM.yesBtn.style.transform = 'none';
+                    DOM.yesBtn.style.order = '0';
+                    DOM.noBtn.style.order = '0';
+                    DOM.yesBtn.classList.remove('btn-blur');
+                    DOM.noBtn.classList.remove('btn-blur');
+                    // Reset onclick
+                    DOM.yesBtn.onclick = handleYes;
+                    this.removeHoldListeners();
+                }
+                if(DOM.phaseHint) DOM.phaseHint.style.opacity = '0';
+            },
+
+            // Phase 1: Gentle Drift
+            startDrift() {
+                let angle = 0;
+                const radius = 18; 
+                const loop = () => {
+                    if (this.currentPhase !== 1) return;
+                    angle += 0.02;
+                    const x = Math.cos(angle) * radius;
+                    const y = Math.sin(angle * 1.5) * radius;
+                    DOM.yesBtn.style.transform = `translate(${x}px, ${y}px)`;
+                    this.rafId = requestAnimationFrame(loop);
+                };
+                loop();
+            },
+
+            // Phase 2: Soft Confusion (Swap every 5 clicks)
+            handlePhase2Logic() {
+                const total = this.getTotalClicks();
+                // Simple logic: if total is divisible by 5, swap. Else normal.
+                // Actually prompt says: "Swap only every 5 total clicks"
+                // Let's toggle swap state based on mod 5.
+                // To keep it confusing: swap if (total / 5) is odd? 
+                // Or just swap if total % 10 >= 5? 
+                // Let's do: Swap whenever total % 5 === 0. But wait, update() runs AFTER click.
+                // So if user just clicked to reach 25 (multiple of 5), we swap.
+                // Then at 26, we revert? That would be very rapid.
+                // "Swap POSITIONS occasionally" -> "Swap ONLY every 5 clicks".
+                // Interpretation: The state CHANGES every 5 clicks.
+                // Let's check a "block" of 5.
+                const block = Math.floor(total / 5);
+                if (block % 2 !== 0) {
+                    // Odd blocks (5-9, 15-19, 25-29, etc) -> Swapped
+                    // Since phase 2 starts at 25, it starts SWAPPED.
+                    // 25-29: Swap
+                    // 30-34: Normal
+                    // 35-39: Swap
+                    // 40-44: Normal
+                    DOM.yesBtn.style.order = '2';
+                    DOM.noBtn.style.order = '1';
+                } else {
+                    DOM.yesBtn.style.order = '0';
+                    DOM.noBtn.style.order = '0';
+                }
+            },
+
+            // Phase 3: Blurred Truth
+            applyBlur() {
+                DOM.yesBtn.classList.add('btn-blur');
+                DOM.noBtn.classList.add('btn-blur');
+                
+                const L = getLang();
+                if(DOM.phaseHint) {
+                    DOM.phaseHint.innerText = L.phase3_hint;
+                    DOM.phaseHint.style.opacity = '1';
+                }
+            },
+
+            // Phase 4: Hold to Mean It
+            startHoldMode() {
+                // Disable normal click logic
+                DOM.yesBtn.onclick = (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                };
+
+                this.addHoldListeners();
+            },
+
+            stopHoldMode() {
+                this.removeHoldListeners();
+                // Restore click
+                DOM.yesBtn.onclick = handleYes;
+            },
+
+            addHoldListeners() {
+                const btn = DOM.yesBtn;
+                this.boundStart = this.onHoldStart.bind(this);
+                this.boundEnd = this.onHoldEnd.bind(this);
+                
+                btn.addEventListener('pointerdown', this.boundStart);
+                btn.addEventListener('touchstart', this.boundStart, {passive: false}); // Mobile backup
+                
+                window.addEventListener('pointerup', this.boundEnd);
+                window.addEventListener('touchend', this.boundEnd);
+            },
+
+            removeHoldListeners() {
+                const btn = DOM.yesBtn;
+                if(this.boundStart) {
+                    btn.removeEventListener('pointerdown', this.boundStart);
+                    btn.removeEventListener('touchstart', this.boundStart);
+                    window.removeEventListener('pointerup', this.boundEnd);
+                    window.removeEventListener('touchend', this.boundEnd);
+                }
+            },
+
+            onHoldStart(e) {
+                if (this.currentPhase !== 4) return;
+                // Prevent default touch actions (scrolling) on button
+                if(e.type === 'touchstart') e.preventDefault();
+                
+                this.isHolding = true;
+                
+                // Visual feedback (scale down slightly)
+                DOM.yesBtn.style.transform = 'scale(0.92)';
+                DOM.yesBtn.style.transition = 'transform 0.5s ease';
+
+                this.holdTimer = setTimeout(() => {
+                    if (this.isHolding) {
+                        this.isHolding = false;
+                        DOM.yesBtn.style.transform = 'scale(1)';
+                        handleYes(); // Trigger SUCCESS
+                    }
+                }, 550);
+            },
+
+            onHoldEnd() {
+                if (!this.isHolding) return;
+                this.isHolding = false;
+                clearTimeout(this.holdTimer);
+                
+                // Released too early
+                DOM.yesBtn.style.transform = 'scale(1)';
+                
+                // Show hesitate message
+                const L = getLang();
+                showTooltip(L.hesitate_msg);
+            }
+        };
+
+        /* --- 5. STATE MACHINE (UI ENGINE) --- */
         
         function setMode(mode) {
             console.log(`Switching UI: ${UI_MODE} -> ${mode}`);
@@ -1049,7 +1313,7 @@
             AudioCtrl.sync();
         }
 
-        /* --- 5. INITIALIZATION & EVENTS --- */
+        /* --- 6. INITIALIZATION & EVENTS --- */
         
         function initGame() {
             cacheDOM();
@@ -1057,9 +1321,15 @@
             generateStages();
             AudioCtrl.init();
             updateTexts();
+            PhaseManager.init(); // Init Phases
 
             // BIND EVENTS ONCE
-            if(DOM.startBtn) DOM.startBtn.onclick = () => { SFX.init(); goToLobby(); };
+            // IMPORTANT: User Gesture Logic for Autoplay Policy
+            if(DOM.startBtn) DOM.startBtn.onclick = () => { 
+                AudioCtrl.initUserGesture(); // Initialize Audio Context and Audio Elements
+                SFX.init(); // Resume SFX context
+                goToLobby(); 
+            };
             
             // Lobby
             document.getElementById('lobby-btn-yes').onclick = () => { SFX.playYes(); startGameplay(); };
@@ -1141,7 +1411,7 @@
             setMode('start');
         }
 
-        /* --- 6. GAME FLOW CONTROLLERS --- */
+        /* --- 7. GAME FLOW CONTROLLERS --- */
 
         function goToLobby() {
             // Full Reset Logic
@@ -1154,6 +1424,9 @@
             // Reset UI Visuals
             document.getElementById('lbl-yes-trigger').style.color = "#666";
             
+            // Phase Reset
+            PhaseManager.stopAll();
+
             setMode('lobby');
         }
 
@@ -1167,9 +1440,8 @@
             ENDING_STATE.isTyping = false;
             ENDING_STATE.finished = false;
             
-            // 2. Stop Ending Music immediately so game music can take over in sync()
-            DOM.audioEnd.pause();
-            DOM.audioEnd.currentTime = 0;
+            // 2. Stop Ending Music safely
+            AudioCtrl.stopAll(true);
 
             // 3. Restart Game logic (resets stats and sets mode to gameplay)
             startGameplay();
@@ -1184,6 +1456,11 @@
             
             updateStatsUI();
             applyCurrentStage();
+            
+            // Phase Reset
+            PhaseManager.stopAll();
+            PhaseManager.update(); // Initialize phase 0
+
             document.getElementById('fake-container').innerHTML = "";
             document.getElementById('dialogue-text').innerText = getLang().phase1[0]; // Start with Phase 1
             
@@ -1191,6 +1468,8 @@
         }
 
         function enterEnding(id) {
+            PhaseManager.stopAll(); // STOP ALL PHASES
+            
             STATE.endingId = id;
             SHARE_CARD.lastEndingId = (id === '3_final') ? 3 : id;
             SHARE_CARD.cachedDataURL = null;
@@ -1200,6 +1479,7 @@
         }
 
         async function enterRoom() {
+            PhaseManager.stopAll(); // STOP PHASES
             updateRoomHUD();
             setMode('room');
             
@@ -1223,6 +1503,7 @@
         }
 
         function enterSecret() {
+            PhaseManager.stopAll();
             setMode('secret');
             runSecretSequence();
         }
@@ -1241,7 +1522,7 @@
             });
         }
 
-        /* --- 7. LOGIC HANDLERS --- */
+        /* --- 8. LOGIC HANDLERS --- */
 
         function handleYes() {
             if (UI_MODE !== 'gameplay') return;
@@ -1250,6 +1531,7 @@
             updateStatsUI();
             spawnFloatingHeart(DOM.yesBtn);
             applyCurrentStage();
+            PhaseManager.update(); // Update Phase Logic
             checkEndingTriggers();
         }
 
@@ -1258,6 +1540,7 @@
             STATE.no++;
             SFX.playNo();
             updateStatsUI();
+            PhaseManager.update(); // Update Phase Logic
             
             const card = document.getElementById('main-card');
             card.classList.remove('shake');
@@ -1307,7 +1590,7 @@
             }
         }
 
-        /* --- 8. ENDING VISUAL NOVEL ENGINE (NEW) --- */
+        /* --- 9. ENDING VISUAL NOVEL ENGINE --- */
 
         function renderEndingOverlay(id) {
             const L = getLang();
@@ -1580,92 +1863,279 @@
             SFX.playTone(50, 'square', 0.3, 1.0);
         }
 
-        /* --- 9. AUDIO & SFX --- */
+        /* --- 10. AUDIO & SFX --- */
         
+        const MUSIC_CONFIG = {
+            lobby: ["lobby1.mp3", "lobby2.mp3"],
+            gameplay: ["gameplay1.mp3", "gameplay2.mp3", "gameplay3.mp3", "gameplay4.mp3", "gameplay5.mp3", "gameplay6.mp3"],
+            endings: {
+                1: ["ending1_true_love1.mp3", "ending1_true_love2.mp3"],
+                2: ["ending2_hesitant_heart1.mp3", "ending2_hesitant_heart2.mp3"],
+                3: ["ending3_empty_room1.mp3", "ending3_empty_room2.mp3"],
+                4: ["ending4_secret_yes1.mp3", "ending4_secret_yes2.mp3"]
+            }
+        };
+
         const AudioCtrl = {
-            currentEndingId: null,
+            currentMode: null,
+            fadeIntervals: new Map(),
+            hasInteracted: false, // Gesture Flag
+            // Track history to avoid repeats
+            history: {
+                lobby: null,
+                gameplay: null,
+                ending: {}
+            },
+
+            // Cache busting helper
+            getPath(filename) {
+                return `music/${filename}?v=2`;
+            },
+
             init() {
-                DOM.audioLobby.src = "music/lobby.mp3?v=2";
-                DOM.audioGame.src = "music/game.mp3?v=2";
-                DOM.audioLobby.volume = 0.5;
-                DOM.audioGame.volume = 0.4;
-                DOM.audioEnd.volume = 0.5;
+                // Set initial volumes but don't play yet
+                if(DOM.audioLobby) DOM.audioLobby.volume = 0.35;
+                if(DOM.audioGame) DOM.audioGame.volume = 0.35;
+                if(DOM.audioEnd) DOM.audioEnd.volume = 0.45; // Default ending vol
                 
-                // Basic error handling for missing files
-                DOM.audioEnd.onerror = () => { console.warn("Ending music missing."); };
+                // Error handling
+                const logError = (e) => console.warn("Audio Load Error:", e);
+                DOM.audioLobby.onerror = logError;
+                DOM.audioGame.onerror = logError;
+                DOM.audioEnd.onerror = logError;
+            },
+
+            initUserGesture() {
+                if (this.hasInteracted) return;
+                this.hasInteracted = true;
+                
+                // Wake up AudioContext if suspended
+                if (SFX.ctx && SFX.ctx.state === 'suspended') {
+                    SFX.ctx.resume().catch(e => console.log("SFX Context resume failed:", e));
+                }
             },
             
+            getRandomTrack(listName, endingId = null) {
+                let list = [];
+                // Normalize endingId
+                let lookupId = endingId;
+                if(lookupId === '3_final') lookupId = 3;
+
+                if(listName === 'lobby') list = MUSIC_CONFIG.lobby;
+                else if(listName === 'gameplay') list = MUSIC_CONFIG.gameplay;
+                else if(listName === 'ending') list = MUSIC_CONFIG.endings[lookupId] || MUSIC_CONFIG.endings[1];
+                
+                if(!list || list.length === 0) return null;
+
+                // Avoid repeat logic
+                let candidates = list;
+                let last = null;
+
+                if(listName === 'lobby') last = this.history.lobby;
+                else if(listName === 'gameplay') last = this.history.gameplay;
+                else if(listName === 'ending') last = this.history.ending[lookupId];
+
+                if(list.length > 1 && last) {
+                    candidates = list.filter(t => t !== last);
+                    // Fallback if filtering removed all options (shouldn't happen with logic above but safe check)
+                    if (candidates.length === 0) candidates = list;
+                }
+
+                const file = candidates[Math.floor(Math.random() * candidates.length)];
+
+                // Update history
+                if(listName === 'lobby') this.history.lobby = file;
+                else if(listName === 'gameplay') this.history.gameplay = file;
+                else if(listName === 'ending') this.history.ending[lookupId] = file;
+
+                return this.getPath(file);
+            },
+
+            async playTrack(el, src, targetVol = null) {
+                if(!src) return;
+                try {
+                    // Avoid reloading if exact same source to prevent stutter
+                    if(el.getAttribute('src') !== src) {
+                        el.src = src;
+                        el.load();
+                    }
+                    if(el.paused) {
+                        // Crucial: Use a promise to catch autoplay policies
+                        const playPromise = el.play();
+                        if(playPromise !== undefined) {
+                            playPromise
+                                .then(() => {
+                                    // Play successful, start fade in
+                                    this.fadeIn(el, targetVol);
+                                })
+                                .catch(error => {
+                                    console.warn("Autoplay prevented or load error (waiting for interaction):", error);
+                                    // Fallback: If blocked, we rely on next gesture to fix it,
+                                    // but we assume initUserGesture() was called correctly on Start.
+                                });
+                        }
+                    }
+                } catch(e) {
+                    console.warn("PlayTrack Error:", e);
+                }
+            },
+            
+            fadeIn(el, targetVol = null) {
+                this.clearFade(el);
+                
+                let maxVol = 0.5;
+                if (targetVol !== null) {
+                    maxVol = targetVol;
+                } else {
+                    if(el === DOM.audioLobby) maxVol = 0.35;
+                    else if(el === DOM.audioGame) maxVol = 0.35;
+                    else if(el === DOM.audioEnd) maxVol = 0.45;
+                }
+                
+                // Ensure we don't jump to 0 if we are already fading
+                if (el.volume === 0 || el.paused) el.volume = 0;
+                
+                const step = maxVol / 10;
+                const interval = setInterval(() => {
+                    if(el.volume + step < maxVol) {
+                        el.volume += step;
+                    } else {
+                        el.volume = maxVol;
+                        clearInterval(interval);
+                        this.fadeIntervals.delete(el);
+                    }
+                }, 30); // 300ms total
+                
+                this.fadeIntervals.set(el, interval);
+            },
+            
+            fadeOut(el) {
+                if(el.paused) return;
+                this.clearFade(el);
+                
+                const step = el.volume / 10;
+                const interval = setInterval(() => {
+                    if(el.volume - step > 0) {
+                        el.volume -= step;
+                    } else {
+                        el.volume = 0;
+                        el.pause();
+                        el.currentTime = 0;
+                        clearInterval(interval);
+                        this.fadeIntervals.delete(el);
+                    }
+                }, 30);
+                
+                this.fadeIntervals.set(el, interval);
+            },
+            
+            clearFade(el) {
+                if(this.fadeIntervals.has(el)) {
+                    clearInterval(this.fadeIntervals.get(el));
+                    this.fadeIntervals.delete(el);
+                }
+            },
+
             playEnding(id) {
-                const src = `music/end${id}.mp3`;
-                this.currentEndingId = id;
+                const src = this.getRandomTrack('ending', id);
+                
+                let vol = 0.45;
+                if (id === 3 || id === '3_final') vol = 0.25;
 
-                // Avoid reloading if already correct
-                if (!DOM.audioEnd.getAttribute('src') || DOM.audioEnd.getAttribute('src') !== src) {
-                    DOM.audioEnd.src = src;
-                    DOM.audioEnd.setAttribute('src', src);
-                    DOM.audioEnd.load();
-                }
+                // Stop other tracks explicitly just in case sync didn't catch them (safe)
+                this.fadeOut(DOM.audioLobby);
+                this.fadeOut(DOM.audioGame);
 
-                if (SETTINGS.gameMusic) {
-                    DOM.audioEnd.play().catch(e => console.log("Play failed", e));
+                if(src && SETTINGS.gameMusic) { // Use gameMusic toggle for endings too
+                     this.playTrack(DOM.audioEnd, src, vol);
                 }
+            },
+            
+            stopAll(instant = false) {
+                [DOM.audioLobby, DOM.audioGame, DOM.audioEnd].forEach(el => {
+                    if(instant) {
+                        el.pause();
+                        el.currentTime = 0;
+                    } else {
+                        this.fadeOut(el);
+                    }
+                });
             },
 
             sync() {
-                // Lobby Music
-                const playLobby = (UI_MODE === 'lobby' && SETTINGS.lobbyMusic);
-                if (playLobby) {
-                    if (DOM.audioLobby.paused) DOM.audioLobby.play().catch(()=>{});
-                } else {
-                    DOM.audioLobby.pause();
-                    if(UI_MODE !== 'lobby') DOM.audioLobby.currentTime = 0;
-                }
+                const targetMode = UI_MODE;
+                
+                // 1. Detect Mode Switch
+                if(this.currentMode !== targetMode) {
+                    // Fade out old tracks
+                    if(this.currentMode === 'lobby') this.fadeOut(DOM.audioLobby);
+                    if(this.currentMode === 'gameplay') this.fadeOut(DOM.audioGame);
+                    if(this.currentMode === 'ending' || this.currentMode === 'secret' || this.currentMode === 'room') this.fadeOut(DOM.audioEnd);
 
-                // Game Music
-                const playGame = (UI_MODE === 'gameplay' && SETTINGS.gameMusic);
-                if (playGame) {
-                    if (DOM.audioGame.paused) DOM.audioGame.play().catch(()=>{});
-                } else {
-                    DOM.audioGame.pause();
-                    if(UI_MODE !== 'gameplay') DOM.audioGame.currentTime = 0;
-                }
+                    this.currentMode = targetMode;
 
-                // Ending Music
-                // If in ending mode, we ensure it plays if allowed. 
-                // Actual track setting happens in enterEnding -> playEnding
-                const playEnd = ((UI_MODE === 'ending' || UI_MODE === 'secret') && SETTINGS.gameMusic);
-                if (playEnd) {
-                    if (DOM.audioEnd.paused && DOM.audioEnd.readyState >= 2) DOM.audioEnd.play().catch(()=>{});
-                } else {
-                    if(!DOM.audioEnd.paused) DOM.audioEnd.pause();
-                    // Optional: reset time if leaving ending mode
-                    if(UI_MODE !== 'ending' && UI_MODE !== 'secret') DOM.audioEnd.currentTime = 0;
+                    // Play new tracks (if settings allow)
+                    if(targetMode === 'lobby' && SETTINGS.lobbyMusic) {
+                        this.playTrack(DOM.audioLobby, this.getRandomTrack('lobby'));
+                    }
+                    if(targetMode === 'gameplay' && SETTINGS.gameMusic) {
+                        this.playTrack(DOM.audioGame, this.getRandomTrack('gameplay'));
+                    }
                 }
-            },
-            stopAll(instant) {
-                DOM.audioLobby.pause();
-                DOM.audioGame.pause();
-                DOM.audioEnd.pause();
+                
+                // 2. Handle Mute Toggle (Same Mode)
+                if(targetMode === 'lobby') {
+                    if(SETTINGS.lobbyMusic && DOM.audioLobby.paused) {
+                         this.playTrack(DOM.audioLobby, this.getRandomTrack('lobby'));
+                    } else if(!SETTINGS.lobbyMusic && !DOM.audioLobby.paused) {
+                        this.fadeOut(DOM.audioLobby);
+                    }
+                }
+                if(targetMode === 'gameplay') {
+                    if(SETTINGS.gameMusic && DOM.audioGame.paused) {
+                         this.playTrack(DOM.audioGame, this.getRandomTrack('gameplay'));
+                    } else if(!SETTINGS.gameMusic && !DOM.audioGame.paused) {
+                        this.fadeOut(DOM.audioGame);
+                    }
+                }
             }
         };
 
         const SFX = {
             ctx: null,
-            init() { if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
+            init() { 
+                if(!this.ctx) {
+                    try {
+                        this.ctx = new (window.AudioContext||window.webkitAudioContext)(); 
+                    } catch(e) {
+                        console.warn("Web Audio API not supported", e);
+                    }
+                }
+                // Attempt to resume if suspended (common in some browsers)
+                if(this.ctx && this.ctx.state === 'suspended') {
+                    this.ctx.resume().catch(e => console.log("Resume failed", e));
+                }
+            },
             playTone(f, t, vol=0.1, dur=0.1) {
                 if(!this.ctx) this.init();
-                if(this.ctx.state==='suspended') this.ctx.resume();
-                const o=this.ctx.createOscillator(), g=this.ctx.createGain();
-                o.type=t; o.frequency.value=f; g.gain.value=vol;
-                o.connect(g); g.connect(this.ctx.destination);
-                o.start(); o.stop(this.ctx.currentTime+dur);
+                if(!this.ctx) return; // Fallback if init failed
+                
+                try {
+                    if(this.ctx.state === 'suspended') this.ctx.resume();
+                    const o=this.ctx.createOscillator(), g=this.ctx.createGain();
+                    o.type=t; o.frequency.value=f; g.gain.value=vol;
+                    o.connect(g); g.connect(this.ctx.destination);
+                    o.start(); o.stop(this.ctx.currentTime+dur);
+                } catch(e) {
+                    console.warn("SFX Error:", e);
+                }
             },
             playYes() { this.playTone(880, 'sine'); },
             playNo() { this.playTone(150, 'sawtooth'); },
             playType() { this.playTone(1200, 'triangle', 0.03, 0.05); } // Cinematic click sound
         };
 
-        /* --- 10. UTILS & UI UPDATES --- */
+        /* --- 11. UTILS & UI UPDATES --- */
 
         function getLang() { return LANG[SETTINGS.lang] || LANG['en']; }
         
@@ -1698,9 +2168,13 @@
         }
 
         function applyCurrentStage() {
-            // Simple visual effect
+            // Simple visual effect (keeping subtle rotation for variety outside of PhaseManager specific)
             if(STATE.yes > 10 && STATE.yes < 20) DOM.yesBtn.style.transform = `rotate(${Math.random()*10-5}deg)`;
-            else DOM.yesBtn.style.transform = 'none';
+            // NOTE: PhaseManager controls drift now, so this might conflict in Phase 1. 
+            // PhaseManager uses transform translate. 
+            // Let's rely on PhaseManager entirely for transform.
+            // Disabled this simple effect to avoid conflict with Phase 1.
+            // else DOM.yesBtn.style.transform = 'none'; 
         }
 
         function generateStages() { STATE.effects = []; }
