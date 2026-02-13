@@ -477,6 +477,11 @@
                 settingsModal: document.getElementById('settings-modal'),
                 shareModal: document.getElementById('share-modal'),
 
+                // Titles & Text (FIXED CRASH)
+                mainTitle: document.getElementById('main-title'),
+                lobbyTitle: document.getElementById('lobby-title'),
+                lobbySubtitle: document.getElementById('lobby-subtitle'),
+
                 // Buttons
                 startBtn: document.getElementById('btn-start-game'),
                 yesBtn: document.getElementById('btn-yes'),
@@ -904,13 +909,15 @@
 
         function getLang() { return LANG[SETTINGS.lang] || LANG['en']; }
         
+        function setText(el, txt) { if(el) el.innerText = txt; }
+
         function updateTexts() {
             const L = getLang();
-            DOM.mainTitle.innerText = L.title;
-            DOM.lobbyTitle.innerText = L.title;
-            DOM.lobbySubtitle.innerText = L.subtitle;
-            DOM.yesBtn.innerText = L.yesBtn;
-            DOM.noBtn.innerText = L.noBtn;
+            setText(DOM.mainTitle, L.title);
+            setText(DOM.lobbyTitle, L.title);
+            setText(DOM.lobbySubtitle, L.subtitle);
+            setText(DOM.yesBtn, L.yesBtn);
+            setText(DOM.noBtn, L.noBtn);
         }
 
         function updateStatsUI() {
