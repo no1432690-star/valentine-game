@@ -532,7 +532,8 @@
             inLobby: true,
             usingSynth: false,
             effects: [],
-            roomProgress: { tulip: false, letter: false, diary: false } // For Ending 3
+            roomProgress: { tulip: false, letter: false, diary: false }, // For Ending 3
+            ignoreEndingCheck: false // Safety flag
         };
 
         /* --- MODAL STATE --- */
@@ -1050,7 +1051,7 @@
                 if(DOM.lobbyYes) DOM.lobbyYes.onclick = () => {
                     console.log("Lobby YES Clicked");
                     SFX.playYes();
-                    STATE.inLobby = false;
+                    STATE.inLobby = false; // Mark as NOT in lobby to start game logic
                     if(DOM.lobbyScreen) DOM.lobbyScreen.classList.add('hidden');
                     AudioCtrl.playGame();
                     saveGame();
@@ -1103,33 +1104,73 @@
         }
         
         function goToLobby() {
-            console.log("Returning to Lobby");
-            // 1. Reset Flags
+            console.log("Returning to Lobby & Resetting State");
+            
+            // 1. Reset Game Progress completely for Replay
+            STATE.yesCount = 0;
+            STATE.noCount = 0;
+            STATE.scoreClicked = false;
+            STATE.roomProgress = { tulip: false, letter: false, diary: false };
+
+            // 2. Reset Flags
             STATE.isEnding = false;
             STATE.inLobby = true;
             STATE.currentEnding = 0;
+            STATE.ignoreEndingCheck = true; // Safety grace period
 
-            // 2. Hide Endings/Room
-            if(DOM.endingOverlay) DOM.endingOverlay.classList.remove('visible');
+            // Remove safety flag after delay
+            setTimeout(() => { STATE.ignoreEndingCheck = false; }, 800);
+
+            // 3. Reset UI Elements
+            if(DOM.endingOverlay) {
+                DOM.endingOverlay.classList.remove('visible');
+                DOM.endingOverlay.style.pointerEvents = 'none';
+                DOM.endingOverlay.className = ''; // remove theme classes
+                DOM.endingOverlay.id = 'ending-overlay'; // ensure ID stays
+            }
+            
             if(DOM.roomScene) {
                 DOM.roomScene.classList.remove('visible');
-                DOM.roomScene.style.opacity = 0; // Ensure fade out
+                DOM.roomScene.style.opacity = 0;
             }
-            if(DOM.gameView) {
-                DOM.gameView.style.opacity = '1'; // Show game behind lobby (glass effect)
-                DOM.gameView.style.pointerEvents = 'auto'; // Re-enable checks
+            
+            if(DOM.secretModal) {
+                DOM.secretModal.classList.remove('visible');
             }
 
-            // 3. Show Lobby
+            // Reset Game View visual state
+            if(DOM.gameView) {
+                DOM.gameView.style.opacity = '1';
+                DOM.gameView.style.pointerEvents = 'auto';
+            }
+            
+            // Clear Fake Buttons / Effects
+            const container = document.getElementById('fake-container');
+            if(container) container.innerHTML = "";
+            
+            // Reset Main Buttons
+            if(DOM.yesBtn) {
+                DOM.yesBtn.style.position='relative'; 
+                DOM.yesBtn.style.left='auto'; 
+                DOM.yesBtn.style.top='auto'; 
+                DOM.yesBtn.style.opacity='1';
+                DOM.yesBtn.style.transform='none';
+                DOM.yesBtn.onmouseenter=null;
+            }
+
+            updateStatsUI(); // Visually reset bars to 0
+            applyCurrentStage(); // Reset stage effects
+
+            // 4. Show Lobby
             if(DOM.lobbyScreen) {
                 DOM.lobbyScreen.classList.remove('hidden');
                 DOM.lobbyScreen.classList.add('visible');
             }
 
-            // 4. Audio
+            // 5. Audio
             AudioCtrl.playLobby();
 
-            // 5. Save State (Crucial: This overwrites the 'ending' save)
+            // 6. Save Clean State (Overwrites ending state)
             saveGame();
         }
 
@@ -1183,9 +1224,10 @@
         }
 
         function checkEndingTriggers() {
-            // 0. Safety Check
+            // 0. Safety Checks
             if (STATE.isEnding) return true;
             if (STATE.inLobby) return false; // Prevent endings triggering while in lobby
+            if (STATE.ignoreEndingCheck) return false; // Prevent trigger during reset transition
 
             // 1. Secret Modal Trigger: YES=100 AND scoreClicked=true
             if (STATE.yesCount === 100 && STATE.scoreClicked) {
