@@ -95,11 +95,13 @@
         .dialogue-box { min-height: 40px; margin-bottom: 20px; color: #555; font-style: italic; font-size: 1.1rem; }
 
         /* Buttons */
-        .button-area { position: relative; height: 300px; width: 100%; display: flex; justify-content: center; align-items: flex-start; gap: 20px; padding-top: 10px; }
+        .button-area { position: relative; height: 300px; width: 100%; display: flex; justify-content: center; align-items: flex-start; gap: 20px; padding-top: 10px; pointer-events: none; }
+        /* Main buttons need pointer events */
         .game-btn {
             font-family: 'Fredoka', sans-serif; font-size: 1.2rem; padding: 12px 30px;
             border: none; border-radius: 50px; cursor: pointer; transition: 0.2s;
             outline: none; position: relative; z-index: 100; white-space: nowrap; pointer-events: auto;
+            touch-action: manipulation;
         }
         .btn-yes { background: linear-gradient(45deg, var(--primary-pink), var(--secondary-pink)); color: white; box-shadow: var(--btn-shadow); }
         .btn-yes:active { transform: scale(0.95); }
@@ -107,8 +109,8 @@
         .btn-no:active { transform: scale(0.95); background: #d6d6d6; }
 
         /* Fake/Effects */
-        #fake-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none !important; z-index: 50; overflow: hidden; border-radius: 20px; }
-        .fake-btn { position: absolute; opacity: 0.8; pointer-events: auto !important; z-index: 101; }
+        #fake-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; overflow: hidden; border-radius: 20px; }
+        .fake-btn { position: absolute; opacity: 0.8; pointer-events: auto; z-index: 101; }
         .blur-heavy { filter: blur(4px); }
         .spin-fast { animation: spin 0.8s linear infinite; }
         .blur-mode { filter: blur(3.5px) !important; background: #a29bfe !important; color: white !important; transform: scale(0.95); }
@@ -119,10 +121,15 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.5); z-index: 1000;
             display: flex; align-items: center; justify-content: center;
-            opacity: 1; transition: opacity 0.5s ease;
+            opacity: 1; visibility: visible;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
         }
-        .hidden { opacity: 0; pointer-events: none !important; display: none !important; }
-        .visible { opacity: 1; pointer-events: auto !important; display: flex !important; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .visible { opacity: 1; visibility: visible; pointer-events: auto; }
+
+        /* Generic fade up animation for modals */
+        .animate-up { animation: fadeInUp 0.5s ease-out forwards; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Start Overlay */
         #start-overlay { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); z-index: 2000; flex-direction: column; }
@@ -130,14 +137,14 @@
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
         /* Lobby */
-        .lobby-card { max-width: 450px; padding: 40px; z-index: 1002; background: rgba(255,255,255,0.95); pointer-events: auto; }
+        .lobby-card { max-width: 450px; padding: 40px; z-index: 1002; background: rgba(255,255,255,0.95); pointer-events: auto; animation: fadeInUp 0.5s ease-out; }
         .subtitle { font-size: 1.1rem; color: #666; margin-bottom: 30px; }
         .lobby-actions { display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; }
         .lobby-msg { height: 24px; font-size: 0.95rem; color: #ff5252; font-weight: bold; margin-top: 10px; }
         .music-credit { margin-top: 20px; font-size: 0.85rem; color: #888; font-style: italic; opacity: 0.8; }
 
         /* Settings */
-        .settings-card { width: 350px; z-index: 1005; background: rgba(255,255,255,0.95); pointer-events: auto; }
+        .settings-card { width: 350px; z-index: 1005; background: rgba(255,255,255,0.95); pointer-events: auto; animation: fadeInUp 0.4s ease-out; }
         .settings-card h2 { text-align: center; color: #555; margin-bottom: 25px; }
         .setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 1.1rem; color: #444; }
         .setting-item.column { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -148,23 +155,24 @@
         .slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
         input:checked + .slider { background-color: var(--primary-pink); }
         input:checked + .slider:before { transform: translateX(24px); }
-        .action-btn { padding: 12px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--secondary-pink); color: white; width: 100%; }
+        .action-btn { padding: 12px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--secondary-pink); color: white; width: 100%; touch-action: manipulation; }
 
         /* --- ENDING SYSTEM STYLES --- */
         #ending-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 2500; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: opacity 1s ease;
+            opacity: 0; visibility: hidden; pointer-events: none; 
+            transition: opacity 1s ease, visibility 1s ease;
             color: white; padding: 20px; text-align: center;
         }
-        #ending-overlay.visible { opacity: 1; pointer-events: auto; }
+        #ending-overlay.visible { opacity: 1; visibility: visible; pointer-events: auto; }
         
         .theme-1 { background: var(--theme-1-bg); }
         .theme-2 { background: var(--theme-2-bg); }
         .theme-3 { background: var(--theme-3-bg); }
         .theme-4 { background: var(--theme-4-bg); }
 
-        .ending-content { max-width: 500px; width: 100%; z-index: 2; }
+        .ending-content { max-width: 500px; width: 100%; z-index: 2; animation: fadeInUp 1s ease-out 0.2s backwards; }
         .ending-title { font-family: 'Fredoka', cursive; font-size: 3rem; margin-bottom: 5px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .ending-sub { font-size: 1rem; opacity: 0.9; margin-bottom: 30px; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; }
         
@@ -180,30 +188,106 @@
         .end-btn {
             background: rgba(255,255,255,0.25); border: 2px solid white; color: white;
             padding: 10px 25px; border-radius: 30px; cursor: pointer; font-weight: bold;
-            transition: 0.2s; font-size: 1rem; pointer-events: auto;
+            transition: 0.2s; font-size: 1rem; pointer-events: auto; touch-action: manipulation;
         }
         .end-btn:hover { background: white; color: #333; }
 
-        /* Room Scene */
+        /* Room Scene Updated */
         #room-scene {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #0d0d0d; z-index: 1500; display: none; opacity: 0; transition: opacity 1.5s;
+            background: #050505; /* Pitch black environment */
+            z-index: 1500; display: flex; opacity: 0; visibility: hidden; transition: opacity 1.5s ease, visibility 1.5s ease;
             overflow: hidden; font-family: 'VT323', monospace;
         }
-        #room-scene.visible { display: block; opacity: 1; pointer-events: auto; }
-        .room-bg {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 100%; height: 100%; max-width: 800px;
-            background: radial-gradient(circle at 70% 30%, #2a2a2a 0%, #000000 90%);
-        }
-        .room-obj { position: absolute; cursor: pointer; transition: 0.3s; font-size: 3rem; filter: grayscale(0.7) brightness(0.8); pointer-events: auto; }
-        .room-obj:hover { filter: grayscale(0) brightness(1.2) drop-shadow(0 0 10px rgba(255,255,255,0.3)); transform: scale(1.1); }
+        #room-scene.visible { opacity: 1; visibility: visible; pointer-events: auto; }
         
-        #obj-tulip { bottom: 20%; left: 20%; font-size: 3.5rem; }
-        #obj-letter { bottom: 35%; left: 45%; font-size: 2.5rem; transform: rotate(-10deg); }
-        #obj-diary { bottom: 25%; right: 25%; font-size: 3rem; }
-        #obj-window { top: 10%; right: 10%; font-size: 5rem; opacity: 0.5; pointer-events: auto; }
-        #obj-lamp { bottom: 40%; right: 10%; font-size: 3rem; color: #fdcb6e; filter: brightness(0.9); }
+        .room-bg {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            /* Lighting: Cool Moonlight (Top-Right) & Warm Lamp (Bottom-Right) */
+            background: 
+                radial-gradient(circle at 85% 75%, rgba(255, 170, 80, 0.15) 0%, transparent 45%),
+                radial-gradient(circle at 90% 10%, rgba(150, 170, 255, 0.1) 0%, transparent 50%);
+        }
+
+        #room-progress {
+            position: absolute; top: 30px; left: 30px;
+            color: rgba(255,255,255,0.7);
+            font-family: 'VT323', monospace; font-size: 2.5rem;
+            pointer-events: none; z-index: 1700;
+            text-shadow: 2px 2px 0 #000;
+        }
+
+        .room-exit-btn {
+            position: absolute; bottom: 30px; left: 30px;
+            background: transparent; border: 1px solid rgba(255,255,255,0.5);
+            color: rgba(255,255,255,0.7); padding: 10px 20px;
+            font-family: 'VT323', monospace; font-size: 1.2rem;
+            cursor: pointer; z-index: 1700; transition: 0.3s;
+            pointer-events: auto;
+        }
+        .room-exit-btn:hover {
+            background: rgba(255,255,255,0.1); color: white; border-color: white;
+        }
+
+        /* Generic Room Object Styles */
+        .room-obj { 
+            position: absolute; cursor: pointer; transition: 0.3s; 
+            filter: brightness(0.6) grayscale(0.4); 
+            pointer-events: auto; 
+        }
+        .room-obj:hover { 
+            filter: brightness(1.1) grayscale(0) drop-shadow(0 0 8px rgba(255,255,255,0.2)); 
+            transform: scale(1.05); 
+        }
+
+        /* 1. Window: Top Right (Source of moonlight) */
+        #obj-window { 
+            top: 10%; right: 8%; 
+            font-size: 5rem; opacity: 0.3; 
+        }
+        
+        /* 2. Lamp: Bottom Right (Source of warm light) */
+        #obj-lamp { 
+            bottom: 28%; right: 12%; 
+            font-size: 3rem; color: #fdcb6e; 
+            filter: brightness(0.9) drop-shadow(0 0 15px rgba(253, 203, 110, 0.2)); 
+        }
+
+        /* 3. Bookshelf Area: Mid-Left */
+        /* Tulip on shelf */
+        #obj-tulip { 
+            top: 40%; left: 15%; 
+            font-size: 3.5rem; 
+        }
+        /* Red Thread on Tulip */
+        #obj-tulip::after {
+            content: ''; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+            width: 20px; height: 3px; background: #d63031; box-shadow: 0 0 4px #ff7675;
+            border-radius: 2px; pointer-events: none; transform: rotate(-5deg);
+        }
+
+        /* 4. Table Area: Bottom-Right (Near Lamp) */
+        /* Diary */
+        #obj-diary { 
+            bottom: 22%; right: 28%; /* Near lamp */
+            font-size: 3rem; transform: rotate(5deg);
+        }
+        /* Letter: Beside Diary */
+        #obj-letter { 
+            bottom: 20%; right: 40%; /* Left of diary */
+            font-size: 2.5rem; transform: rotate(-15deg);
+        }
+
+        /* 5. Additional Objects for Poetic Horror */
+        #obj-clock { top: 15%; left: 40%; font-size: 2.5rem; opacity: 0.7; }
+        #obj-mirror { top: 25%; left: 5%; font-size: 4rem; opacity: 0.5; transform: skewY(5deg); }
+        #obj-frame { top: 30%; right: 30%; font-size: 2rem; transform: rotate(10deg); opacity: 0.6; }
+        #obj-chair { bottom: 25%; right: 35%; font-size: 4rem; opacity: 0.8; transform: scaleX(-1); }
+        #obj-carpet { bottom: 5%; left: 40%; font-size: 3rem; opacity: 0.4; transform: rotateX(60deg); }
+        #obj-pillow { bottom: 35%; left: 10%; font-size: 2.5rem; opacity: 0.6; }
+        #obj-blanket { bottom: 30%; left: 15%; font-size: 3rem; opacity: 0.6; }
+
 
         #room-tooltip {
             position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
@@ -215,18 +299,19 @@
             width: 85%; max-width: 400px; background: #1a1a1a; border: 1px solid #444;
             padding: 25px; color: #eee; text-align: center; display: none;
             box-shadow: 0 0 50px rgba(0,0,0,1); z-index: 1600; pointer-events: auto;
+            cursor: pointer;
         }
         #room-modal-text { font-size: 1.3rem; min-height: 80px; margin-bottom: 20px; line-height: 1.4; text-align: left; }
-        .room-close-btn { background: #333; color: white; border: 1px solid #666; padding: 8px 20px; cursor: pointer; font-family: inherit; font-size: 1.2rem; }
+        .room-close-btn { background: #333; color: white; border: 1px solid #666; padding: 8px 20px; cursor: pointer; font-family: inherit; font-size: 1.2rem; pointer-events: auto; }
 
         /* Secret Modal */
         #secret-modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.92); z-index: 3000;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; pointer-events: none; transition: 0.5s;
+            opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.5s ease, visibility 0.5s ease;
         }
-        #secret-modal.visible { opacity: 1; pointer-events: auto; }
+        #secret-modal.visible { opacity: 1; visibility: visible; pointer-events: auto; }
         .secret-btn {
             font-size: 2.5rem; padding: 15px 50px; margin-top: 40px;
             background: gold; color: black; border: none; border-radius: 50px; font-family: 'Fredoka', sans-serif;
@@ -234,6 +319,20 @@
         }
 
         #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2400; pointer-events: none; }
+        
+        /* Share Modal Styles */
+        .share-card-container {
+            width: 90%; max-width: 380px; background: #fff;
+            padding: 20px; display: flex; flex-direction: column; align-items: center;
+            animation: fadeInUp 0.3s ease-out;
+        }
+        .share-card-container h2 { font-family: 'Fredoka'; color: var(--primary-pink); margin-bottom: 15px; }
+        #share-preview-container { 
+            width: 100%; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
+            border-radius: 10px; overflow: hidden; display: flex; justify-content: center;
+        }
+        #share-preview-container img { max-width: 100%; height: auto; display: block; }
+        .share-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     </style>
 </head>
 <body>
@@ -360,9 +459,19 @@
     <!-- 5. ENDING 3: ROOM SCENE -->
     <div id="room-scene">
         <div class="room-bg">
+            <div id="room-progress">Room: 0/3</div>
+            <!-- Ambience Objects (Tooltip Only) -->
             <div class="room-obj" id="obj-window" title="Window">🪟</div>
             <div class="room-obj" id="obj-lamp" title="Lamp">🏮</div>
-            <!-- Main Objects -->
+            <div class="room-obj" id="obj-clock" title="Clock">🕰️</div>
+            <div class="room-obj" id="obj-mirror" title="Mirror">🪞</div>
+            <div class="room-obj" id="obj-frame" title="Photo Frame">🖼️</div>
+            <div class="room-obj" id="obj-chair" title="Chair">🪑</div>
+            <div class="room-obj" id="obj-carpet" title="Carpet">👣</div>
+            <div class="room-obj" id="obj-pillow" title="Pillow">☁️</div>
+            <div class="room-obj" id="obj-blanket" title="Blanket">🛌</div>
+
+            <!-- Main Interaction Objects -->
             <div class="room-obj" id="obj-tulip" title="Tulip">🌷</div>
             <div class="room-obj" id="obj-letter" title="Letter">✉️</div>
             <div class="room-obj" id="obj-diary" title="Diary">📓</div>
@@ -372,6 +481,7 @@
             <div id="room-modal-text"></div>
             <button class="room-close-btn" id="btn-room-close">Close</button>
         </div>
+        <button id="btn-room-exit" class="room-exit-btn">Exit Room</button>
     </div>
 
     <!-- 6. ENDING 4: SECRET QUESTION -->
@@ -379,6 +489,21 @@
         <h1 style="color:white; font-family:'Fredoka'; text-align:center; margin:20px;">One last question...</h1>
         <div id="secret-text" style="color:white; font-size: 1.5rem; text-align:center; min-height:50px;"></div>
         <button id="btn-secret-yes" class="secret-btn">YES</button>
+    </div>
+    
+    <!-- 7. SHARE CARD MODAL -->
+    <div id="share-modal" class="overlay-screen hidden">
+        <div class="glass-card share-card-container">
+            <h2>Share your Fate 💌</h2>
+            <div id="share-preview-container">
+                <!-- Image goes here -->
+            </div>
+            <div class="share-actions">
+                <button id="btn-share-download" class="action-btn">Download Image 📥</button>
+                <button id="btn-share-copy" class="action-btn">Copy Share Text 📋</button>
+                <button id="btn-share-close" class="action-btn" style="background:#555;">Close</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -403,10 +528,19 @@
             startTime: null,
             scoreClicked: false, // For Ending 4
             isEnding: false,
+            currentEnding: 0, // Track for share card
             inLobby: true,
             usingSynth: false,
             effects: [],
             roomProgress: { tulip: false, letter: false, diary: false } // For Ending 3
+        };
+
+        /* --- MODAL STATE --- */
+        let modalState = {
+            lines: [],
+            idx: 0,
+            typing: false,
+            timer: null
         };
 
         /* --- LANGUAGE DATA --- */
@@ -426,11 +560,29 @@
                 end3_lines: ["You left...", "from the very start.", "It just took me 100 times...", "to believe it."],
                 end4_title: "THE SECRET YES", end4_sub: "SECRET ENDING FOUND",
                 end4_lines: ["You found the secret.", "Not just the game's secret...", "but mine.", "You proved that...", "I am worth choosing.", "This Valentine...", "I am yours."],
-                room_window: "The moon is cold tonight.",
-                room_lamp: "A fading light...",
-                room_tulip: ["Tulip.", "The flower of deep love.", "But this one is fake.", "It never lived."],
-                room_letter: ["I wrote it...", "tore it...", "wrote it again.", "Scared of one 'NO'.", "You gave me 100."],
-                room_diary: ["Page 1: I saw you today...", "Page 2: I wanted to ask...", "Page 3: The answer existed before the question."],
+                
+                // Share Quotes
+                share_quotes: {
+                    1: "True love is 101 times YES.",
+                    2: "Hesitant, but eventually sure.",
+                    3: "The room remains empty.",
+                    4: "You found the hidden truth."
+                },
+
+                // Room Descriptions (Poetic Horror)
+                room_window: "The moonlight is too bright. It reveals the empty space where you used to stand.",
+                room_lamp: "Flickering... like my hope. It casts shadows that look like you.",
+                room_tulip: ["A single tulip.", "Red as blood, bound by a thread of fate.", "It never withered, because it was never alive.", "Just like us."],
+                room_letter: ["My hands shook when I wrote this.", "Every word was a plea.", "But you never opened it.", "Now it's just ink on dead paper."],
+                room_diary: ["Page 1: I met you.", "Page 50: I loved you.", "Page 100: You left.", "The rest of the pages are blank."],
+                room_clock: "The hands are frozen at the exact moment you said 'No'.",
+                room_mirror: "I looked for myself, but I only saw the ghost of who I was when you loved me.",
+                room_frame: "A picture of us laughing. The glass is cracked right down the middle, separating our hands.",
+                room_chair: "Pulled back from the table, waiting for a guest who will never arrive.",
+                room_carpet: "Stained with shadows. The footprints only lead towards the door, never back inside.",
+                room_pillow: "It still smells like your shampoo. Or maybe that's just my memory playing tricks.",
+                room_blanket: "Cold and heavy. It feels like a shroud covering a dream that died.",
+                
                 secret_q: ["You think this is enough?", "If you truly want it...", "Say YES one last time."]
             },
             vi: {
@@ -448,12 +600,30 @@
                 end3_lines: ["Cậu đã rời đi...", "ngay từ lần đầu tiên.", "Chỉ là...", "tớ mất 100 lần...", "mới chịu tin."],
                 end4_title: "LỜI ĐỒNG Ý BÍ MẬT", end4_sub: "ĐÃ TÌM THẤY BÍ MẬT",
                 end4_lines: ["Cậu tìm thấy bí mật rồi.", "Không phải bí mật của game...", "mà là của tớ.", "Cậu chứng minh rằng...", "tớ đáng được chọn.", "Valentine này...", "tớ thuộc về cậu."],
-                room_window: "Ánh trăng đêm nay lạnh lẽo quá.",
-                room_lamp: "Ngọn đèn sắp tắt...",
-                room_tulip: ["Tulip.", "Loài hoa của tình yêu.", "Nhưng bông hoa này là giả.", "Nó chưa từng sống."],
-                room_letter: ["Tớ đã viết...", "rồi xé...", "rồi viết lại.", "Sợ nhận lại một chữ 'KHÔNG'.", "Cậu đã cho tớ 100 chữ."],
-                room_diary: ["Trang 1: Hôm nay tớ thấy cậu...", "Trang 2: Tớ muốn hỏi...", "Trang 3: Câu trả lời đã có trước khi tớ kịp hỏi."],
-                secret_q: ["Cậu nghĩ thế là đủ sao?", "Nếu cậu thật sự muốn...", "Hãy nói CÓ một lần nữa."]
+                
+                // Share Quotes
+                share_quotes: {
+                    1: "Tình yêu thật sự là 101 lần CÓ.",
+                    2: "Do dự, nhưng cuối cùng vẫn chắc chắn.",
+                    3: "Căn phòng vẫn trống rỗng.",
+                    4: "Cậu đã tìm thấy sự thật ẩn giấu."
+                },
+
+                // Room Descriptions (Poetic Horror)
+                room_window: "Ánh trăng quá sáng. Nó soi rõ khoảng trống nơi cậu từng đứng.",
+                room_lamp: "Chập chờn... như hy vọng của tớ. Nó tạo ra những cái bóng trông giống cậu.",
+                room_tulip: ["Một bông tulip lẻ loi.", "Đỏ như máu, buộc bởi sợi chỉ định mệnh.", "Nó không bao giờ héo, vì nó chưa từng sống.", "Giống như chúng ta vậy."],
+                room_letter: ["Tay tớ run rẩy khi viết những dòng này.", "Từng chữ là một lời cầu xin.", "Nhưng cậu chưa bao giờ mở nó.", "Giờ chỉ còn là mực trên giấy chết."],
+                room_diary: ["Trang 1: Tớ gặp cậu.", "Trang 50: Tớ yêu cậu.", "Trang 100: Cậu rời đi.", "Những trang còn lại đều trắng xóa."],
+                room_clock: "Kim đồng hồ đông cứng ngay khoảnh khắc cậu nói 'Không'.",
+                room_mirror: "Tớ tìm kiếm chính mình, nhưng chỉ thấy bóng ma của kẻ mà cậu từng thương hại.",
+                room_frame: "Bức ảnh chúng ta cười. Mặt kính nứt ngay chính giữa, chia cắt đôi bàn tay.",
+                room_chair: "Được kéo ra khỏi bàn, chờ đợi một vị khách sẽ không bao giờ đến.",
+                room_carpet: "Manchada de sombras. Las huellas solo conducen hacia la puerta, nunca de regreso.",
+                room_pillow: "Todavía huele a tu champú. O tal vez sea solo mi memoria jugándome trucos.",
+                room_blanket: "Fría y pesada. Se siente como un sudario cubriendo un sueño que murió.",
+
+                secret_q: ["¿Crees que es suficiente?", "Si realmente lo quieres...", "Di SÍ una última vez."]
             },
             es: {
                 title: "¿Quieres ser mi San Valentín? 💘",
@@ -470,11 +640,29 @@
                 end3_lines: ["Te fuiste...", "desde el principio.", "Solo me tomó 100 veces...", "creerlo."],
                 end4_title: "EL SÍ SECRETO", end4_sub: "FINAL SECRETO ENCONTRADO",
                 end4_lines: ["Encontraste el secreto.", "No del juego...", "sino el mío.", "Demostraste que...", "valgo la pena.", "Este San Valentín...", "soy tuyo."],
-                room_window: "La luna está fría esta noche.",
-                room_lamp: "Una luz que se apaga...",
-                room_tulip: ["Tulipán.", "La flor del amor profundo.", "Pero este es falso.", "Nunca vivió."],
-                room_letter: ["La escribí...", "la rompí...", "la escribí de nuevo.", "Miedo a un 'NO'.", "Me diste 100."],
-                room_diary: ["Página 1: Te vi hoy...", "Página 2: Quería preguntar...", "Página 3: La respuesta existía antes de la pregunta."],
+                
+                // Share Quotes
+                share_quotes: {
+                    1: "El amor verdadero es 101 veces SÍ.",
+                    2: "Dudoso, pero finalmente seguro.",
+                    3: "La habitación permanece vacía.",
+                    4: "Encontraste la verdad oculta."
+                },
+
+                // Room Descriptions (Poetic Horror)
+                room_window: "La luz de la luna es demasiado brillante. Revela el vacío donde solías estar.",
+                room_lamp: "Parpadeando... como mi esperanza. Proyecta sombras que se parecen a ti.",
+                room_tulip: ["Un solo tulipán.", "Rojo como la sangre, atado por un hilo del destino.", "Nó không bao giờ héo, vì nó chưa từng sống.", "Igual que nosotros."],
+                room_letter: ["Mis manos temblaban al escribir esto.", "Cada palabra era una súplica.", "Pero nunca la abriste.", "Ahora es solo tinta en papel muerto."],
+                room_diary: ["Página 1: Te conocí.", "Página 50: Te amé.", "Página 100: Te fuiste.", "El resto de las páginas están en blanco."],
+                room_clock: "Las manecillas se congelaron en el momento exacto en que dijiste 'No'.",
+                room_mirror: "Me busqué a mí mismo, pero solo vi el fantasma de quien era cuando me amabas.",
+                room_frame: "Una foto nuestra riendo. El cristal está roto justo en el medio, separando nuestras manos.",
+                room_chair: "Apartada de la mesa, esperando a un invitado que nunca llegará.",
+                room_carpet: "Manchada de sombras. Las huellas solo conducen hacia la puerta, nunca de regreso.",
+                room_pillow: "Todavía huele a tu champú. O tal vez sea solo mi memoria jugándome trucos.",
+                room_blanket: "Fría y pesada. Se siente como un sudario cubriendo un sueño que murió.",
+
                 secret_q: ["¿Crees que es suficiente?", "Si realmente lo quieres...", "Di SÍ una última vez."]
             }
         };
@@ -557,71 +745,245 @@
                 roomTooltip: document.getElementById('room-tooltip'),
                 roomModal: document.getElementById('room-modal'),
                 roomModalText: document.getElementById('room-modal-text'),
-                roomCloseBtn: document.getElementById('btn-room-close')
+                roomCloseBtn: document.getElementById('btn-room-close'),
+                roomProgress: document.getElementById('room-progress'),
+                roomExitBtn: document.getElementById('btn-room-exit'),
+
+                // Share Modal UI
+                shareModal: document.getElementById('share-modal'),
+                sharePreview: document.getElementById('share-preview-container'),
+                btnShareDownload: document.getElementById('btn-share-download'),
+                btnShareCopy: document.getElementById('btn-share-copy'),
+                btnShareClose: document.getElementById('btn-share-close')
             };
         }
 
         /* --- AUDIO MANAGER --- */
         const AudioCtrl = {
+            ambientOsc: null,
+            ambientGain: null,
+
             async init() {
                 if (!DOM.audioLobby) return;
-                DOM.audioLobby.volume = 0.5;
-                DOM.audioGame.volume = 0.4;
-                DOM.audioEnd.volume = 0.5;
+                
+                // Set volume to 0 for fade-ins
+                DOM.audioLobby.volume = 0;
+                DOM.audioGame.volume = 0;
+                DOM.audioEnd.volume = 0;
+
                 const v = "?v=2";
                 DOM.audioLobby.src = "music/lobby.mp3" + v;
                 DOM.audioGame.src = "music/game.mp3" + v;
+                
                 try {
                     await fetch(DOM.audioLobby.src, {method:'HEAD'});
                     STATE.usingSynth = false;
                 } catch(e) {
+                    console.warn("Audio fetch failed, utilizing Synth fallback", e);
                     STATE.usingSynth = true; 
                 }
             },
             
-            playLobby() {
-                if(!SETTINGS.lobbyMusic) return;
-                if(DOM.audioGame) DOM.audioGame.pause(); 
-                if(DOM.audioEnd) DOM.audioEnd.pause();
-                if(!STATE.usingSynth && DOM.audioLobby) DOM.audioLobby.play().catch(()=>{});
-                else SynthMusic.start();
+            // --- FADING HELPERS ---
+            fadeIn(audio, maxVol) {
+                if(!audio) return;
+                if(audio.fadeTimer && audio.isFadingOut) {
+                    clearInterval(audio.fadeTimer);
+                    audio.fadeTimer = null;
+                }
+                if(audio.fadeTimer) return; // Already fading in or active
+
+                if(audio.paused) {
+                    audio.volume = 0;
+                    audio.play().catch(e => console.warn("Auto-play prevented", e));
+                }
+                
+                audio.isFadingOut = false;
+                const step = maxVol / 12; // 0.6s (12 * 50ms)
+                
+                audio.fadeTimer = setInterval(() => {
+                    if(audio.volume < maxVol - step) audio.volume += step;
+                    else {
+                        audio.volume = maxVol;
+                        clearInterval(audio.fadeTimer);
+                        audio.fadeTimer = null;
+                    }
+                }, 50);
             },
 
-            playGame() {
-                if(!SETTINGS.gameMusic) return;
-                if(DOM.audioLobby) DOM.audioLobby.pause(); 
-                if(DOM.audioEnd) DOM.audioEnd.pause();
-                SynthMusic.stop(); 
-                if(DOM.audioGame) DOM.audioGame.play().catch(()=>{});
+            fadeOut(audio) {
+                if(!audio) return;
+                if(audio.paused) return;
+                
+                if(audio.fadeTimer && !audio.isFadingOut) {
+                    clearInterval(audio.fadeTimer);
+                    audio.fadeTimer = null;
+                }
+                if(audio.fadeTimer) return; // Already fading out
+
+                audio.isFadingOut = true;
+                const step = audio.volume / 12;
+
+                audio.fadeTimer = setInterval(() => {
+                    if(audio.volume > step) audio.volume -= step;
+                    else {
+                        audio.volume = 0;
+                        audio.pause();
+                        clearInterval(audio.fadeTimer);
+                        audio.fadeTimer = null;
+                        audio.isFadingOut = false;
+                    }
+                }, 50);
             },
+
+            // --- AMBIENT ROOM HUM ---
+            playRoomAmbience() {
+                // Ensure everything else is quiet
+                this.fadeOut(DOM.audioLobby);
+                this.fadeOut(DOM.audioGame);
+                this.fadeOut(DOM.audioEnd);
+                SynthMusic.stop();
+
+                if (this.ambientOsc) return; // Already playing
+                
+                // Lazy access SFX ctx
+                if (!SFX.ctx) return;
+                if(SFX.ctx.state === 'suspended') SFX.ctx.resume();
+
+                this.ambientOsc = SFX.ctx.createOscillator();
+                this.ambientGain = SFX.ctx.createGain();
+
+                // Very low hum
+                this.ambientOsc.type = 'sine';
+                this.ambientOsc.frequency.value = 50; 
+                
+                // Very low volume
+                this.ambientGain.gain.value = 0; 
+
+                this.ambientOsc.connect(this.ambientGain);
+                this.ambientGain.connect(SFX.ctx.destination);
+
+                this.ambientOsc.start();
+                
+                // Web Audio Ramp for smooth fade in
+                this.ambientGain.gain.linearRampToValueAtTime(0.05, SFX.ctx.currentTime + 2);
+            },
+
+            stopRoomAmbience() {
+                if (this.ambientOsc && this.ambientGain) {
+                    const osc = this.ambientOsc;
+                    const gain = this.ambientGain;
+                    this.ambientOsc = null;
+                    this.ambientGain = null;
+
+                    // Fade out
+                    if(SFX.ctx) {
+                        gain.gain.setValueAtTime(gain.gain.value, SFX.ctx.currentTime);
+                        gain.gain.linearRampToValueAtTime(0, SFX.ctx.currentTime + 1);
+                    }
+                    
+                    setTimeout(() => {
+                        try {
+                            osc.stop();
+                            osc.disconnect();
+                            gain.disconnect();
+                        } catch(e) {}
+                    }, 1000);
+                }
+            },
+
+            // --- MAIN ACTIONS ---
+            playLobby() { this.update(); },
+            playGame() { this.update(); },
 
             playEnding(type) {
-                if(!SETTINGS.gameMusic) return; 
-                if(DOM.audioLobby) DOM.audioLobby.pause(); 
-                if(DOM.audioGame) DOM.audioGame.pause();
+                // Priority: Stop everything else
+                this.fadeOut(DOM.audioLobby);
+                this.fadeOut(DOM.audioGame);
+                SynthMusic.stop();
+
+                // Specific check for room ending
+                if(type === 3) {
+                    this.playRoomAmbience();
+                    return; 
+                } else {
+                    this.stopRoomAmbience();
+                }
+
+                if(!SETTINGS.gameMusic) return; // Respect setting
+
                 let src = "";
                 if(type === 1) src = "music/victory_love.mp3?v=2";
                 if(type === 2) src = "music/ending_bittersweet.mp3?v=2";
-                if(type === 3) src = ""; 
                 if(type === 4) src = "music/music_box.mp3?v=2";
+                // Type 3 (Room) handled above
+
                 if(src && DOM.audioEnd) {
                     DOM.audioEnd.src = src;
-                    DOM.audioEnd.play().catch(()=>{});
+                    this.fadeIn(DOM.audioEnd, 0.5);
                 }
             },
             
             stopAll() {
-                if(DOM.audioLobby) DOM.audioLobby.pause(); 
-                if(DOM.audioGame) DOM.audioGame.pause(); 
-                if(DOM.audioEnd) DOM.audioEnd.pause();
+                this.fadeOut(DOM.audioLobby);
+                this.fadeOut(DOM.audioGame);
+                this.fadeOut(DOM.audioEnd);
+                this.stopRoomAmbience();
                 SynthMusic.stop();
             },
             
             update() {
+                const isStartOverlay = DOM.startOverlay && !DOM.startOverlay.classList.contains('hidden');
+
+                // STATE A: Start Overlay Visible -> Silence
+                if(isStartOverlay) {
+                    this.stopAll();
+                    return;
+                }
+
+                // STATE D: Ending Active -> Ending Music Only
+                if(STATE.isEnding) {
+                    this.fadeOut(DOM.audioLobby);
+                    this.fadeOut(DOM.audioGame);
+                    SynthMusic.stop();
+                    // Ending music is triggered once via playEnding(), we don't restart it here
+                    // However, if we are in Ending 3, ambience might be running. 
+                    // We don't want to stop it here repeatedly.
+                    if(!SETTINGS.gameMusic && !STATE.roomProgress) this.fadeOut(DOM.audioEnd);
+                    return;
+                }
+
+                // Ensure ambience is stopped if we are not in Ending
+                this.stopRoomAmbience();
+
+                // STATE B: Lobby Visible -> Lobby Music
                 if(STATE.inLobby) {
-                    if(SETTINGS.lobbyMusic) this.playLobby(); else this.stopAll();
-                } else if (!STATE.isEnding) {
-                    if(SETTINGS.gameMusic) this.playGame(); else this.stopAll();
+                    this.fadeOut(DOM.audioGame);
+                    this.fadeOut(DOM.audioEnd);
+                    
+                    if(SETTINGS.lobbyMusic) {
+                        if(STATE.usingSynth) {
+                             SynthMusic.start();
+                        } else {
+                             SynthMusic.stop();
+                             this.fadeIn(DOM.audioLobby, 0.5);
+                        }
+                    } else {
+                        this.fadeOut(DOM.audioLobby);
+                        SynthMusic.stop();
+                    }
+                    return;
+                }
+
+                // STATE C: Gameplay Active -> Game Music
+                this.fadeOut(DOM.audioLobby);
+                this.fadeOut(DOM.audioEnd);
+                SynthMusic.stop(); 
+
+                if(SETTINGS.gameMusic) {
+                    this.fadeIn(DOM.audioGame, 0.4);
+                } else {
+                    this.fadeOut(DOM.audioGame);
                 }
             }
         };
@@ -651,7 +1013,7 @@
             try {
                 cacheDOM(); 
                 loadSettings();
-                loadGame();
+                loadGame(); // Restores state and UI
                 generateStages();
                 AudioCtrl.init().catch(err => console.warn("Audio Init Warning:", err));
                 
@@ -660,22 +1022,23 @@
                 if(DOM.langSelect) DOM.langSelect.value = SETTINGS.lang;
                 
                 updateTexts();
-                updateStatsUI();
+                updateStatsUI(); // Ensure stats match loaded data
 
                 // Bind Events using DOM cache
                 if(DOM.startBtn) DOM.startBtn.onclick = () => {
                     console.log("Start Button Clicked");
                     if(DOM.startOverlay) DOM.startOverlay.classList.add('hidden');
                     SFX.ctx.resume();
-                    if(STATE.inLobby) {
+                    
+                    // Resume correct audio based on restored STATE
+                    if(STATE.isEnding) {
+                        if(STATE.currentEnding === 3) AudioCtrl.playEnding(3); // Room ambience
+                        else AudioCtrl.playEnding(STATE.currentEnding);
+                    } else if(STATE.inLobby) {
                         console.log("Entering Lobby");
-                        if(DOM.lobbyScreen) {
-                            DOM.lobbyScreen.classList.remove('hidden');
-                            DOM.lobbyScreen.classList.add('visible');
-                        }
                         AudioCtrl.playLobby();
                     } else {
-                        console.log("Entering Game directly");
+                        console.log("Entering Game");
                         AudioCtrl.playGame();
                     }
                 };
@@ -686,6 +1049,7 @@
                     STATE.inLobby = false;
                     if(DOM.lobbyScreen) DOM.lobbyScreen.classList.add('hidden');
                     AudioCtrl.playGame();
+                    saveGame();
                 };
                 if(DOM.lobbyNo) DOM.lobbyNo.onclick = () => {
                     console.log("Lobby NO Clicked");
@@ -710,7 +1074,7 @@
                 
                 if(DOM.endReplayBtn) DOM.endReplayBtn.onclick = resetGame;
                 if(DOM.endLobbyBtn) DOM.endLobbyBtn.onclick = () => location.reload();
-                if(DOM.endShareBtn) DOM.endShareBtn.onclick = () => alert("Share Card coming soon! 💌");
+                if(DOM.endShareBtn) DOM.endShareBtn.onclick = openShareModal;
 
                 if(DOM.settingsBtn) DOM.settingsBtn.onclick = () => DOM.settingsModal && DOM.settingsModal.classList.remove('hidden');
                 if(DOM.closeSettingsBtn) DOM.closeSettingsBtn.onclick = () => DOM.settingsModal && DOM.settingsModal.classList.add('hidden');
@@ -720,6 +1084,11 @@
                 if(DOM.langSelect) DOM.langSelect.onchange = (e) => { SETTINGS.lang = e.target.value; saveSettings(); updateTexts(); };
                 
                 if(DOM.resetBtn) DOM.resetBtn.onclick = () => { if(confirm(getLang().reset + "?")) resetGame(); };
+
+                // Share Modal Events
+                if(DOM.btnShareClose) DOM.btnShareClose.onclick = () => DOM.shareModal.classList.add('hidden');
+                if(DOM.btnShareDownload) DOM.btnShareDownload.onclick = downloadShareCard;
+                if(DOM.btnShareCopy) DOM.btnShareCopy.onclick = copyShareText;
 
                 createParticles();
 
@@ -779,23 +1148,50 @@
         }
 
         function checkEndingTriggers() {
-            if(STATE.yesCount === 100 && STATE.scoreClicked) { triggerSecretModal(); return true; }
-            if(STATE.yesCount >= CONFIG.YES_GOAL) { enterEnding(1); return true; }
-            if(STATE.yesCount === 51 && STATE.noCount === 50) { enterEnding(2); return true; }
-            if(STATE.noCount >= CONFIG.NO_GOAL) { enterEnding(3); return true; }
+            // 0. Safety Check
+            if (STATE.isEnding) return true;
+
+            // 1. Secret Modal Trigger: YES=100 AND scoreClicked=true
+            if (STATE.yesCount === 100 && STATE.scoreClicked) {
+                triggerSecretModal();
+                return true;
+            }
+
+            // 2. Ending 1: YES >= 101
+            if (STATE.yesCount >= CONFIG.YES_GOAL) {
+                enterEnding(1);
+                return true;
+            }
+
+            // 3. Ending 2: YES=51 AND NO=50
+            if (STATE.yesCount === 51 && STATE.noCount === 50) {
+                enterEnding(2);
+                return true;
+            }
+
+            // 4. Ending 3: NO >= 100
+            if (STATE.noCount >= CONFIG.NO_GOAL) {
+                enterEnding(3);
+                return true;
+            }
+
             return false;
         }
 
         function enterEnding(id) {
             console.log("Entering Ending:", id);
             STATE.isEnding = true;
+            STATE.currentEnding = id; // Store ID for share card
+            
             if(DOM.gameView) {
                 DOM.gameView.style.opacity = '0';
                 DOM.gameView.style.pointerEvents = 'none';
             }
             saveGame(); 
             if(id === 3) {
-                AudioCtrl.stopAll();
+                // AudioCtrl handled by playEnding(3) internally now which calls playRoomAmbience
+                AudioCtrl.playEnding(3);
+                
                 setTimeout(() => {
                     if(DOM.roomScene) DOM.roomScene.classList.add('visible');
                     initRoomScene();
@@ -862,8 +1258,15 @@
             startTypewriter(lines);
             if(id===1 || id===4) startConfetti();
         }
+        
+        function updateRoomHUD() {
+            if(!DOM.roomProgress) return;
+            const c = (STATE.roomProgress.tulip?1:0) + (STATE.roomProgress.letter?1:0) + (STATE.roomProgress.diary?1:0);
+            DOM.roomProgress.innerText = `Room: ${c}/3`;
+        }
 
         function initRoomScene() {
+            updateRoomHUD(); 
             const L = getLang();
             const bindObj = (id, textKey, isMain, keyName) => {
                 const el = document.getElementById(id);
@@ -871,11 +1274,9 @@
                 el.onclick = () => {
                     if(isMain) {
                         STATE.roomProgress[keyName] = true;
-                        if(DOM.roomModal) DOM.roomModal.style.display = 'block';
-                        let content = L[textKey];
-                        if(Array.isArray(content)) content = content.join("<br><br>");
-                        if(DOM.roomModalText) DOM.roomModalText.innerHTML = content;
-                        checkRoomComplete();
+                        updateRoomHUD();
+                        saveGame();
+                        openRoomModal(L[textKey]);
                     } else {
                         if(DOM.roomTooltip) {
                             DOM.roomTooltip.innerText = L[textKey];
@@ -885,12 +1286,94 @@
                     }
                 };
             };
+            // Main Objects
             bindObj('obj-window', 'room_window', false);
             bindObj('obj-lamp', 'room_lamp', false);
             bindObj('obj-tulip', 'room_tulip', true, 'tulip');
             bindObj('obj-letter', 'room_letter', true, 'letter');
             bindObj('obj-diary', 'room_diary', true, 'diary');
-            if(DOM.roomCloseBtn) DOM.roomCloseBtn.onclick = () => { if(DOM.roomModal) DOM.roomModal.style.display = 'none'; };
+
+            // Extra Horror Objects
+            bindObj('obj-clock', 'room_clock', false);
+            bindObj('obj-mirror', 'room_mirror', false);
+            bindObj('obj-pillow', 'room_pillow', false);
+            bindObj('obj-blanket', 'room_blanket', false);
+            bindObj('obj-carpet', 'room_carpet', false);
+            bindObj('obj-chair', 'room_chair', false);
+            bindObj('obj-frame', 'room_frame', false);
+
+            if(DOM.roomCloseBtn) DOM.roomCloseBtn.onclick = () => { 
+                if(DOM.roomModal) DOM.roomModal.style.display = 'none'; 
+                checkRoomComplete();
+            };
+            
+            // Setup Modal Click Advance
+            if(DOM.roomModal) {
+                DOM.roomModal.onclick = (e) => advanceModal(e);
+            }
+
+            // Exit Button Logic
+            if(DOM.roomExitBtn) {
+                DOM.roomExitBtn.onclick = () => {
+                    AudioCtrl.stopRoomAmbience();
+                    if(DOM.roomScene) {
+                        DOM.roomScene.classList.remove('visible');
+                    }
+                    STATE.isEnding = false;
+                    STATE.inLobby = true;
+                    if(DOM.lobbyScreen) {
+                        DOM.lobbyScreen.classList.remove('hidden');
+                        DOM.lobbyScreen.classList.add('visible');
+                    }
+                    AudioCtrl.playLobby();
+                    saveGame();
+                };
+            }
+        }
+        
+        function openRoomModal(content) {
+            modalState.lines = Array.isArray(content) ? content : [content];
+            modalState.idx = 0;
+            if(DOM.roomModal) DOM.roomModal.style.display = 'block';
+            if(DOM.roomCloseBtn) DOM.roomCloseBtn.style.display = 'none';
+            playModalLine();
+        }
+        
+        function playModalLine() {
+            const text = modalState.lines[modalState.idx];
+            if(DOM.roomModalText) DOM.roomModalText.innerText = "";
+            modalState.typing = true;
+            let i = 0;
+            if(modalState.timer) clearTimeout(modalState.timer);
+            
+            function type() {
+                if(!modalState.typing) return;
+                if(DOM.roomModalText) DOM.roomModalText.innerText = text.substring(0, i++);
+                if(i <= text.length) modalState.timer = setTimeout(type, 40);
+                else modalState.typing = false;
+            }
+            type();
+        }
+        
+        function advanceModal(e) {
+            // Prevent close button click from triggering advance logic if they overlap
+            if(e.target === DOM.roomCloseBtn) return;
+            
+            if(modalState.typing) {
+                // Instant finish
+                modalState.typing = false;
+                clearTimeout(modalState.timer);
+                if(DOM.roomModalText) DOM.roomModalText.innerText = modalState.lines[modalState.idx];
+            } else {
+                // Next line
+                modalState.idx++;
+                if(modalState.idx < modalState.lines.length) {
+                    playModalLine();
+                } else {
+                    // Finished
+                    if(DOM.roomCloseBtn) DOM.roomCloseBtn.style.display = 'inline-block';
+                }
+            }
         }
 
         function checkRoomComplete() {
@@ -900,14 +1383,18 @@
                         DOM.roomScene.style.opacity = 0;
                         setTimeout(() => {
                             DOM.roomScene.classList.remove('visible');
+                            AudioCtrl.stopRoomAmbience(); // Stop the hum when leaving room
                             renderEndingOverlay('3_final');
+                            STATE.currentEnding = '3_final';
+                            saveGame();
                         }, 1500);
                     }
-                }, 1000);
+                }, 500);
             }
         }
 
         function triggerSecretModal() {
+            if (STATE.isEnding) return;
             STATE.isEnding = true; 
             const L = getLang();
             if(DOM.secretModal) DOM.secretModal.classList.add('visible');
@@ -957,6 +1444,235 @@
                 el.innerText = lines[l];
                 setTimeout(() => { l++; c=0; type(); }, 500);
             };
+        }
+
+        /* --- SHARE CARD LOGIC --- */
+        let shareCardCanvas = document.createElement('canvas');
+        
+        function openShareModal() {
+            if(DOM.shareModal) {
+                DOM.shareModal.classList.remove('hidden');
+                DOM.sharePreview.innerHTML = "Generating...";
+                setTimeout(generateShareCard, 100);
+            }
+        }
+
+        function generateShareCard() {
+            const L = getLang();
+            const ctx = shareCardCanvas.getContext('2d');
+            const w = 600, h = 900; // Taller for better layout
+            shareCardCanvas.width = w; shareCardCanvas.height = h;
+
+            // Determine Ending ID
+            let id = STATE.currentEnding;
+            
+            // Fallback logic if ID is missing (e.g. legacy save or weird state)
+            if(!id) {
+                 if(STATE.yesCount >= 101) id=1;
+                 else if(STATE.yesCount === 51 && STATE.noCount === 50) id=2;
+                 else if(STATE.scoreClicked && STATE.yesCount === 100) id=4;
+                 else if(STATE.noCount >= 100) id=3;
+                 else id=1;
+            }
+            if(id === '3_final') id = 3;
+
+            // Theme Configs
+            const themes = {
+                1: { // Pink Romantic
+                    bg: (c) => { 
+                        const g = c.createLinearGradient(0,0,w,h); 
+                        g.addColorStop(0, '#ff9a9e'); g.addColorStop(1, '#fecfef'); 
+                        return g; 
+                    },
+                    border: '#ffffff',
+                    textMain: '#ffffff',
+                    textSub: '#fff0f5',
+                    accent: 'rgba(255,255,255,0.3)',
+                    shadow: '#ff758c',
+                    icon: '💖',
+                    fontTitle: 'Fredoka',
+                    quote: L.share_quotes[1],
+                    title: L.end1_title,
+                    sub: L.end1_sub
+                },
+                2: { // Purple Melancholy
+                    bg: (c) => { 
+                        // Purple requested:
+                        const p = c.createLinearGradient(0,0,w,h);
+                        p.addColorStop(0, '#667eea'); p.addColorStop(1, '#764ba2');
+                        return p; 
+                    },
+                    border: '#e0c3fc',
+                    textMain: '#ffffff',
+                    textSub: '#e0c3fc',
+                    accent: 'rgba(0,0,0,0.2)',
+                    shadow: '#4a00e0',
+                    icon: '💔',
+                    fontTitle: 'Nunito',
+                    quote: L.share_quotes[2],
+                    title: L.end2_title,
+                    sub: L.end2_sub
+                },
+                3: { // Dark Horror Noir
+                    bg: (c) => { 
+                        const g = c.createRadialGradient(w/2, h/3, 50, w/2, h/2, 800);
+                        g.addColorStop(0, '#2c3e50'); g.addColorStop(0.6, '#000000'); 
+                        return g; 
+                    },
+                    border: '#555555',
+                    textMain: '#dcdcdc',
+                    textSub: '#a9a9a9',
+                    accent: 'rgba(255,255,255,0.05)',
+                    shadow: '#000000',
+                    icon: '🕯️', // Lamp/Moon
+                    fontTitle: 'VT323',
+                    quote: L.share_quotes[3],
+                    title: L.end3_title,
+                    sub: L.end3_sub
+                },
+                4: { // Gold Secret Divine
+                    bg: (c) => { 
+                        const g = c.createLinearGradient(0,0,w,h); 
+                        g.addColorStop(0, '#f6d365'); g.addColorStop(0.5, '#fda085'); g.addColorStop(1, '#f6d365');
+                        return g; 
+                    },
+                    border: '#fff8dc',
+                    textMain: '#ffffff',
+                    textSub: '#fffacd',
+                    accent: 'rgba(255,255,255,0.4)',
+                    shadow: '#d4af37',
+                    icon: '👑',
+                    fontTitle: 'Fredoka',
+                    quote: L.share_quotes[4],
+                    title: L.end4_title,
+                    sub: L.end4_sub
+                }
+            };
+
+            const t = themes[id] || themes[1];
+
+            // --- DRAWING ---
+            
+            // 1. Background
+            ctx.fillStyle = t.bg(ctx);
+            ctx.fillRect(0,0,w,h);
+
+            // 2. Border
+            ctx.strokeStyle = t.border;
+            ctx.lineWidth = 15;
+            ctx.strokeRect(25, 25, w-50, h-50);
+            
+            // 3. Inner Box (Glass effect)
+            ctx.fillStyle = t.accent;
+            ctx.fillRect(50, 50, w-100, h-100);
+            
+            // Setup Text
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // 4. Icon
+            ctx.font = '120px serif'; // Emoji
+            ctx.shadowColor = t.shadow;
+            ctx.shadowBlur = 30;
+            ctx.fillText(t.icon, w/2, 180);
+            ctx.shadowBlur = 0; // Reset
+
+            // 5. Title
+            ctx.fillStyle = t.textMain;
+            ctx.font = `bold 60px ${t.fontTitle}`;
+            ctx.shadowColor = 'rgba(0,0,0,0.3)';
+            ctx.shadowBlur = 10;
+            ctx.fillText(t.title, w/2, 320);
+            ctx.shadowBlur = 0;
+
+            // 6. Subtitle
+            ctx.fillStyle = t.textSub;
+            ctx.font = '30px Nunito';
+            ctx.fillText(t.sub, w/2, 380);
+
+            // 7. Stats Box
+            const boxY = 450;
+            const boxH = 200;
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            if(id === 3) ctx.fillStyle = 'rgba(255,255,255,0.05)'; // lighter for dark theme
+            if(id === 4) ctx.fillStyle = 'rgba(255,255,255,0.3)'; // brighter for gold
+            
+            // Manual Round Rect for compat
+            ctx.beginPath();
+            const r = 20, x=100, y=boxY, bw=w-200, bh=boxH;
+            ctx.moveTo(x+r, y);
+            ctx.arcTo(x+bw, y, x+bw, y+bh, r);
+            ctx.arcTo(x+bw, y+bh, x, y+bh, r);
+            ctx.arcTo(x, y+bh, x, y, r);
+            ctx.arcTo(x, y, x+bw, y, r);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.fillStyle = t.textMain;
+            ctx.font = 'bold 50px VT323'; // Stats always look cool in pixel font or monospace
+            ctx.fillText(`YES: ${STATE.yesCount}`, w/2, boxY + 60);
+            ctx.fillText(`NO:  ${STATE.noCount}`, w/2, boxY + 140);
+            
+            // 8. Quote
+            ctx.fillStyle = t.textSub;
+            ctx.font = 'italic 28px Noto Sans';
+            ctx.fillText(`"${t.quote}"`, w/2, 720);
+
+            // 9. Footer
+            ctx.font = '20px Nunito';
+            ctx.fillStyle = t.textSub;
+            ctx.globalAlpha = 0.8;
+            ctx.fillText(new Date().toLocaleDateString(), w/2, 820);
+            ctx.fillText("Valentine's Game 2025", w/2, 850);
+            ctx.globalAlpha = 1.0;
+
+            // Output
+            const img = new Image();
+            img.src = shareCardCanvas.toDataURL('image/png');
+            DOM.sharePreview.innerHTML = "";
+            DOM.sharePreview.appendChild(img);
+        }
+
+        function downloadShareCard() {
+            const link = document.createElement('a');
+            link.download = `Valentine_Result_${Date.now()}.png`;
+            link.href = shareCardCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function copyShareText() {
+            const L = getLang();
+            let id = STATE.currentEnding;
+            // Fallback logic if ID is missing
+            if(!id) {
+                 if(STATE.yesCount >= 101) id=1;
+                 else if(STATE.yesCount === 51 && STATE.noCount === 50) id=2;
+                 else if(STATE.scoreClicked && STATE.yesCount === 100) id=4;
+                 else if(STATE.noCount >= 100) id=3;
+                 else id=1;
+            }
+            if(id === '3_final') id = 3;
+
+            let title = "";
+            if(id===1) title = L.end1_title;
+            else if(id===2) title = L.end2_title;
+            else if(id===3) title = L.end3_title;
+            else if(id===4) title = L.end4_title;
+
+            const quote = L.share_quotes[id] || "Happy Valentine's!";
+            
+            // Generate formatted text
+            const txt = `${title} 💘\nScore: ${STATE.yesCount} YES / ${STATE.noCount} NO\n"${quote}"\n#ValentineGame`;
+            
+            navigator.clipboard.writeText(txt).then(() => {
+                const b = DOM.btnShareCopy;
+                const og = b.innerText;
+                b.innerText = "Copied! ✅";
+                setTimeout(() => b.innerText = og, 2000);
+            }).catch(err => {
+                console.error("Copy failed", err);
+                alert("Could not copy text. Please copy manually!");
+            });
         }
 
         function resetGame() {
@@ -1047,30 +1763,114 @@
         }
 
         function applyCurrentStage() {
-            if(STATE.yesCount >= 100) return; 
+            // Aggressive reset for stability
             if(DOM.yesBtn) {
-                DOM.yesBtn.style.position='relative'; DOM.yesBtn.style.left='auto'; DOM.yesBtn.style.top='auto'; DOM.yesBtn.style.opacity=1; DOM.yesBtn.onmouseenter=null;
+                DOM.yesBtn.style.position='relative'; 
+                DOM.yesBtn.style.left='auto'; 
+                DOM.yesBtn.style.top='auto'; 
+                DOM.yesBtn.style.opacity='1';
+                DOM.yesBtn.style.transform='none';
+                DOM.yesBtn.onmouseenter=null;
             }
+            if(STATE.yesCount >= 100) return; 
+            
             const container = document.getElementById('fake-container');
             if(container) container.innerHTML = "";
             const ef = STATE.effects[STATE.yesCount];
             if(ef && ef.init) ef.init();
         }
 
-        function saveGame() { localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify({yes: STATE.yesCount, no: STATE.noCount, click: STATE.scoreClicked, room: STATE.roomProgress})); }
+        function saveGame() { 
+            let mode = 'lobby';
+            if(STATE.isEnding) {
+                if(STATE.currentEnding === '3_final') mode = 'ending_3_final';
+                else if(STATE.currentEnding === 3) mode = 'room';
+                else mode = 'ending_' + STATE.currentEnding;
+            } else if(!STATE.inLobby) {
+                mode = 'game';
+            }
+            
+            const data = {
+                v: 2,
+                yes: STATE.yesCount,
+                no: STATE.noCount,
+                click: STATE.scoreClicked,
+                room: STATE.roomProgress,
+                mode: mode,
+                ts: Date.now()
+            };
+            try {
+                localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
+            } catch(e) { console.warn("Save failed"); }
+        }
+
         function loadGame() {
             try {
-                const d = JSON.parse(localStorage.getItem(CONFIG.STORAGE_KEY));
-                if(d) { 
-                    STATE.yesCount=d.yes||0; 
-                    STATE.noCount=d.no||0; 
-                    STATE.scoreClicked=d.click||false; 
-                    STATE.roomProgress=d.room||{tulip:false,letter:false,diary:false}; 
-                    if(STATE.yesCount > 0 || STATE.noCount > 0) STATE.inLobby=false; 
+                const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
+                if(!raw) return;
+                const d = JSON.parse(raw);
+                
+                // Basic Integrity Check
+                if(typeof d.yes !== 'number') throw "Invalid data";
+
+                STATE.yesCount = d.yes;
+                STATE.noCount = d.no;
+                STATE.scoreClicked = d.click || false;
+                STATE.roomProgress = d.room || {tulip:false, letter:false, diary:false};
+                
+                // Restore Mode logic
+                const mode = d.mode || (STATE.yesCount > 0 ? 'game' : 'lobby');
+
+                // Reset UI defaults first
+                if(DOM.lobbyScreen) DOM.lobbyScreen.classList.add('hidden');
+                if(DOM.gameView) DOM.gameView.style.opacity = '1';
+                if(DOM.gameView) DOM.gameView.style.pointerEvents = 'auto';
+
+                if(mode === 'lobby') {
+                    STATE.inLobby = true;
+                    STATE.isEnding = false;
+                    if(DOM.lobbyScreen) {
+                        DOM.lobbyScreen.classList.remove('hidden');
+                        DOM.lobbyScreen.classList.add('visible');
+                    }
+                } else if(mode === 'game') {
+                    STATE.inLobby = false;
+                    STATE.isEnding = false;
+                    applyCurrentStage();
+                } else if(mode === 'room') {
+                    STATE.inLobby = false;
+                    STATE.isEnding = true;
+                    STATE.currentEnding = 3;
+                    if(DOM.gameView) DOM.gameView.style.opacity = '0';
+                    if(DOM.gameView) DOM.gameView.style.pointerEvents = 'none';
+                    if(DOM.roomScene) DOM.roomScene.classList.add('visible');
+                    setTimeout(initRoomScene, 50); // Delay for DOM
+                } else if(mode.startsWith('ending_')) {
+                    STATE.inLobby = false;
+                    STATE.isEnding = true;
+                    if(DOM.gameView) {
+                        DOM.gameView.style.opacity = '0';
+                        DOM.gameView.style.pointerEvents = 'none';
+                    }
+                    
+                    let endId = mode.replace('ending_', '');
+                    if(endId !== '3_final') endId = parseInt(endId);
+                    else endId = '3_final';
+                    
+                    STATE.currentEnding = endId;
+                    
+                    setTimeout(() => renderEndingOverlay(endId), 50);
                 }
+                
+                updateStatsUI();
+
             } catch(e) {
-                console.error("Save file corrupted, resetting");
+                console.error("Save Corrupted, resetting...", e);
                 localStorage.removeItem(CONFIG.STORAGE_KEY);
+                // Reset State to defaults
+                STATE.yesCount = 0; 
+                STATE.noCount = 0;
+                STATE.inLobby = true;
             }
         }
         function saveSettings() { localStorage.setItem(CONFIG.SETTINGS_KEY, JSON.stringify(SETTINGS)); }
