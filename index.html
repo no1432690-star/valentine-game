@@ -268,11 +268,34 @@
         /* Room Scene */
         .room-bg { 
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+            /* Fallback gradient is removed in JS if image loads, but kept here for initial state */
             background: radial-gradient(circle at 80% 40%, rgba(120,120,120,0.15) 0%, #000000 70%),
                         radial-gradient(circle at 15% 80%, rgba(255,200,120,0.10) 0%, #000000 65%),
                         #000000;
             transition: opacity 2s ease; 
+            z-index: 10; /* Above PS1 BG */
         }
+        
+        /* PS1 Background Layer */
+        #room-ps1-bg {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 0; pointer-events: none;
+            background-color: #050505;
+            background-size: cover; background-position: center;
+            /* PS1-style Horror Filter */
+            filter: contrast(1.1) brightness(0.5) saturate(0.7) sepia(0.3);
+        }
+        #room-ps1-bg::after { /* Vignette */
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(0,0,0,0) 30%, rgba(0,0,0,0.95) 100%);
+            pointer-events: none;
+        }
+        #room-ps1-bg::before { /* Noise Texture */
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.06; mix-blend-mode: overlay; pointer-events: none;
+        }
+
         #room-info { position: absolute; top: 30px; right: 30px; color: rgba(255,255,255,0.5); font-family: 'VT323', monospace; font-size: 1.2rem; pointer-events: none; z-index: 1700; }
         #room-progress { position: absolute; top: 30px; left: 30px; color: rgba(255,255,255,0.7); font-family: 'VT323', monospace; font-size: 2.5rem; pointer-events: none; z-index: 1700; text-shadow: 2px 2px 0 #000; }
         .room-exit-btn { position: absolute; bottom: 30px; left: 30px; background: transparent; border: 1px solid rgba(255,255,255,0.5); color: rgba(255,255,255,0.7); padding: 10px 20px; font-family: 'VT323', monospace; font-size: 1.2rem; cursor: pointer; z-index: 1700; transition: 0.3s; pointer-events: auto; }
@@ -457,9 +480,12 @@
     </div>
 
     <div id="room-scene" class="overlay-screen">
+        <!-- New Background Layer -->
+        <div id="room-ps1-bg"></div>
+        
         <div class="room-bg" id="room-bg-layer">
             <div id="room-info">Ending 03 / 04</div>
-            <div id="room-progress">Fragment: 00/03</div>
+            <div id="room-progress">Fragments: 00/03</div>
             <div class="room-obj" id="obj-window" title="Window">🪟</div>
             <div class="room-obj" id="obj-lamp" title="Lamp">🏮</div>
             <div class="room-obj" id="obj-clock" title="Clock">🕰️</div>
@@ -623,8 +649,8 @@
                     "even when nobody is watching?"
                 ],
 
-                room_window: "Moonlight crawls in like a quiet witness.",
-                room_lamp: "The oil lamp is still burning… as if it’s waiting.",
+                room_window: "Moonlight crawls in like a quiet witness. The world outside is silent.",
+                room_lamp: "The oil lamp is still burning… as if it’s waiting for a ghost.",
                 room_tulip: [
                     "A bouquet of fake tulips.",
                     "Tied together with a thin red thread…",
@@ -656,16 +682,17 @@
                 ],
                 secret_q: ["You think this is enough?", "If you truly want it...", "Say YES one last time."],
                 
-                // Tooltips
+                // Tooltips (All 12 Objects)
                 room_clock: "The clock stopped. It never reached your return.",
-                room_mirror: "The mirror reflects me… but not you.",
-                room_shelf: "A bookshelf. The tulips rest there like a memory.",
-                room_chair: "One chair. Always facing the empty side.",
+                room_mirror: "The mirror reflects me… but I can't see you anywhere.",
+                room_shelf: "A bookshelf. The tulips rest there like a sacred relic.",
+                room_chair: "One chair. Pulled out as if someone left in a hurry.",
                 room_bed: "The bed is untouched. Cold, like it forgot warmth.",
-                room_photo: "A photo frame… with no photo inside.",
-                room_box: "A small box. It feels like it hides a confession.",
-                room_dust: "Dust everywhere. Even dust remembers time.",
-                room_musicbox: "A silent music box. It only plays when you’re gone."
+                room_photo: "A photo frame… the face inside is scratched out.",
+                room_box: "A small box. It feels heavy with unspoken words.",
+                room_dust: "Dust floating in moonlight. Time made visible.",
+                room_musicbox: "A silent music box. The melody is stuck inside.",
+                room_musicbox_alt: "A silent music box. The melody is stuck inside."
             },
             vi: {
                 title: "Làm Valentine của tớ nhé? 💘",
@@ -742,8 +769,8 @@
                     "kể cả khi không ai nhìn thấy?"
                 ],
 
-                room_window: "Ánh trăng trườn vào như một nhân chứng im lặng.",
-                room_lamp: "Đèn dầu vẫn cháy… như thể đang chờ ai đó.",
+                room_window: "Ánh trăng trườn vào như một nhân chứng im lặng. Thế giới bên ngoài thật tĩnh mịch.",
+                room_lamp: "Đèn dầu vẫn cháy… như thể đang chờ một bóng ma.",
                 room_tulip: [
                     "Một bó tulip giả.",
                     "Được cột lại bằng sợi chỉ đỏ…",
@@ -777,14 +804,15 @@
 
                 // Tooltips
                 room_clock: "Chiếc đồng hồ đã dừng. Nó chưa từng chờ được cậu quay lại.",
-                room_mirror: "Gương phản chiếu tớ… nhưng không có cậu.",
-                room_shelf: "Giá sách. Bó tulip nằm đó như một ký ức.",
-                room_chair: "Một chiếc ghế. Luôn hướng về phía trống rỗng.",
+                room_mirror: "Gương phản chiếu tớ… nhưng tớ không tìm thấy cậu đâu cả.",
+                room_shelf: "Giá sách. Bó tulip nằm đó như một kỷ vật thiêng liêng.",
+                room_chair: "Một chiếc ghế. Bị kéo ra như thể ai đó vừa vội vã rời đi.",
                 room_bed: "Chiếc giường chưa từng được chạm vào. Lạnh đến lạ.",
-                room_photo: "Khung ảnh… nhưng không có bức ảnh nào.",
-                room_box: "Một chiếc hộp nhỏ. Nó giống như đang giấu một lời thú nhận.",
-                room_dust: "Bụi ở khắp nơi. Ngay cả bụi cũng nhớ thời gian.",
-                room_musicbox: "Hộp nhạc im lặng. Nó chỉ phát khi cậu không ở đây."
+                room_photo: "Khung ảnh… khuôn mặt bên trong đã bị cào nát.",
+                room_box: "Một chiếc hộp nhỏ. Cảm giác nặng trĩu những điều chưa nói.",
+                room_dust: "Bụi lơ lửng dưới ánh trăng. Thời gian hiện hình.",
+                room_musicbox: "Hộp nhạc im lặng. Giai điệu bị kẹt lại bên trong.",
+                room_musicbox_alt: "Hộp nhạc im lặng. Giai điệu bị kẹt lại bên trong."
             },
             es: {
                 title: "¿Quieres ser mi San Valentín? 💘",
@@ -861,8 +889,8 @@
                     "aunque nadie esté mirando?"
                 ],
 
-                room_window: "La luz de la luna entra como un testigo silencioso.",
-                room_lamp: "La lámpara sigue encendida… como si esperara.",
+                room_window: "La luz de la luna entra como un testigo silencioso. El mundo exterior está callado.",
+                room_lamp: "La lámpara sigue encendida… como si esperara a un fantasma.",
                 room_tulip: [
                     "Un ramo de tulipanes falsos.",
                     "Atado con un hilo rojo…",
@@ -896,14 +924,15 @@
 
                 // Tooltips
                 room_clock: "El reloj se detuvo. Nunca alcanzó tu regreso.",
-                room_mirror: "El espejo me refleja… pero a ti no.",
-                room_shelf: "Una estantería. Los tulipanes descansan como un recuerdo.",
-                room_chair: "Una silla. Siempre mirando el lado vacío.",
+                room_mirror: "El espejo me refleja… pero no puedo verte por ningún lado.",
+                room_shelf: "Una estantería. Los tulipanes descansan allí como una reliquia.",
+                room_chair: "Una silla. Arrastrada como si alguien se hubiera ido con prisa.",
                 room_bed: "La cama está intacta. Fría, como si olvidara el calor.",
-                room_photo: "Un marco… pero no hay foto dentro.",
-                room_box: "Una caja pequeña. Se siente como una confesión escondida.",
-                room_dust: "Polvo por todas partes. Incluso el polvo recuerda el tiempo.",
-                room_musicbox: "Una caja de música silenciosa. Solo suena cuando no estás."
+                room_photo: "Un marco… la cara de adentro está tachada.",
+                room_box: "Una caja pequeña. Se siente pesada con palabras no dichas.",
+                room_dust: "Polvo flotando bajo la luna. El tiempo hecho visible.",
+                room_musicbox: "Una caja de música silenciosa. La melodía está atrapada dentro.",
+                room_musicbox_alt: "Una caja de música silenciosa. La melodía está atrapada dentro."
             }
         };
 
@@ -1174,6 +1203,12 @@
             updateRoomHUD();
             setMode('room');
             
+            // Try to set PS1 Background
+            const bgImg = document.getElementById("room-ps1-bg");
+            if(bgImg) {
+                bgImg.style.backgroundImage = "url('assets/ending3/ending3_room_ps1.png')";
+            }
+
             // Reset Scene Opacity (in case it was faded)
             DOM.roomBgLayer.style.opacity = '1';
             
@@ -1444,7 +1479,11 @@
                     } else {
                         // Fluff Interaction (Tooltip)
                         roomInteractionLocked = true;
-                        showTooltip(L[`room_${key}`] || "...");
+                        let text = L[`room_${key}`] || " ... ";
+                        // Check alternate key for musicbox/shelf if original missing
+                        if(key === 'musicbox' && !L.room_musicbox) text = L.room_musicbox_alt || "...";
+                        
+                        showTooltip(text);
                         setTimeout(() => { roomInteractionLocked = false; }, 2000); // 2s read time
                     }
                 };
@@ -1460,7 +1499,7 @@
 
         function updateRoomHUD() {
             const c = (STATE.roomProgress.tulip?1:0) + (STATE.roomProgress.letter?1:0) + (STATE.roomProgress.diary?1:0);
-            DOM.roomProgress.innerText = `Fragment: 0${c}/03`;
+            DOM.roomProgress.innerText = `Fragments: 0${c}/03`;
         }
 
         function openRoomModal(content, onClose) {
