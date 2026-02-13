@@ -124,7 +124,7 @@
             opacity: 1; visibility: visible;
             transition: opacity 0.4s ease, visibility 0.4s ease;
         }
-        .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+        .hidden { opacity: 0; visibility: hidden; pointer-events: none !important; }
         .visible { opacity: 1; visibility: visible; pointer-events: auto; }
 
         /* Generic fade up animation for modals */
@@ -514,26 +514,24 @@
         /* --- CONFIG & STATE --- */
         const CONFIG = {
             YES_GOAL: 101,
-            NO_GOAL: 100,
-            STORAGE_KEY: 'val_game_mega_v2',
-            SETTINGS_KEY: 'val_settings_mega_v2'
+            NO_GOAL: 100
         };
 
         let SETTINGS = { lobbyMusic: true, gameMusic: true, lang: 'en' };
 
-        // MERGED STATE
+        // MERGED STATE - CLEAN STATE MACHINE
         const STATE = {
+            mode: 'start', // 'start' | 'lobby' | 'gameplay' | 'ending' | 'room'
             yesCount: 0,
             noCount: 0,
             startTime: null,
-            scoreClicked: false, // For Ending 4
+            scoreClicked: false, 
             isEnding: false,
-            currentEnding: 0, // Track for share card
-            inLobby: true,
+            currentEnding: 0, 
             usingSynth: false,
             effects: [],
-            roomProgress: { tulip: false, letter: false, diary: false }, // For Ending 3
-            ignoreEndingCheck: false // Safety flag
+            roomProgress: { tulip: false, letter: false, diary: false },
+            ignoreEndingCheck: false 
         };
 
         /* --- MODAL STATE --- */
@@ -692,7 +690,7 @@
 
                 // Main Game UI
                 mainCard: document.getElementById('main-card'),
-                mainTitle: document.getElementById('main-title'), // Fix: Added mainTitle
+                mainTitle: document.getElementById('main-title'),
                 dialogue: document.getElementById('dialogue-text'),
                 stageIndicator: document.getElementById('stage-indicator'),
                 buttonArea: document.getElementById('button-area'),
@@ -962,7 +960,7 @@
                 this.stopRoomAmbience();
 
                 // STATE B: Lobby Visible -> Lobby Music
-                if(STATE.inLobby) {
+                if(STATE.mode === 'lobby') {
                     this.fadeOut(DOM.audioGame);
                     this.fadeOut(DOM.audioEnd);
                     
@@ -1017,8 +1015,8 @@
         function initGame() {
             try {
                 cacheDOM(); 
-                loadSettings();
-                loadGame(); // Restores state and UI
+                // loadSettings(); // DISABLED: Removed persistence
+                // loadGame(); // DISABLED: Removed persistence
                 generateStages();
                 AudioCtrl.init().catch(err => console.warn("Audio Init Warning:", err));
                 
@@ -1027,34 +1025,30 @@
                 if(DOM.langSelect) DOM.langSelect.value = SETTINGS.lang;
                 
                 updateTexts();
-                updateStatsUI(); // Ensure stats match loaded data
+                updateStatsUI();
+
+                // Set initial mode
+                STATE.mode = 'start';
+                if (DOM.startOverlay) DOM.startOverlay.classList.remove('hidden');
 
                 // Bind Events using DOM cache
                 if(DOM.startBtn) DOM.startBtn.onclick = () => {
                     console.log("Start Button Clicked");
-                    if(DOM.startOverlay) DOM.startOverlay.classList.add('hidden');
                     SFX.ctx.resume();
                     
-                    // Resume correct audio based on restored STATE
-                    if(STATE.isEnding) {
-                        if(STATE.currentEnding === 3) AudioCtrl.playEnding(3); // Room ambience
-                        else AudioCtrl.playEnding(STATE.currentEnding);
-                    } else if(STATE.inLobby) {
-                        console.log("Entering Lobby");
-                        AudioCtrl.playLobby();
-                    } else {
-                        console.log("Entering Game");
-                        AudioCtrl.playGame();
+                    if(DOM.startOverlay) {
+                        DOM.startOverlay.classList.add('hidden');
+                        DOM.startOverlay.classList.remove('visible');
                     }
+                    
+                    resetProgress();
+                    showLobby();
                 };
 
                 if(DOM.lobbyYes) DOM.lobbyYes.onclick = () => {
                     console.log("Lobby YES Clicked");
                     SFX.playYes();
-                    STATE.inLobby = false; // Mark as NOT in lobby to start game logic
-                    if(DOM.lobbyScreen) DOM.lobbyScreen.classList.add('hidden');
-                    AudioCtrl.playGame();
-                    saveGame();
+                    startGameplay();
                 };
                 if(DOM.lobbyNo) DOM.lobbyNo.onclick = () => {
                     console.log("Lobby NO Clicked");
@@ -1073,22 +1067,33 @@
                         DOM.lblYesTrigger.style.color = "gold";
                         DOM.lblYesTrigger.style.textShadow = "0 0 5px gold";
                         showTooltip("✨ Secret Found!");
-                        saveGame();
                     }
                 };
                 
-                if(DOM.endReplayBtn) DOM.endReplayBtn.onclick = resetGame;
-                if(DOM.endLobbyBtn) DOM.endLobbyBtn.onclick = goToLobby;
+                if(DOM.endReplayBtn) DOM.endReplayBtn.onclick = () => {
+                    resetProgress();
+                    showLobby();
+                    startGameplay();
+                };
+                if(DOM.endLobbyBtn) DOM.endLobbyBtn.onclick = () => {
+                    resetProgress();
+                    showLobby();
+                };
                 if(DOM.endShareBtn) DOM.endShareBtn.onclick = openShareModal;
 
                 if(DOM.settingsBtn) DOM.settingsBtn.onclick = () => DOM.settingsModal && DOM.settingsModal.classList.remove('hidden');
                 if(DOM.closeSettingsBtn) DOM.closeSettingsBtn.onclick = () => DOM.settingsModal && DOM.settingsModal.classList.add('hidden');
                 
-                if(DOM.toggleLobby) DOM.toggleLobby.onchange = (e) => { SETTINGS.lobbyMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
-                if(DOM.toggleGame) DOM.toggleGame.onchange = (e) => { SETTINGS.gameMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
-                if(DOM.langSelect) DOM.langSelect.onchange = (e) => { SETTINGS.lang = e.target.value; saveSettings(); updateTexts(); };
+                if(DOM.toggleLobby) DOM.toggleLobby.onchange = (e) => { SETTINGS.lobbyMusic = e.target.checked; AudioCtrl.update(); };
+                if(DOM.toggleGame) DOM.toggleGame.onchange = (e) => { SETTINGS.gameMusic = e.target.checked; AudioCtrl.update(); };
+                if(DOM.langSelect) DOM.langSelect.onchange = (e) => { SETTINGS.lang = e.target.value; updateTexts(); };
                 
-                if(DOM.resetBtn) DOM.resetBtn.onclick = () => { if(confirm(getLang().reset + "?")) resetGame(); };
+                if(DOM.resetBtn) DOM.resetBtn.onclick = () => { 
+                    if(confirm(getLang().reset + "?")) {
+                        resetProgress();
+                        showLobby();
+                    }
+                };
 
                 // Share Modal Events
                 if(DOM.btnShareClose) DOM.btnShareClose.onclick = () => DOM.shareModal.classList.add('hidden');
@@ -1102,134 +1107,132 @@
                 alert("Game failed to load. Please refresh.");
             }
         }
-        
-        function goToLobby() {
-            console.log("Returning to Lobby & Resetting State");
-            
-            // 1. Reset Game Progress completely for Replay
+
+        // --- CORE FUNCTIONS ---
+
+        function resetProgress() {
+            console.log("Resetting Progress");
             STATE.yesCount = 0;
             STATE.noCount = 0;
             STATE.scoreClicked = false;
             STATE.roomProgress = { tulip: false, letter: false, diary: false };
+            STATE.effects = [];
+            generateStages();
 
-            // 2. Reset Flags
+            // UI Reset
+            updateStatsUI();
+            if(DOM.dialogue) DOM.dialogue.innerText = getLang().dialogues[0] || "Please say yes! 🥺";
+            const container = document.getElementById('fake-container');
+            if(container) container.innerHTML = "";
+            applyCurrentStage();
+        }
+
+        function showLobby() {
+            console.log("Showing Lobby");
+            STATE.mode = 'lobby';
             STATE.isEnding = false;
-            STATE.inLobby = true;
             STATE.currentEnding = 0;
-            STATE.ignoreEndingCheck = true; // Safety grace period
 
-            // Remove safety flag after delay
-            setTimeout(() => { STATE.ignoreEndingCheck = false; }, 800);
-
-            // 3. Reset UI Elements
+            // Hide Endings/Room
             if(DOM.endingOverlay) {
                 DOM.endingOverlay.classList.remove('visible');
                 DOM.endingOverlay.style.pointerEvents = 'none';
-                DOM.endingOverlay.className = ''; // remove theme classes
-                DOM.endingOverlay.id = 'ending-overlay'; // ensure ID stays
+                DOM.endingOverlay.className = ''; 
+                DOM.endingOverlay.id = 'ending-overlay';
             }
-            
             if(DOM.roomScene) {
                 DOM.roomScene.classList.remove('visible');
                 DOM.roomScene.style.opacity = 0;
             }
-            
-            if(DOM.secretModal) {
-                DOM.secretModal.classList.remove('visible');
-            }
+            if(DOM.secretModal) DOM.secretModal.classList.remove('visible');
 
-            // Reset Game View visual state
-            if(DOM.gameView) {
-                DOM.gameView.style.opacity = '1';
-                DOM.gameView.style.pointerEvents = 'auto';
-            }
-            
-            // Clear Fake Buttons / Effects
-            const container = document.getElementById('fake-container');
-            if(container) container.innerHTML = "";
-            
-            // Reset Main Buttons
-            if(DOM.yesBtn) {
-                DOM.yesBtn.style.position='relative'; 
-                DOM.yesBtn.style.left='auto'; 
-                DOM.yesBtn.style.top='auto'; 
-                DOM.yesBtn.style.opacity='1';
-                DOM.yesBtn.style.transform='none';
-                DOM.yesBtn.onmouseenter=null;
-            }
-
-            updateStatsUI(); // Visually reset bars to 0
-            applyCurrentStage(); // Reset stage effects
-
-            // 4. Show Lobby
+            // Show Lobby
             if(DOM.lobbyScreen) {
                 DOM.lobbyScreen.classList.remove('hidden');
                 DOM.lobbyScreen.classList.add('visible');
             }
 
-            // 5. Audio
-            AudioCtrl.playLobby();
+            // Game View: Visible but behind
+            if(DOM.gameView) {
+                DOM.gameView.style.opacity = '1';
+                DOM.gameView.style.pointerEvents = 'auto';
+            }
 
-            // 6. Save Clean State (Overwrites ending state)
-            saveGame();
+            // Enable Buttons just in case
+            if(DOM.yesBtn) DOM.yesBtn.disabled = false;
+            if(DOM.noBtn) DOM.noBtn.disabled = false;
+
+            AudioCtrl.playLobby();
         }
+
+        function startGameplay() {
+            console.log("Starting Gameplay");
+            STATE.mode = 'gameplay';
+            STATE.isEnding = false;
+            
+            // Hide Lobby
+            if(DOM.lobbyScreen) {
+                DOM.lobbyScreen.classList.remove('visible');
+                DOM.lobbyScreen.classList.add('hidden');
+            }
+
+            // Ensure Game View active
+            if(DOM.gameView) {
+                DOM.gameView.style.opacity = '1';
+                DOM.gameView.style.pointerEvents = 'auto';
+            }
+
+            AudioCtrl.playGame();
+        }
+
+        // --- HANDLERS ---
 
         function handleYes(e) {
             if(e) e.preventDefault();
-            console.log("Handle YES triggered. State:", STATE);
+            console.log("Handle YES. Mode:", STATE.mode);
             
-            if(STATE.isEnding) return;
-            
-            // Auto-fix: If user clicks Main YES but code thinks we are in Lobby, exit Lobby
-            if(STATE.inLobby) {
-                console.warn("Auto-correcting: Leaving Lobby via Main Game Click");
-                STATE.inLobby = false;
-                if(DOM.lobbyScreen) DOM.lobbyScreen.classList.add('hidden');
-            }
+            // STRICT MODE GUARD
+            if(STATE.mode !== 'gameplay') return;
             
             STATE.yesCount++;
             SFX.playYes();
             updateStatsUI();
+            
             if(checkEndingTriggers()) return;
+            
             if(DOM.yesBtn) spawnFloatingHeart(DOM.yesBtn);
             if(DOM.dialogue) DOM.dialogue.innerText = "Yay! 💘";
-            saveGame();
+            
             applyCurrentStage();
         }
 
         function handleNo(e) {
             if(e) e.preventDefault();
-            console.log("Handle NO triggered. State:", STATE);
+            console.log("Handle NO. Mode:", STATE.mode);
             
-            if(STATE.isEnding) return;
-
-            // Auto-fix: If user clicks Main NO but code thinks we are in Lobby, exit Lobby
-            if(STATE.inLobby) {
-                console.warn("Auto-correcting: Leaving Lobby via Main Game Click");
-                STATE.inLobby = false;
-                if(DOM.lobbyScreen) DOM.lobbyScreen.classList.add('hidden');
-            }
+            // STRICT MODE GUARD
+            if(STATE.mode !== 'gameplay') return;
 
             STATE.noCount++;
             SFX.playNo();
             updateStatsUI();
+            
             if(checkEndingTriggers()) return;
+            
             if(DOM.mainCard) {
                 DOM.mainCard.classList.remove('shake');
                 void DOM.mainCard.offsetWidth;
                 DOM.mainCard.classList.add('shake');
             }
             if(DOM.dialogue) DOM.dialogue.innerText = getLang().dialogues[Math.floor(Math.random()*getLang().dialogues.length)];
-            saveGame();
         }
 
         function checkEndingTriggers() {
-            // 0. Safety Checks
-            if (STATE.isEnding) return true;
-            if (STATE.inLobby) return false; // Prevent endings triggering while in lobby
-            if (STATE.ignoreEndingCheck) return false; // Prevent trigger during reset transition
+            // STRICT GUARDS
+            if(STATE.mode !== 'gameplay') return false;
+            if(STATE.isEnding) return true;
 
-            // 1. Secret Modal Trigger: YES=100 AND scoreClicked=true
+            // 1. Secret Modal Trigger
             if (STATE.yesCount === 100 && STATE.scoreClicked) {
                 triggerSecretModal();
                 return true;
@@ -1259,17 +1262,16 @@
         function enterEnding(id) {
             console.log("Entering Ending:", id);
             STATE.isEnding = true;
-            STATE.currentEnding = id; // Store ID for share card
+            STATE.mode = (id === 3) ? 'room' : 'ending';
+            STATE.currentEnding = id; 
             
             if(DOM.gameView) {
                 DOM.gameView.style.opacity = '0';
                 DOM.gameView.style.pointerEvents = 'none';
             }
-            saveGame(); 
+            
             if(id === 3) {
-                // AudioCtrl handled by playEnding(3) internally now which calls playRoomAmbience
                 AudioCtrl.playEnding(3);
-                
                 setTimeout(() => {
                     if(DOM.roomScene) DOM.roomScene.classList.add('visible');
                     initRoomScene();
@@ -1353,7 +1355,6 @@
                     if(isMain) {
                         STATE.roomProgress[keyName] = true;
                         updateRoomHUD();
-                        saveGame();
                         openRoomModal(L[textKey]);
                     } else {
                         if(DOM.roomTooltip) {
@@ -1392,7 +1393,9 @@
 
             // Exit Button Logic
             if(DOM.roomExitBtn) {
-                DOM.roomExitBtn.onclick = goToLobby; // Use new unified function
+                // Exit Room -> Go back to lobby (resets progress automatically)
+                resetProgress();
+                showLobby();
             }
         }
         
@@ -1451,7 +1454,7 @@
                             AudioCtrl.stopRoomAmbience(); // Stop the hum when leaving room
                             renderEndingOverlay('3_final');
                             STATE.currentEnding = '3_final';
-                            saveGame();
+                            STATE.mode = 'ending'; // Ensure mode update
                         }, 1500);
                     }
                 }, 500);
@@ -1461,6 +1464,7 @@
         function triggerSecretModal() {
             if (STATE.isEnding) return;
             STATE.isEnding = true; 
+            STATE.mode = 'ending';
             const L = getLang();
             if(DOM.secretModal) DOM.secretModal.classList.add('visible');
             if(DOM.secretYesBtn) DOM.secretYesBtn.style.display = 'none';
@@ -1740,11 +1744,6 @@
             });
         }
 
-        function resetGame() {
-            localStorage.removeItem(CONFIG.STORAGE_KEY);
-            location.reload();
-        }
-
         function getLang() { return LANG[SETTINGS.lang] || LANG['en']; }
         
         function updateTexts() {
@@ -1843,107 +1842,6 @@
             if(container) container.innerHTML = "";
             const ef = STATE.effects[STATE.yesCount];
             if(ef && ef.init) ef.init();
-        }
-
-        function saveGame() { 
-            let mode = 'lobby';
-            if(STATE.isEnding) {
-                if(STATE.currentEnding === '3_final') mode = 'ending_3_final';
-                else if(STATE.currentEnding === 3) mode = 'room';
-                else mode = 'ending_' + STATE.currentEnding;
-            } else if(!STATE.inLobby) {
-                mode = 'game';
-            }
-            
-            const data = {
-                v: 2,
-                yes: STATE.yesCount,
-                no: STATE.noCount,
-                click: STATE.scoreClicked,
-                room: STATE.roomProgress,
-                mode: mode,
-                ts: Date.now()
-            };
-            try {
-                localStorage.setItem(CONFIG.STORAGE_KEY, JSON.stringify(data));
-            } catch(e) { console.warn("Save failed"); }
-        }
-
-        function loadGame() {
-            try {
-                const raw = localStorage.getItem(CONFIG.STORAGE_KEY);
-                if(!raw) return;
-                const d = JSON.parse(raw);
-                
-                // Basic Integrity Check
-                if(typeof d.yes !== 'number') throw "Invalid data";
-
-                STATE.yesCount = d.yes;
-                STATE.noCount = d.no;
-                STATE.scoreClicked = d.click || false;
-                STATE.roomProgress = d.room || {tulip:false, letter:false, diary:false};
-                
-                // Restore Mode logic
-                const mode = d.mode || (STATE.yesCount > 0 ? 'game' : 'lobby');
-
-                // Reset UI defaults first
-                if(DOM.lobbyScreen) DOM.lobbyScreen.classList.add('hidden');
-                if(DOM.gameView) DOM.gameView.style.opacity = '1';
-                if(DOM.gameView) DOM.gameView.style.pointerEvents = 'auto';
-
-                if(mode === 'lobby') {
-                    STATE.inLobby = true;
-                    STATE.isEnding = false;
-                    if(DOM.lobbyScreen) {
-                        DOM.lobbyScreen.classList.remove('hidden');
-                        DOM.lobbyScreen.classList.add('visible');
-                    }
-                } else if(mode === 'game') {
-                    STATE.inLobby = false;
-                    STATE.isEnding = false;
-                    applyCurrentStage();
-                } else if(mode === 'room') {
-                    STATE.inLobby = false;
-                    STATE.isEnding = true;
-                    STATE.currentEnding = 3;
-                    if(DOM.gameView) DOM.gameView.style.opacity = '0';
-                    if(DOM.gameView) DOM.gameView.style.pointerEvents = 'none';
-                    if(DOM.roomScene) DOM.roomScene.classList.add('visible');
-                    setTimeout(initRoomScene, 50); // Delay for DOM
-                } else if(mode.startsWith('ending_')) {
-                    STATE.inLobby = false;
-                    STATE.isEnding = true;
-                    if(DOM.gameView) {
-                        DOM.gameView.style.opacity = '0';
-                        DOM.gameView.style.pointerEvents = 'none';
-                    }
-                    
-                    let endId = mode.replace('ending_', '');
-                    if(endId !== '3_final') endId = parseInt(endId);
-                    else endId = '3_final';
-                    
-                    STATE.currentEnding = endId;
-                    
-                    setTimeout(() => renderEndingOverlay(endId), 50);
-                }
-                
-                updateStatsUI();
-
-            } catch(e) {
-                console.error("Save Corrupted, resetting...", e);
-                localStorage.removeItem(CONFIG.STORAGE_KEY);
-                // Reset State to defaults
-                STATE.yesCount = 0; 
-                STATE.noCount = 0;
-                STATE.inLobby = true;
-            }
-        }
-        function saveSettings() { localStorage.setItem(CONFIG.SETTINGS_KEY, JSON.stringify(SETTINGS)); }
-        function loadSettings() { 
-            try {
-                const s=JSON.parse(localStorage.getItem(CONFIG.SETTINGS_KEY)); 
-                if(s) SETTINGS=s; 
-            } catch(e) { console.error("Settings corrupted"); }
         }
 
         if(document.readyState !== 'loading') initGame();
