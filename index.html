@@ -46,7 +46,7 @@
         }
 
         /* Top Controls */
-        .top-controls { position: absolute; top: 20px; right: 20px; z-index: 500; display: flex; gap: 10px; }
+        .top-controls { position: absolute; top: 20px; right: 20px; z-index: 500; display: flex; gap: 10px; pointer-events: auto; }
         .ui-btn {
             background: rgba(255,255,255,0.5); border: 1px solid white;
             padding: 8px 15px; border-radius: 20px; cursor: pointer;
@@ -57,9 +57,11 @@
         .icon-btn { font-size: 1.2rem; padding: 6px 12px; }
 
         /* Game Container */
-        .game-container { position: relative; z-index: 10; width: 90%; max-width: 500px; perspective: 1000px; transition: opacity 0.5s; pointer-events: none; }
-        /* Enable pointer events on children */
-        .game-container > * { pointer-events: auto; }
+        .game-container { 
+            position: relative; z-index: 10; width: 90%; max-width: 500px; 
+            perspective: 1000px; transition: opacity 0.3s; 
+            /* Default state hidden logic handled by JS */
+        }
 
         .glass-card {
             background: var(--glass-bg); backdrop-filter: blur(12px);
@@ -76,7 +78,7 @@
             40%, 60% { transform: translate3d(6px, 0, 0); }
         }
 
-        /* Stats Bar (NEW LAYOUT) */
+        /* Stats Bar */
         .stats-container { margin-bottom: 15px; display: flex; flex-direction: column; gap: 6px; }
         .stat-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: #666; font-weight: 700; }
         .stat-label { width: 55px; text-align: right; cursor: default; }
@@ -96,7 +98,6 @@
 
         /* Buttons */
         .button-area { position: relative; height: 300px; width: 100%; display: flex; justify-content: center; align-items: flex-start; gap: 20px; padding-top: 10px; pointer-events: none; }
-        /* Main buttons need pointer events */
         .game-btn {
             font-family: 'Fredoka', sans-serif; font-size: 1.2rem; padding: 12px 30px;
             border: none; border-radius: 50px; cursor: pointer; transition: 0.2s;
@@ -111,40 +112,47 @@
         /* Fake/Effects */
         #fake-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; overflow: hidden; border-radius: 20px; }
         .fake-btn { position: absolute; opacity: 0.8; pointer-events: auto; z-index: 101; }
-        .blur-heavy { filter: blur(4px); }
-        .spin-fast { animation: spin 0.8s linear infinite; }
-        .blur-mode { filter: blur(3.5px) !important; background: #a29bfe !important; color: white !important; transform: scale(0.95); }
-        @keyframes spin { 100% { transform: rotate(360deg); } }
 
         /* --- OVERLAYS --- */
+        /* Base styles for all full-screen overlays */
         .overlay-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.5); z-index: 1000;
-            display: flex; align-items: center; justify-content: center;
-            opacity: 1; visibility: visible;
-            transition: opacity 0.4s ease, visibility 0.4s ease;
+            background: rgba(0,0,0,0.5); 
+            display: none; /* Default hidden */
+            align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.4s ease;
         }
-        .hidden { opacity: 0; visibility: hidden; pointer-events: none !important; }
-        .visible { opacity: 1; visibility: visible; pointer-events: auto; }
+        
+        /* Specific Z-Indexes to ensure order */
+        #room-scene { z-index: 1500; background: #050505; font-family: 'VT323', monospace; }
+        #start-overlay { z-index: 2000; background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); flex-direction: column; }
+        #ending-overlay { z-index: 2500; flex-direction: column; color: white; padding: 20px; text-align: center; }
+        #secret-modal { z-index: 3000; background: rgba(0,0,0,0.92); flex-direction: column; }
+        #lobby-screen { z-index: 1002; }
+        #settings-modal { z-index: 3500; }
+        #share-modal { z-index: 3500; }
 
-        /* Generic fade up animation for modals */
-        .animate-up { animation: fadeInUp 0.5s ease-out forwards; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* Active State Class */
+        .overlay-screen.visible {
+            display: flex;
+            opacity: 1;
+            pointer-events: auto;
+        }
 
         /* Start Overlay */
-        #start-overlay { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); z-index: 2000; flex-direction: column; }
         .start-btn { font-size: 2rem; padding: 20px 50px; border-radius: 50px; border: 4px solid white; background: rgba(255,255,255,0.3); color: white; cursor: pointer; font-family: 'Fredoka', cursive; animation: pulse 1.5s infinite; text-transform: uppercase; pointer-events: auto; }
         @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
 
         /* Lobby */
-        .lobby-card { max-width: 450px; padding: 40px; z-index: 1002; background: rgba(255,255,255,0.95); pointer-events: auto; animation: fadeInUp 0.5s ease-out; }
+        .lobby-card { max-width: 450px; padding: 40px; background: rgba(255,255,255,0.95); pointer-events: auto; animation: fadeInUp 0.5s ease-out; }
         .subtitle { font-size: 1.1rem; color: #666; margin-bottom: 30px; }
         .lobby-actions { display: flex; justify-content: center; gap: 20px; margin-bottom: 15px; }
         .lobby-msg { height: 24px; font-size: 0.95rem; color: #ff5252; font-weight: bold; margin-top: 10px; }
         .music-credit { margin-top: 20px; font-size: 0.85rem; color: #888; font-style: italic; opacity: 0.8; }
 
         /* Settings */
-        .settings-card { width: 350px; z-index: 1005; background: rgba(255,255,255,0.95); pointer-events: auto; animation: fadeInUp 0.4s ease-out; }
+        .settings-card { width: 350px; background: rgba(255,255,255,0.95); pointer-events: auto; animation: fadeInUp 0.4s ease-out; }
         .settings-card h2 { text-align: center; color: #555; margin-bottom: 25px; }
         .setting-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-size: 1.1rem; color: #444; }
         .setting-item.column { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -157,16 +165,7 @@
         input:checked + .slider:before { transform: translateX(24px); }
         .action-btn { padding: 12px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--secondary-pink); color: white; width: 100%; touch-action: manipulation; }
 
-        /* --- ENDING SYSTEM STYLES --- */
-        #ending-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 2500; display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; visibility: hidden; pointer-events: none; 
-            transition: opacity 1s ease, visibility 1s ease;
-            color: white; padding: 20px; text-align: center;
-        }
-        #ending-overlay.visible { opacity: 1; visibility: visible; pointer-events: auto; }
-        
+        /* Ending Styles */
         .theme-1 { background: var(--theme-1-bg); }
         .theme-2 { background: var(--theme-2-bg); }
         .theme-3 { background: var(--theme-3-bg); }
@@ -175,15 +174,12 @@
         .ending-content { max-width: 500px; width: 100%; z-index: 2; animation: fadeInUp 1s ease-out 0.2s backwards; }
         .ending-title { font-family: 'Fredoka', cursive; font-size: 3rem; margin-bottom: 5px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
         .ending-sub { font-size: 1rem; opacity: 0.9; margin-bottom: 30px; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; }
-        
         .cinematic-text {
             font-family: 'Nunito', sans-serif; font-size: 1.3rem; min-height: 140px;
             background: rgba(0,0,0,0.2); padding: 25px; border-radius: 15px;
             margin-bottom: 30px; display: flex; align-items: center; justify-content: center;
-            line-height: 1.5; cursor: pointer; backdrop-filter: blur(5px);
-            pointer-events: auto;
+            line-height: 1.5; cursor: pointer; backdrop-filter: blur(5px); pointer-events: auto;
         }
-
         .ending-actions { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
         .end-btn {
             background: rgba(255,255,255,0.25); border: 2px solid white; color: white;
@@ -191,95 +187,23 @@
             transition: 0.2s; font-size: 1rem; pointer-events: auto; touch-action: manipulation;
         }
         .end-btn:hover { background: white; color: #333; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Room Scene Updated */
-        #room-scene {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #050505; /* Pitch black environment */
-            z-index: 1500; display: flex; opacity: 0; visibility: hidden; transition: opacity 1.5s ease, visibility 1.5s ease;
-            overflow: hidden; font-family: 'VT323', monospace;
-        }
-        #room-scene.visible { opacity: 1; visibility: visible; pointer-events: auto; }
-        
-        .room-bg {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%;
-            /* Lighting: Cool Moonlight (Top-Right) & Warm Lamp (Bottom-Right) */
-            background: 
-                radial-gradient(circle at 85% 75%, rgba(255, 170, 80, 0.15) 0%, transparent 45%),
-                radial-gradient(circle at 90% 10%, rgba(150, 170, 255, 0.1) 0%, transparent 50%);
-        }
-
-        #room-progress {
-            position: absolute; top: 30px; left: 30px;
-            color: rgba(255,255,255,0.7);
-            font-family: 'VT323', monospace; font-size: 2.5rem;
-            pointer-events: none; z-index: 1700;
-            text-shadow: 2px 2px 0 #000;
-        }
-
-        .room-exit-btn {
-            position: absolute; bottom: 30px; left: 30px;
-            background: transparent; border: 1px solid rgba(255,255,255,0.5);
-            color: rgba(255,255,255,0.7); padding: 10px 20px;
-            font-family: 'VT323', monospace; font-size: 1.2rem;
-            cursor: pointer; z-index: 1700; transition: 0.3s;
-            pointer-events: auto;
-        }
-        .room-exit-btn:hover {
-            background: rgba(255,255,255,0.1); color: white; border-color: white;
-        }
-
-        /* Generic Room Object Styles */
-        .room-obj { 
-            position: absolute; cursor: pointer; transition: 0.3s; 
-            filter: brightness(0.6) grayscale(0.4); 
-            pointer-events: auto; 
-        }
-        .room-obj:hover { 
-            filter: brightness(1.1) grayscale(0) drop-shadow(0 0 8px rgba(255,255,255,0.2)); 
-            transform: scale(1.05); 
-        }
-
-        /* 1. Window: Top Right (Source of moonlight) */
-        #obj-window { 
-            top: 10%; right: 8%; 
-            font-size: 5rem; opacity: 0.3; 
-        }
-        
-        /* 2. Lamp: Bottom Right (Source of warm light) */
-        #obj-lamp { 
-            bottom: 28%; right: 12%; 
-            font-size: 3rem; color: #fdcb6e; 
-            filter: brightness(0.9) drop-shadow(0 0 15px rgba(253, 203, 110, 0.2)); 
-        }
-
-        /* 3. Bookshelf Area: Mid-Left */
-        /* Tulip on shelf */
-        #obj-tulip { 
-            top: 40%; left: 15%; 
-            font-size: 3.5rem; 
-        }
-        /* Red Thread on Tulip */
-        #obj-tulip::after {
-            content: ''; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-            width: 20px; height: 3px; background: #d63031; box-shadow: 0 0 4px #ff7675;
-            border-radius: 2px; pointer-events: none; transform: rotate(-5deg);
-        }
-
-        /* 4. Table Area: Bottom-Right (Near Lamp) */
-        /* Diary */
-        #obj-diary { 
-            bottom: 22%; right: 28%; /* Near lamp */
-            font-size: 3rem; transform: rotate(5deg);
-        }
-        /* Letter: Beside Diary */
-        #obj-letter { 
-            bottom: 20%; right: 40%; /* Left of diary */
-            font-size: 2.5rem; transform: rotate(-15deg);
-        }
-
-        /* 5. Additional Objects for Poetic Horror */
+        /* Room Scene */
+        .room-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 85% 75%, rgba(255, 170, 80, 0.15) 0%, transparent 45%), radial-gradient(circle at 90% 10%, rgba(150, 170, 255, 0.1) 0%, transparent 50%); }
+        #room-progress { position: absolute; top: 30px; left: 30px; color: rgba(255,255,255,0.7); font-family: 'VT323', monospace; font-size: 2.5rem; pointer-events: none; z-index: 1700; text-shadow: 2px 2px 0 #000; }
+        .room-exit-btn { position: absolute; bottom: 30px; left: 30px; background: transparent; border: 1px solid rgba(255,255,255,0.5); color: rgba(255,255,255,0.7); padding: 10px 20px; font-family: 'VT323', monospace; font-size: 1.2rem; cursor: pointer; z-index: 1700; transition: 0.3s; pointer-events: auto; }
+        .room-exit-btn:hover { background: rgba(255,255,255,0.1); color: white; border-color: white; }
+        .room-obj { position: absolute; cursor: pointer; transition: 0.3s; filter: brightness(0.6) grayscale(0.4); pointer-events: auto; }
+        .room-obj:hover { filter: brightness(1.1) grayscale(0) drop-shadow(0 0 8px rgba(255,255,255,0.2)); transform: scale(1.05); }
+        /* Room Objects */
+        #obj-window { top: 10%; right: 8%; font-size: 5rem; opacity: 0.3; }
+        #obj-lamp { bottom: 28%; right: 12%; font-size: 3rem; color: #fdcb6e; filter: brightness(0.9) drop-shadow(0 0 15px rgba(253, 203, 110, 0.2)); }
+        #obj-tulip { top: 40%; left: 15%; font-size: 3.5rem; }
+        #obj-tulip::after { content: ''; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background: #d63031; box-shadow: 0 0 4px #ff7675; border-radius: 2px; pointer-events: none; transform: rotate(-5deg); }
+        #obj-diary { bottom: 22%; right: 28%; font-size: 3rem; transform: rotate(5deg); }
+        #obj-letter { bottom: 20%; right: 40%; font-size: 2.5rem; transform: rotate(-15deg); }
+        /* Ambience */
         #obj-clock { top: 15%; left: 40%; font-size: 2.5rem; opacity: 0.7; }
         #obj-mirror { top: 25%; left: 5%; font-size: 4rem; opacity: 0.5; transform: skewY(5deg); }
         #obj-frame { top: 30%; right: 30%; font-size: 2rem; transform: rotate(10deg); opacity: 0.6; }
@@ -287,50 +211,20 @@
         #obj-carpet { bottom: 5%; left: 40%; font-size: 3rem; opacity: 0.4; transform: rotateX(60deg); }
         #obj-pillow { bottom: 35%; left: 10%; font-size: 2.5rem; opacity: 0.6; }
         #obj-blanket { bottom: 30%; left: 15%; font-size: 3rem; opacity: 0.6; }
-
-
-        #room-tooltip {
-            position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.8); color: #ccc; padding: 10px 20px;
-            border-radius: 5px; font-size: 1.4rem; pointer-events: none; opacity: 0; transition: 0.3s; width: max-content;
-        }
-        #room-modal {
-            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-            width: 85%; max-width: 400px; background: #1a1a1a; border: 1px solid #444;
-            padding: 25px; color: #eee; text-align: center; display: none;
-            box-shadow: 0 0 50px rgba(0,0,0,1); z-index: 1600; pointer-events: auto;
-            cursor: pointer;
-        }
+        /* Room UI */
+        #room-tooltip { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #ccc; padding: 10px 20px; border-radius: 5px; font-size: 1.4rem; pointer-events: none; opacity: 0; transition: 0.3s; width: max-content; }
+        #room-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; background: #1a1a1a; border: 1px solid #444; padding: 25px; color: #eee; text-align: center; display: none; box-shadow: 0 0 50px rgba(0,0,0,1); z-index: 1600; pointer-events: auto; cursor: pointer; }
         #room-modal-text { font-size: 1.3rem; min-height: 80px; margin-bottom: 20px; line-height: 1.4; text-align: left; }
         .room-close-btn { background: #333; color: white; border: 1px solid #666; padding: 8px 20px; cursor: pointer; font-family: inherit; font-size: 1.2rem; pointer-events: auto; }
 
-        /* Secret Modal */
-        #secret-modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.92); z-index: 3000;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        #secret-modal.visible { opacity: 1; visibility: visible; pointer-events: auto; }
-        .secret-btn {
-            font-size: 2.5rem; padding: 15px 50px; margin-top: 40px;
-            background: gold; color: black; border: none; border-radius: 50px; font-family: 'Fredoka', sans-serif;
-            cursor: pointer; box-shadow: 0 0 30px gold; animation: pulse 0.8s infinite; pointer-events: auto;
-        }
-
+        /* Secret */
+        .secret-btn { font-size: 2.5rem; padding: 15px 50px; margin-top: 40px; background: gold; color: black; border: none; border-radius: 50px; font-family: 'Fredoka', sans-serif; cursor: pointer; box-shadow: 0 0 30px gold; animation: pulse 0.8s infinite; pointer-events: auto; display: none; }
         #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2400; pointer-events: none; }
         
-        /* Share Modal Styles */
-        .share-card-container {
-            width: 90%; max-width: 380px; background: #fff;
-            padding: 20px; display: flex; flex-direction: column; align-items: center;
-            animation: fadeInUp 0.3s ease-out;
-        }
+        /* Share Modal */
+        .share-card-container { width: 90%; max-width: 380px; background: #fff; padding: 20px; display: flex; flex-direction: column; align-items: center; animation: fadeInUp 0.3s ease-out; }
         .share-card-container h2 { font-family: 'Fredoka'; color: var(--primary-pink); margin-bottom: 15px; }
-        #share-preview-container { 
-            width: 100%; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); 
-            border-radius: 10px; overflow: hidden; display: flex; justify-content: center;
-        }
+        #share-preview-container { width: 100%; margin-bottom: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border-radius: 10px; overflow: hidden; display: flex; justify-content: center; }
         #share-preview-container img { max-width: 100%; height: auto; display: block; }
         .share-actions { display: flex; flex-direction: column; gap: 10px; width: 100%; }
     </style>
@@ -354,57 +248,42 @@
     <!-- MAIN GAME CONTAINER -->
     <div class="game-container" id="game-view">
         <div class="glass-card" id="main-card">
-            
-            <!-- NEW STATS LAYOUT -->
             <div class="stats-container">
-                <!-- YES BAR -->
                 <div class="stat-row">
                     <div class="stat-label clickable" id="lbl-yes-trigger" title="Score?">YES</div>
                     <div class="progress-track"><div class="progress-bar" id="bar-yes"></div></div>
                     <div class="stat-val" id="val-yes">00/101</div>
                 </div>
-                <!-- NO BAR -->
                 <div class="stat-row">
                     <div class="stat-label">NO</div>
                     <div class="progress-track"><div class="progress-bar" id="bar-no"></div></div>
                     <div class="stat-val" id="val-no">00/100</div>
                 </div>
-                <!-- CHOICE BAR -->
                 <div class="stat-row">
                     <div class="stat-label">ALL</div>
                     <div class="progress-track"><div class="progress-bar" id="bar-choice"></div></div>
                     <div class="stat-val" id="val-choice">00/101</div>
                 </div>
             </div>
-
-            <!-- Stage Info -->
             <div id="stage-indicator" class="stage-text">Stage: 01/101</div>
-
-            <!-- Main Title & Dialogue -->
             <h1 class="title" id="main-title">Will you be my valentine? 💘</h1>
             <div class="dialogue-box">
                 <p id="dialogue-text">Please say yes! 🥺</p>
             </div>
-
-            <!-- Buttons -->
             <div class="button-area" id="button-area">
                 <button id="btn-yes" class="game-btn btn-yes">YES 💖</button>
                 <button id="btn-no" class="game-btn btn-no">NO 💔</button>
                 <div id="fake-container"></div>
             </div>
-            
         </div>
     </div>
 
     <!-- OVERLAYS -->
-
-    <!-- 1. START -->
-    <div id="start-overlay" class="overlay-screen">
+    <div id="start-overlay" class="overlay-screen visible">
         <button id="btn-start-game" class="start-btn">Tap to Start 💘</button>
     </div>
 
-    <!-- 2. LOBBY -->
-    <div id="lobby-screen" class="overlay-screen hidden">
+    <div id="lobby-screen" class="overlay-screen">
         <div class="glass-card lobby-card">
             <h1 class="title" id="lobby-title">Will you be my valentine? 💘</h1>
             <p class="subtitle" id="lobby-subtitle">You must say YES 101 times to win 😈</p>
@@ -417,32 +296,17 @@
         </div>
     </div>
 
-    <!-- 3. SETTINGS -->
-    <div id="settings-modal" class="overlay-screen hidden">
+    <div id="settings-modal" class="overlay-screen">
         <div class="glass-card settings-card">
             <h2 id="st-title">Settings ⚙️</h2>
-            <div class="setting-item">
-                <span id="st-lobby-music">Lobby Music</span>
-                <label class="switch"><input type="checkbox" id="toggle-lobby-music" checked><span class="slider round"></span></label>
-            </div>
-            <div class="setting-item">
-                <span id="st-game-music">Game Music</span>
-                <label class="switch"><input type="checkbox" id="toggle-game-music" checked><span class="slider round"></span></label>
-            </div>
-            <div class="setting-item column">
-                <span id="st-language">Language</span>
-                <select id="lang-select" class="lang-dropdown">
-                    <option value="en">English 🇺🇸</option>
-                    <option value="vi">Tiếng Việt 🇻🇳</option>
-                    <option value="es">Español 🇪🇸</option>
-                </select>
-            </div>
+            <div class="setting-item"><span id="st-lobby-music">Lobby Music</span><label class="switch"><input type="checkbox" id="toggle-lobby-music" checked><span class="slider round"></span></label></div>
+            <div class="setting-item"><span id="st-game-music">Game Music</span><label class="switch"><input type="checkbox" id="toggle-game-music" checked><span class="slider round"></span></label></div>
+            <div class="setting-item column"><span id="st-language">Language</span><select id="lang-select" class="lang-dropdown"><option value="en">English 🇺🇸</option><option value="vi">Tiếng Việt 🇻🇳</option><option value="es">Español 🇪🇸</option></select></div>
             <button id="close-settings" class="action-btn">Close</button>
         </div>
     </div>
 
-    <!-- 4. ENDING OVERLAY (Generic for 1, 2, 4) -->
-    <div id="ending-overlay">
+    <div id="ending-overlay" class="overlay-screen">
         <div class="ending-content">
             <h1 class="ending-title" id="end-title">TRUE LOVE</h1>
             <p class="ending-sub" id="end-sub">YES: 101/101</p>
@@ -456,11 +320,9 @@
         <canvas id="confetti-canvas"></canvas>
     </div>
 
-    <!-- 5. ENDING 3: ROOM SCENE -->
-    <div id="room-scene">
+    <div id="room-scene" class="overlay-screen">
         <div class="room-bg">
             <div id="room-progress">Room: 0/3</div>
-            <!-- Ambience Objects (Tooltip Only) -->
             <div class="room-obj" id="obj-window" title="Window">🪟</div>
             <div class="room-obj" id="obj-lamp" title="Lamp">🏮</div>
             <div class="room-obj" id="obj-clock" title="Clock">🕰️</div>
@@ -470,34 +332,25 @@
             <div class="room-obj" id="obj-carpet" title="Carpet">👣</div>
             <div class="room-obj" id="obj-pillow" title="Pillow">☁️</div>
             <div class="room-obj" id="obj-blanket" title="Blanket">🛌</div>
-
-            <!-- Main Interaction Objects -->
             <div class="room-obj" id="obj-tulip" title="Tulip">🌷</div>
             <div class="room-obj" id="obj-letter" title="Letter">✉️</div>
             <div class="room-obj" id="obj-diary" title="Diary">📓</div>
         </div>
         <div id="room-tooltip"></div>
-        <div id="room-modal">
-            <div id="room-modal-text"></div>
-            <button class="room-close-btn" id="btn-room-close">Close</button>
-        </div>
+        <div id="room-modal"><div id="room-modal-text"></div><button class="room-close-btn" id="btn-room-close">Close</button></div>
         <button id="btn-room-exit" class="room-exit-btn">Exit Room</button>
     </div>
 
-    <!-- 6. ENDING 4: SECRET QUESTION -->
-    <div id="secret-modal">
+    <div id="secret-modal" class="overlay-screen">
         <h1 style="color:white; font-family:'Fredoka'; text-align:center; margin:20px;">One last question...</h1>
         <div id="secret-text" style="color:white; font-size: 1.5rem; text-align:center; min-height:50px;"></div>
         <button id="btn-secret-yes" class="secret-btn">YES</button>
     </div>
     
-    <!-- 7. SHARE CARD MODAL -->
-    <div id="share-modal" class="overlay-screen hidden">
+    <div id="share-modal" class="overlay-screen">
         <div class="glass-card share-card-container">
             <h2>Share your Fate 💌</h2>
-            <div id="share-preview-container">
-                <!-- Image goes here -->
-            </div>
+            <div id="share-preview-container"></div>
             <div class="share-actions">
                 <button id="btn-share-download" class="action-btn">Download Image 📥</button>
                 <button id="btn-share-copy" class="action-btn">Copy Share Text 📋</button>
@@ -511,7 +364,18 @@
             console.error("Global Error: " + msg);
         };
 
-        /* --- 1. DATA & CONSTANTS --- */
+        /* --- 1. GLOBAL STATE & CONFIG --- */
+        let UI_MODE = "start"; // start, lobby, gameplay, ending, room, secret
+        
+        const STATE = {
+            yes: 0,
+            no: 0,
+            scoreClicked: false,
+            roomProgress: { tulip: false, letter: false, diary: false },
+            endingId: null,
+            effects: []
+        };
+
         const CONFIG = {
             YES_GOAL: 101,
             NO_GOAL: 100,
@@ -520,17 +384,7 @@
 
         let SETTINGS = { lobbyMusic: true, gameMusic: true, lang: 'en' };
 
-        // STATE MACHINE
-        const STATE = {
-            screen: "START", // START | LOBBY | GAME | ENDING | ROOM | SECRET
-            yes: 0,
-            no: 0,
-            scoreClicked: false,
-            endingId: null,
-            roomProgress: { tulip: false, letter: false, diary: false },
-            effects: []
-        };
-
+        /* --- 2. DATA --- */
         const LANG = {
             en: {
                 title: "Will you be my valentine? 💘",
@@ -604,7 +458,7 @@
             4: { theme: 'theme-4', musicId: 4 }
         };
 
-        /* --- 2. DOM CACHE --- */
+        /* --- 3. DOM CACHE --- */
         let DOM = {};
         function cacheDOM() {
             DOM = {
@@ -623,235 +477,273 @@
                 settingsModal: document.getElementById('settings-modal'),
                 shareModal: document.getElementById('share-modal'),
 
-                // UI Elements
+                // Buttons
+                startBtn: document.getElementById('btn-start-game'),
                 yesBtn: document.getElementById('btn-yes'),
                 noBtn: document.getElementById('btn-no'),
-                dialogue: document.getElementById('dialogue-text'),
-                valYes: document.getElementById('val-yes'),
-                valNo: document.getElementById('val-no'),
-                valChoice: document.getElementById('val-choice'),
-                barYes: document.getElementById('bar-yes'),
-                barNo: document.getElementById('bar-no'),
-                barChoice: document.getElementById('bar-choice'),
-                stageIndicator: document.getElementById('stage-indicator'),
-                fakeContainer: document.getElementById('fake-container'),
-                lblYesTrigger: document.getElementById('lbl-yes-trigger'),
-
-                // Ending Text
+                
+                // Ending UI
                 endTitle: document.getElementById('end-title'),
                 endSub: document.getElementById('end-sub'),
                 endText: document.getElementById('end-text'),
                 
-                // Room
+                // Room UI
                 roomProgress: document.getElementById('room-progress'),
                 roomTooltip: document.getElementById('room-tooltip'),
                 roomModal: document.getElementById('room-modal'),
                 roomModalText: document.getElementById('room-modal-text'),
                 roomCloseBtn: document.getElementById('btn-room-close'),
 
-                // Secret
+                // Secret UI
                 secretText: document.getElementById('secret-text'),
                 secretYesBtn: document.getElementById('btn-secret-yes'),
 
-                // Confetti
+                // Shared
                 confettiCanvas: document.getElementById('confetti-canvas'),
                 sharePreview: document.getElementById('share-preview-container')
             };
         }
 
-        /* --- 3. FLOW CONTROLLER --- */
+        /* --- 4. STATE MACHINE (UI ENGINE) --- */
+        
+        function setMode(mode) {
+            console.log(`Switching UI: ${UI_MODE} -> ${mode}`);
+            UI_MODE = mode;
+            
+            // 1. Helper to hide all
+            const allScreens = [
+                DOM.startOverlay, DOM.lobbyScreen, DOM.gameView, 
+                DOM.endingOverlay, DOM.roomScene, DOM.secretModal
+            ];
+            
+            allScreens.forEach(el => {
+                if(el) {
+                    el.classList.remove('visible');
+                    // We rely on CSS .overlay-screen (opacity:0, pointer-events:none) + .visible
+                    // But gameView is not .overlay-screen, so handle it manually
+                    if (el === DOM.gameView) {
+                        el.style.opacity = '0';
+                        el.style.pointerEvents = 'none';
+                    }
+                }
+            });
+
+            // 2. Show Target
+            let target = null;
+            if (mode === 'start') target = DOM.startOverlay;
+            else if (mode === 'lobby') target = DOM.lobbyScreen;
+            else if (mode === 'ending') target = DOM.endingOverlay;
+            else if (mode === 'room') target = DOM.roomScene;
+            else if (mode === 'secret') target = DOM.secretModal;
+            else if (mode === 'gameplay') target = DOM.gameView;
+
+            if (target) {
+                if (target === DOM.gameView) {
+                    target.style.opacity = '1';
+                    target.style.pointerEvents = 'auto';
+                } else {
+                    target.classList.add('visible');
+                }
+            }
+
+            // 3. Audio State Sync
+            AudioCtrl.sync();
+        }
+
+        /* --- 5. INITIALIZATION & EVENTS --- */
+        
         function initGame() {
             cacheDOM();
             loadSettings();
             generateStages();
             AudioCtrl.init();
-            
-            // Set initial language texts
             updateTexts();
 
-            // Bind all events once
-            bindEvents();
-
-            // Start in start screen
-            goTo('START');
-        }
-
-        function goTo(screen, payload = {}) {
-            console.log(`Transitioning to: ${screen}`, payload);
-            STATE.screen = screen;
+            // BIND EVENTS ONCE
+            if(DOM.startBtn) DOM.startBtn.onclick = () => { SFX.init(); goToLobby(); };
             
-            // Handle State Logic for Screen Entry
-            if (screen === 'LOBBY') {
-                resetGameplayStats();
-                AudioCtrl.playLobby();
-            } 
-            else if (screen === 'GAME') {
-                resetGameplayStats();
-                AudioCtrl.playGameplay();
-            }
-            else if (screen === 'ENDING') {
-                STATE.endingId = payload.endingId;
-                AudioCtrl.playEnding(payload.endingId);
-            }
-            else if (screen === 'ROOM') {
-                AudioCtrl.playRoom();
-            }
-            else if (screen === 'SECRET') {
-                AudioCtrl.stopAll(); // Silence for suspense
-                runSecretSequence();
-            }
+            // Lobby
+            document.getElementById('lobby-btn-yes').onclick = () => { SFX.playYes(); startGameplay(); };
+            document.getElementById('lobby-btn-no').onclick = () => { 
+                SFX.playNo(); 
+                document.getElementById('lobby-msg').innerText = getLang().lobbyNo[Math.floor(Math.random()*3)]; 
+            };
 
-            renderScreen();
-        }
-
-        /* --- 4. RENDER SYSTEM --- */
-        function renderScreen() {
-            // Hide everything first
-            const screens = [
-                DOM.startOverlay, DOM.lobbyScreen, DOM.gameView, 
-                DOM.endingOverlay, DOM.roomScene, DOM.secretModal
-            ];
-            
-            screens.forEach(el => {
-                if (el) {
-                    el.classList.add('hidden');
-                    el.classList.remove('visible');
-                    el.style.pointerEvents = 'none';
-                    el.style.opacity = '0';
+            // Gameplay
+            DOM.yesBtn.onclick = handleYes;
+            DOM.noBtn.onclick = handleNo;
+            document.getElementById('lbl-yes-trigger').onclick = () => {
+                if(!STATE.scoreClicked) {
+                    STATE.scoreClicked = true;
+                    document.getElementById('lbl-yes-trigger').style.color = "gold";
+                    showTooltip("✨ Secret Found!");
                 }
-            });
+            };
 
-            // Show active screen
-            let activeEl = null;
-            if (STATE.screen === 'START') activeEl = DOM.startOverlay;
-            else if (STATE.screen === 'LOBBY') activeEl = DOM.lobbyScreen;
-            else if (STATE.screen === 'GAME') activeEl = DOM.gameView;
-            else if (STATE.screen === 'ENDING') {
-                activeEl = DOM.endingOverlay;
-                renderEndingContent(STATE.endingId);
-            }
-            else if (STATE.screen === 'ROOM') {
-                activeEl = DOM.roomScene;
-                updateRoomHUD();
-                bindRoomObjects();
-            }
-            else if (STATE.screen === 'SECRET') activeEl = DOM.secretModal;
+            // Ending Buttons
+            document.getElementById('btn-end-replay').onclick = startGameplay;
+            document.getElementById('btn-end-lobby').onclick = goToLobby;
+            document.getElementById('btn-end-share').onclick = openShareModal;
 
-            if (activeEl) {
-                activeEl.classList.remove('hidden');
-                activeEl.classList.add('visible');
-                activeEl.style.pointerEvents = 'auto';
-                activeEl.style.opacity = '1';
-            }
+            // Room Buttons
+            document.getElementById('btn-room-exit').onclick = goToLobby;
+            DOM.roomCloseBtn.onclick = () => { DOM.roomModal.style.display='none'; checkRoomCompletion(); };
+
+            // Secret Buttons
+            DOM.secretYesBtn.onclick = () => enterEnding(4);
+
+            // Settings & Share (Modal toggles do not change UI_MODE main state, just overlap)
+            document.getElementById('settings-btn').onclick = () => DOM.settingsModal.classList.add('visible');
+            document.getElementById('close-settings').onclick = () => DOM.settingsModal.classList.remove('visible');
+            document.getElementById('reset-btn').onclick = () => { if(confirm("Reset Game?")) goToLobby(); };
+            
+            document.getElementById('btn-share-close').onclick = () => DOM.shareModal.classList.remove('visible');
+            document.getElementById('btn-share-download').onclick = downloadShareCard;
+            document.getElementById('btn-share-copy').onclick = copyShareText;
+            
+            // Settings Toggles
+            document.getElementById('toggle-lobby-music').onchange = (e) => { SETTINGS.lobbyMusic = e.target.checked; saveSettings(); AudioCtrl.sync(); };
+            document.getElementById('toggle-game-music').onchange = (e) => { SETTINGS.gameMusic = e.target.checked; saveSettings(); AudioCtrl.sync(); };
+            document.getElementById('lang-select').onchange = (e) => { SETTINGS.lang = e.target.value; saveSettings(); updateTexts(); };
+
+            // Bind Room Objects
+            bindRoomObjects();
+
+            // Set Initial Mode
+            setMode('start');
         }
 
-        /* --- 5. GAMEPLAY LOGIC --- */
-        function handleYes() {
-            if (STATE.screen !== 'GAME') return;
+        /* --- 6. GAME FLOW CONTROLLERS --- */
+
+        function goToLobby() {
+            // Full Reset Logic
+            STATE.yes = 0; 
+            STATE.no = 0;
+            STATE.scoreClicked = false;
+            STATE.endingId = null;
+            STATE.roomProgress = { tulip: false, letter: false, diary: false };
             
-            STATE.yes++;
-            SFX.playYes();
-            updateUI();
+            // Reset UI Visuals
+            document.getElementById('lbl-yes-trigger').style.color = "#666";
             
-            if (DOM.yesBtn) spawnFloatingHeart(DOM.yesBtn);
-            applyCurrentStage();
-            checkEndings();
+            setMode('lobby');
         }
 
-        function handleNo() {
-            if (STATE.screen !== 'GAME') return;
-
-            STATE.no++;
-            SFX.playNo();
-            updateUI();
-            
-            if (DOM.mainCard) {
-                DOM.mainCard.classList.remove('shake');
-                void DOM.mainCard.offsetWidth;
-                DOM.mainCard.classList.add('shake');
-            }
-            
-            const L = getLang();
-            DOM.dialogue.innerText = L.dialogues[Math.floor(Math.random() * L.dialogues.length)];
-            checkEndings();
-        }
-
-        function checkEndings() {
-            // 1. Secret Ending
-            if (STATE.yes === 100 && STATE.scoreClicked) {
-                goTo('SECRET');
-                return;
-            }
-            
-            // 2. Ending 1 (True Love)
-            if (STATE.yes >= CONFIG.YES_GOAL) {
-                goTo('ENDING', { endingId: 1 });
-                return;
-            }
-
-            // 3. Ending 2 (Hesitant)
-            if (STATE.yes === 51 && STATE.no === 50) {
-                goTo('ENDING', { endingId: 2 });
-                return;
-            }
-
-            // 4. Ending 3 (Room)
-            if (STATE.no >= CONFIG.NO_GOAL) {
-                goTo('ROOM');
-                return;
-            }
-        }
-
-        function resetGameplayStats() {
+        function startGameplay() {
+            // Reset Gameplay Stats only
             STATE.yes = 0;
             STATE.no = 0;
             STATE.endingId = null;
-            STATE.scoreClicked = false;
             STATE.roomProgress = { tulip: false, letter: false, diary: false };
             
-            updateUI();
-            
-            if (DOM.dialogue) DOM.dialogue.innerText = getLang().dialogues[0] || "Please say yes!";
-            if (DOM.fakeContainer) DOM.fakeContainer.innerHTML = "";
+            updateStatsUI();
             applyCurrentStage();
+            document.getElementById('fake-container').innerHTML = "";
+            document.getElementById('dialogue-text').innerText = getLang().dialogues[0];
+            
+            setMode('gameplay');
         }
 
-        function updateUI() {
-            if (DOM.valYes) DOM.valYes.innerText = `${Math.min(STATE.yes, CONFIG.YES_GOAL)}/${CONFIG.YES_GOAL}`;
-            if (DOM.valNo) DOM.valNo.innerText = `${Math.min(STATE.no, CONFIG.NO_GOAL)}/${CONFIG.NO_GOAL}`;
-            if (DOM.valChoice) DOM.valChoice.innerText = `${Math.min(STATE.yes + STATE.no, CONFIG.YES_GOAL)}/${CONFIG.YES_GOAL}`;
-            
-            if (DOM.barYes) DOM.barYes.style.width = ((Math.min(STATE.yes, CONFIG.YES_GOAL)/CONFIG.YES_GOAL)*100) + "%";
-            if (DOM.barNo) DOM.barNo.style.width = ((Math.min(STATE.no, CONFIG.NO_GOAL)/CONFIG.NO_GOAL)*100) + "%";
-            if (DOM.barChoice) DOM.barChoice.style.width = ((Math.min(STATE.yes + STATE.no, CONFIG.YES_GOAL)/CONFIG.YES_GOAL)*100) + "%";
-            
-            if (DOM.stageIndicator) DOM.stageIndicator.innerText = `Stage: ${Math.min(STATE.yes + 1, CONFIG.YES_GOAL)}/101`;
+        function enterEnding(id) {
+            STATE.endingId = id;
+            renderEndingOverlay(id);
+            setMode('ending');
         }
 
-        /* --- 6. ENDING SCRIPT ENGINE --- */
-        function renderEndingContent(id) {
+        function enterRoom() {
+            updateRoomHUD();
+            setMode('room');
+            // Check if audio needs strict play
+            AudioCtrl.stopAll(false);
+        }
+
+        function enterSecret() {
+            setMode('secret');
+            runSecretSequence();
+        }
+
+        /* --- 7. LOGIC HANDLERS --- */
+
+        function handleYes() {
+            if (UI_MODE !== 'gameplay') return;
+            STATE.yes++;
+            SFX.playYes();
+            updateStatsUI();
+            spawnFloatingHeart(DOM.yesBtn);
+            applyCurrentStage();
+            checkEndingTriggers();
+        }
+
+        function handleNo() {
+            if (UI_MODE !== 'gameplay') return;
+            STATE.no++;
+            SFX.playNo();
+            updateStatsUI();
+            
+            const card = document.getElementById('main-card');
+            card.classList.remove('shake');
+            void card.offsetWidth;
+            card.classList.add('shake');
+            
+            document.getElementById('dialogue-text').innerText = getLang().dialogues[Math.floor(Math.random()*getLang().dialogues.length)];
+            checkEndingTriggers();
+        }
+
+        function checkEndingTriggers() {
+            if (UI_MODE !== 'gameplay') return;
+
+            // 1. Secret Trigger
+            if (STATE.yes === 100 && STATE.scoreClicked) {
+                enterSecret();
+                return;
+            }
+
+            // 2. Ending 1: True Love
+            if (STATE.yes >= CONFIG.YES_GOAL) {
+                enterEnding(1);
+                return;
+            }
+
+            // 3. Ending 2: Hesitant
+            if (STATE.yes === 51 && STATE.no === 50) {
+                enterEnding(2);
+                return;
+            }
+
+            // 4. Ending 3: Room
+            if (STATE.no >= CONFIG.NO_GOAL) {
+                enterRoom();
+                return;
+            }
+        }
+
+        /* --- 8. ENDING & ROOM ENGINE --- */
+
+        function renderEndingOverlay(id) {
             const L = getLang();
-            const config = ENDINGS_CONFIG[id];
+            const conf = ENDINGS_CONFIG[id];
             
-            // Reset overlay classes
-            DOM.endingOverlay.className = 'visible'; // Keep visible base class
-            DOM.endingOverlay.classList.add(config.theme);
+            // Clean previous theme classes
+            DOM.endingOverlay.className = "overlay-screen";
+            DOM.endingOverlay.classList.add(conf.theme);
 
-            // Set Text
-            if (id === 1) {
+            if (id===1) {
                 DOM.endTitle.innerText = L.end1_title;
                 DOM.endSub.innerText = L.end1_sub;
                 startTypewriter(L.end1_lines);
                 startConfetti();
-            } else if (id === 2) {
+            }
+            else if (id===2) {
                 DOM.endTitle.innerText = L.end2_title;
                 DOM.endSub.innerText = L.end2_sub;
                 startTypewriter(L.end2_lines);
-            } else if (id === 3) {
+            }
+            else if (id===3) {
                 DOM.endTitle.innerText = L.end3_title;
                 DOM.endSub.innerText = L.end3_sub;
                 startTypewriter(L.end3_lines);
-            } else if (id === 4) {
+            }
+            else if (id===4) {
                 DOM.endTitle.innerText = L.end4_title;
                 DOM.endSub.innerText = L.end4_sub;
                 startTypewriter(L.end4_lines);
@@ -861,331 +753,204 @@
 
         let typeTimer;
         function startTypewriter(lines) {
-            let l = 0, c = 0;
-            const el = DOM.endText;
-            if(!el) return;
-            el.innerText = "";
-            
+            if (UI_MODE !== 'ending') return;
+            let l=0, c=0;
+            DOM.endText.innerText = "";
             if(typeTimer) clearTimeout(typeTimer);
 
             function type() {
-                if (STATE.screen !== 'ENDING') return; // Stop if screen changed
-
+                if (UI_MODE !== 'ending') return;
                 if(l >= lines.length) return;
-                el.innerText = lines[l].substring(0, c);
+                
+                DOM.endText.innerText = lines[l].substring(0, c);
                 c++;
-                if(c > lines[l].length) {
+                
+                if (c > lines[l].length) {
                     setTimeout(() => { l++; c=0; type(); }, 1200);
                 } else {
                     typeTimer = setTimeout(type, 50);
                 }
             }
             type();
-            // Allow skip
-            el.onclick = () => {
-                clearTimeout(typeTimer);
-                el.innerText = lines[l];
-                setTimeout(() => { l++; c=0; type(); }, 500);
-            };
         }
 
-        /* --- 7. ROOM & SECRET --- */
         function bindRoomObjects() {
             const L = getLang();
-            const bind = (id, key, isProgress) => {
+            const attach = (id, key, isKeyItem) => {
                 const el = document.getElementById(id);
-                if (!el) return;
-                
-                // Remove old listeners to prevent duplication using cloneNode trick is risky with refs, 
-                // but since we hide/show containers, binding once in init is better, or strictly handling here.
-                // We will use a flag on the element or just overwrite onclick.
-                
+                if(!el) return;
                 el.onclick = () => {
-                    if (isProgress) {
+                    if (isKeyItem) {
                         STATE.roomProgress[key] = true;
                         updateRoomHUD();
                         openRoomModal(L[`room_${key}`]);
                     } else {
-                        // Ambient object
-                        if(DOM.roomTooltip) {
-                            DOM.roomTooltip.innerText = L[`room_${key}`];
-                            DOM.roomTooltip.style.opacity = 1;
-                            setTimeout(()=>DOM.roomTooltip.style.opacity=0, 2000);
-                        }
+                        showTooltip(L[`room_${key}`] || "It's cold...");
                     }
                 };
             };
             
-            // Re-bind is okay here because room objects are static
-            bind('obj-window', 'window', false);
-            bind('obj-lamp', 'lamp', false);
-            bind('obj-tulip', 'tulip', true);
-            bind('obj-letter', 'letter', true);
-            bind('obj-diary', 'diary', true);
+            attach('obj-tulip', 'tulip', true);
+            attach('obj-letter', 'letter', true);
+            attach('obj-diary', 'diary', true);
             
-            // Extras
-            ['clock','mirror','frame','chair','carpet','pillow','blanket'].forEach(k => {
-                const el = document.getElementById('obj-'+k);
-                if(el) el.onclick = () => {
-                    DOM.roomTooltip.innerText = "It's cold...";
-                    DOM.roomTooltip.style.opacity = 1;
-                    setTimeout(()=>DOM.roomTooltip.style.opacity=0, 2000);
-                };
-            });
+            ['window','lamp','clock','mirror','frame','chair','carpet','pillow','blanket'].forEach(k => attach('obj-'+k, k, false));
         }
 
         function updateRoomHUD() {
-            const count = (STATE.roomProgress.tulip?1:0) + (STATE.roomProgress.letter?1:0) + (STATE.roomProgress.diary?1:0);
-            DOM.roomProgress.innerText = `Room: ${count}/3`;
+            const c = (STATE.roomProgress.tulip?1:0) + (STATE.roomProgress.letter?1:0) + (STATE.roomProgress.diary?1:0);
+            DOM.roomProgress.innerText = `Room: ${c}/3`;
         }
 
         function openRoomModal(content) {
             let lines = Array.isArray(content) ? content : [content];
             let idx = 0;
-            
             DOM.roomModal.style.display = 'block';
             DOM.roomCloseBtn.style.display = 'none';
-            DOM.roomModalText.innerText = "";
             
             function next() {
                 if (idx >= lines.length) {
                     DOM.roomCloseBtn.style.display = 'inline-block';
                     return;
                 }
-                DOM.roomModalText.innerText = lines[idx];
-                idx++;
-                // Simple timeout for read pace if auto, but we prefer click to advance?
-                // For simplicity, let's just show text. If array, user clicks modal to advance.
+                DOM.roomModalText.innerText = lines[idx++];
             }
-            
             next();
-            
             DOM.roomModal.onclick = (e) => {
-                if (e.target !== DOM.roomCloseBtn) next();
+                if(e.target !== DOM.roomCloseBtn) next();
             };
         }
 
         function checkRoomCompletion() {
             if (STATE.roomProgress.tulip && STATE.roomProgress.letter && STATE.roomProgress.diary) {
-                setTimeout(() => {
-                    goTo('ENDING', { endingId: 3 });
-                }, 1000);
+                setTimeout(() => enterEnding(3), 500);
             }
         }
 
         function runSecretSequence() {
             const L = getLang();
             DOM.secretYesBtn.style.display = 'none';
-            let i = 0;
-            
-            function showLine() {
-                if (STATE.screen !== 'SECRET') return;
-                
-                if (i < L.secret_q.length) {
-                    DOM.secretText.innerText = L.secret_q[i];
+            let i=0;
+            function step() {
+                if(UI_MODE !== 'secret') return;
+                if(i < L.secret_q.length) {
+                    DOM.secretText.innerText = L.secret_q[i++];
                     DOM.secretText.style.opacity = 0;
-                    setTimeout(() => DOM.secretText.style.opacity = 1, 100);
-                    i++;
-                    setTimeout(showLine, 2500);
+                    setTimeout(() => DOM.secretText.style.opacity=1, 100);
+                    setTimeout(step, 2500);
                 } else {
-                    DOM.secretYesBtn.style.display = 'block';
+                    DOM.secretYesBtn.style.display='block';
                     DOM.secretYesBtn.innerText = L.yesBtn;
                 }
             }
-            showLine();
+            step();
         }
 
-        /* --- 8. EVENTS & AUDIO --- */
-        function bindEvents() {
-            // Start Screen
-            DOM.startBtn.onclick = () => {
-                SFX.ctx.resume();
-                goTo('LOBBY');
-            };
-
-            // Lobby
-            document.getElementById('lobby-btn-yes').onclick = () => {
-                SFX.playYes();
-                goTo('GAME');
-            };
-            document.getElementById('lobby-btn-no').onclick = () => {
-                SFX.playNo();
-                const L = getLang();
-                document.getElementById('lobby-msg').innerText = L.lobbyNo[Math.floor(Math.random()*L.lobbyNo.length)];
-            };
-
-            // Game
-            DOM.yesBtn.onclick = handleYes;
-            DOM.noBtn.onclick = handleNo;
-            DOM.lblYesTrigger.onclick = () => {
-                if (!STATE.scoreClicked) {
-                    STATE.scoreClicked = true;
-                    DOM.lblYesTrigger.style.color = "gold";
-                    DOM.lblYesTrigger.style.textShadow = "0 0 5px gold";
-                    showTooltip("✨ Secret Found!");
-                }
-            };
-
-            // Ending Actions
-            DOM.endReplayBtn.onclick = () => {
-                goTo('GAME');
-            };
-            DOM.endLobbyBtn.onclick = () => {
-                goTo('LOBBY');
-            };
-            DOM.endShareBtn.onclick = openShareModal;
-
-            // Room Actions
-            DOM.roomCloseBtn.onclick = () => {
-                DOM.roomModal.style.display = 'none';
-                checkRoomCompletion();
-            };
-            document.getElementById('btn-room-exit').onclick = () => {
-                goTo('LOBBY');
-            };
-
-            // Secret Actions
-            DOM.secretYesBtn.onclick = () => {
-                goTo('ENDING', { endingId: 4 });
-            };
-
-            // Settings
-            document.getElementById('settings-btn').onclick = () => DOM.settingsModal.classList.remove('hidden');
-            document.getElementById('close-settings').onclick = () => DOM.settingsModal.classList.add('hidden');
-            document.getElementById('toggle-lobby-music').onchange = (e) => { SETTINGS.lobbyMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
-            document.getElementById('toggle-game-music').onchange = (e) => { SETTINGS.gameMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
-            document.getElementById('lang-select').onchange = (e) => { SETTINGS.lang = e.target.value; saveSettings(); updateTexts(); };
-            document.getElementById('reset-btn').onclick = () => { if(confirm(getLang().reset+"?")) goTo('LOBBY'); };
-
-            // Share
-            document.getElementById('btn-share-close').onclick = () => DOM.shareModal.classList.add('hidden');
-            document.getElementById('btn-share-download').onclick = downloadShareCard;
-            document.getElementById('btn-share-copy').onclick = copyShareText;
-        }
-
+        /* --- 9. AUDIO & SFX --- */
+        
         const AudioCtrl = {
             init() {
-                DOM.audioLobby.volume = 0;
-                DOM.audioGame.volume = 0;
-                DOM.audioEnd.volume = 0;
                 DOM.audioLobby.src = "music/lobby.mp3?v=2";
                 DOM.audioGame.src = "music/game.mp3?v=2";
+                DOM.audioLobby.volume = 0.5;
+                DOM.audioGame.volume = 0.4;
+                DOM.audioEnd.volume = 0.5;
             },
-            playLobby() {
-                this.stopAll(false);
-                if (SETTINGS.lobbyMusic) this.fadeIn(DOM.audioLobby);
-            },
-            playGameplay() {
-                this.stopAll(false);
-                if (SETTINGS.gameMusic) this.fadeIn(DOM.audioGame);
-            },
-            playEnding(id) {
-                this.stopAll(false);
-                if (SETTINGS.gameMusic) {
-                    let src = "";
-                    if (id === 1) src = "music/victory_love.mp3";
-                    if (id === 2) src = "music/ending_bittersweet.mp3";
-                    if (id === 4) src = "music/music_box.mp3";
-                    
-                    if (src && DOM.audioEnd) {
-                        DOM.audioEnd.src = src + "?v=2";
-                        this.fadeIn(DOM.audioEnd);
-                    }
+            sync() {
+                // Lobby Music
+                if (UI_MODE === 'lobby' && SETTINGS.lobbyMusic) {
+                    if (DOM.audioLobby.paused) DOM.audioLobby.play().catch(()=>{});
+                } else {
+                    DOM.audioLobby.pause();
+                    DOM.audioLobby.currentTime = 0;
+                }
+
+                // Game Music
+                if (UI_MODE === 'gameplay' && SETTINGS.gameMusic) {
+                    if (DOM.audioGame.paused) DOM.audioGame.play().catch(()=>{});
+                } else {
+                    DOM.audioGame.pause();
+                    DOM.audioGame.currentTime = 0;
+                }
+
+                // Ending Music (Triggered manually in enterEnding, checked here for stop)
+                if (UI_MODE !== 'ending' && UI_MODE !== 'secret') {
+                    DOM.audioEnd.pause();
                 }
             },
-            playRoom() {
-                this.stopAll(false);
-                // Room has ambient hum if implemented, or silence
-            },
-            stopAll(instant = true) {
-                [DOM.audioLobby, DOM.audioGame, DOM.audioEnd].forEach(a => {
-                    if (instant) {
-                        a.pause();
-                        a.currentTime = 0;
-                    } else {
-                        this.fadeOut(a);
-                    }
-                });
-            },
-            fadeIn(audio) {
-                if(!audio) return;
-                audio.volume = 0;
-                audio.play().catch(e => console.warn(e));
-                let vol = 0;
-                const i = setInterval(() => {
-                    vol += 0.05;
-                    if(vol >= 0.5) { vol = 0.5; clearInterval(i); }
-                    audio.volume = vol;
-                }, 100);
-            },
-            fadeOut(audio) {
-                if(!audio) return;
-                let vol = audio.volume;
-                const i = setInterval(() => {
-                    vol -= 0.05;
-                    if(vol <= 0) { vol = 0; audio.pause(); clearInterval(i); }
-                    audio.volume = vol;
-                }, 100);
-            },
-            update() {
-                // Refresh volume based on settings
-                if (!SETTINGS.lobbyMusic && STATE.screen === 'LOBBY') DOM.audioLobby.pause();
-                if (!SETTINGS.gameMusic && STATE.screen === 'GAME') DOM.audioGame.pause();
+            stopAll(instant) {
+                DOM.audioLobby.pause();
+                DOM.audioGame.pause();
+                DOM.audioEnd.pause();
             }
         };
 
         const SFX = {
-            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            ctx: null,
+            init() { if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
             playTone(f, t) {
-                if(this.ctx.state === 'suspended') this.ctx.resume();
-                const o = this.ctx.createOscillator();
-                const g = this.ctx.createGain();
-                o.type = t; o.frequency.value = f;
-                g.gain.value = 0.1;
+                if(!this.ctx) this.init();
+                if(this.ctx.state==='suspended') this.ctx.resume();
+                const o=this.ctx.createOscillator(), g=this.ctx.createGain();
+                o.type=t; o.frequency.value=f; g.gain.value=0.1;
                 o.connect(g); g.connect(this.ctx.destination);
-                o.start(); o.stop(this.ctx.currentTime + 0.1);
+                o.start(); o.stop(this.ctx.currentTime+0.1);
             },
             playYes() { this.playTone(880, 'sine'); },
             playNo() { this.playTone(150, 'sawtooth'); }
         };
 
-        /* --- 9. UTILS & VISUALS --- */
+        /* --- 10. UTILS & UI UPDATES --- */
+
         function getLang() { return LANG[SETTINGS.lang] || LANG['en']; }
         
         function updateTexts() {
             const L = getLang();
             DOM.mainTitle.innerText = L.title;
-            DOM.yesBtn.innerText = L.yesBtn;
-            DOM.noBtn.innerText = L.noBtn;
             DOM.lobbyTitle.innerText = L.title;
             DOM.lobbySubtitle.innerText = L.subtitle;
+            DOM.yesBtn.innerText = L.yesBtn;
+            DOM.noBtn.innerText = L.noBtn;
         }
 
-        function createParticles() {
-            for(let i=0; i<20; i++) {
-                const p = document.createElement('div');
-                p.className = 'heart-particle';
-                p.innerText = "❤";
-                p.style.left = Math.random()*100+'vw';
-                p.style.animationDuration = (Math.random()*5+5)+'s';
-                p.style.fontSize = (Math.random()*20+10)+'px';
-                document.getElementById('particles-container').appendChild(p);
-            }
+        function updateStatsUI() {
+            const { yes, no } = STATE;
+            const total = yes + no;
+            const yg = CONFIG.YES_GOAL, ng = CONFIG.NO_GOAL;
+            
+            document.getElementById('val-yes').innerText = `${Math.min(yes, yg)}/${yg}`;
+            document.getElementById('bar-yes').style.width = ((Math.min(yes, yg)/yg)*100)+'%';
+            
+            document.getElementById('val-no').innerText = `${Math.min(no, ng)}/${ng}`;
+            document.getElementById('bar-no').style.width = ((Math.min(no, ng)/ng)*100)+'%';
+            
+            document.getElementById('val-choice').innerText = `${Math.min(total, yg)}/${yg}`;
+            document.getElementById('bar-choice').style.width = ((Math.min(total, yg)/yg)*100)+'%';
+            
+            document.getElementById('stage-indicator').innerText = `Stage: ${Math.min(yes+1, yg)}/101`;
+        }
+
+        function applyCurrentStage() {
+            // Simple visual effect
+            if(STATE.yes > 10 && STATE.yes < 20) DOM.yesBtn.style.transform = `rotate(${Math.random()*10-5}deg)`;
+            else DOM.yesBtn.style.transform = 'none';
+        }
+
+        function generateStages() { STATE.effects = []; }
+
+        function showTooltip(msg) {
+            const t = document.createElement('div'); t.innerText=msg;
+            t.style.position='fixed'; t.style.top='20%'; t.style.left='50%'; t.style.transform='translate(-50%)';
+            t.style.background='rgba(0,0,0,0.8)'; t.style.color='white'; t.style.padding='10px'; t.style.borderRadius='8px'; t.style.zIndex='4000';
+            document.body.appendChild(t); setTimeout(()=>t.remove(), 1500);
         }
 
         function spawnFloatingHeart(el) {
-            const h = document.createElement('div'); h.innerText="💖";
+            const h = document.createElement('div'); h.innerText="💖"; 
             h.style.position='fixed'; h.style.left=el.getBoundingClientRect().left+'px'; h.style.top=el.getBoundingClientRect().top+'px';
             h.style.transition='1s'; h.style.zIndex='100'; document.body.appendChild(h);
             requestAnimationFrame(()=>{ h.style.transform='translate(0,-100px)'; h.style.opacity='0'; });
             setTimeout(()=>h.remove(),1000);
-        }
-
-        function showTooltip(msg) {
-            const t = document.createElement('div'); t.innerText = msg;
-            t.style.position='fixed'; t.style.top='20%'; t.style.left='50%'; t.style.transform='translate(-50%)';
-            t.style.background='rgba(0,0,0,0.7)'; t.style.color='white'; t.style.padding='10px'; t.style.borderRadius='10px';
-            document.body.appendChild(t); setTimeout(()=>t.remove(), 1500);
         }
 
         function startConfetti() {
@@ -1193,64 +958,44 @@
             const ctx = c.getContext('2d');
             c.width = window.innerWidth; c.height = window.innerHeight;
             const p = [];
-            for(let i=0; i<50; i++) p.push({x:Math.random()*c.width, y:-10, s:Math.random()*5+2, c:['gold','pink','white'][Math.floor(Math.random()*3)]});
-            
+            for(let i=0;i<50;i++) p.push({x:Math.random()*c.width, y:-10, s:Math.random()*5+2, c:['gold','pink','white'][Math.floor(Math.random()*3)]});
             function draw() {
-                if(STATE.screen !== 'ENDING') return;
+                if(UI_MODE !== 'ending') return;
                 ctx.clearRect(0,0,c.width,c.height);
-                p.forEach(o => {
-                    ctx.fillStyle = o.c; ctx.fillRect(o.x, o.y, o.s, o.s);
-                    o.y += o.s; if(o.y > c.height) o.y = -10;
-                });
+                p.forEach(o=>{ ctx.fillStyle=o.c; ctx.fillRect(o.x,o.y,o.s,o.s); o.y+=o.s; if(o.y>c.height)o.y=-10; });
                 requestAnimationFrame(draw);
             }
             draw();
         }
 
-        /* --- STAGE EFFECTS (Simplified) --- */
-        function applyCurrentStage() {
-            // Very simple visual effects based on progress
-            if (STATE.yes > 10 && STATE.yes < 20) DOM.yesBtn.style.transform = `rotate(${Math.random()*10-5}deg)`;
-            else DOM.yesBtn.style.transform = 'none';
-        }
-        
-        function generateStages() { STATE.effects = []; } // Placeholder if needed
-
-        /* --- SETTINGS SAVE --- */
         function saveSettings() { localStorage.setItem(CONFIG.SETTINGS_KEY, JSON.stringify(SETTINGS)); }
         function loadSettings() { 
-            try {
+            try { 
                 const s = JSON.parse(localStorage.getItem(CONFIG.SETTINGS_KEY));
                 if(s) SETTINGS = s;
-                // Update toggle UI
                 document.getElementById('toggle-lobby-music').checked = SETTINGS.lobbyMusic;
                 document.getElementById('toggle-game-music').checked = SETTINGS.gameMusic;
                 document.getElementById('lang-select').value = SETTINGS.lang;
-            } catch(e) {} 
+            } catch(e){} 
         }
 
-        /* --- SHARE CARD --- */
         function openShareModal() {
-            DOM.shareModal.classList.remove('hidden');
-            DOM.sharePreview.innerHTML = "Generating...";
-            setTimeout(() => {
-                const canvas = document.createElement('canvas');
-                canvas.width = 400; canvas.height = 600;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = 'white'; ctx.fillRect(0,0,400,600);
-                ctx.fillStyle = '#ff758c'; ctx.font = '30px Fredoka'; ctx.fillText('My Valentine', 100, 100);
-                ctx.fillStyle = 'black'; ctx.font = '20px Nunito';
-                ctx.fillText(`YES: ${STATE.yes}`, 100, 200);
-                ctx.fillText(`NO: ${STATE.no}`, 100, 250);
-                const img = new Image(); img.src = canvas.toDataURL();
-                DOM.sharePreview.innerHTML = ""; DOM.sharePreview.appendChild(img);
-            }, 100);
+            DOM.shareModal.classList.add('visible');
+            const c = document.createElement('canvas'); c.width=400; c.height=600;
+            const ctx = c.getContext('2d');
+            ctx.fillStyle='white'; ctx.fillRect(0,0,400,600);
+            ctx.fillStyle='#ff758c'; ctx.font='bold 40px Fredoka'; ctx.textAlign='center'; ctx.fillText("My Valentine",200,100);
+            ctx.fillStyle='#333'; ctx.font='20px Nunito'; ctx.fillText(`YES: ${STATE.yes} - NO: ${STATE.no}`,200,300);
+            const img = new Image(); img.src = c.toDataURL();
+            document.getElementById('share-preview-container').innerHTML = "";
+            document.getElementById('share-preview-container').appendChild(img);
         }
-        function downloadShareCard() { alert("Download feature placeholder"); }
-        function copyShareText() { navigator.clipboard.writeText(`Valentine Game Result: ${STATE.yes} YES - ${STATE.no} NO`); }
+        function downloadShareCard() { alert("Download not implemented in preview."); }
+        function copyShareText() { navigator.clipboard.writeText(`I said YES ${STATE.yes} times! 💘`); }
 
-        // BOOT
+        // Start
         document.addEventListener('DOMContentLoaded', initGame);
+
     </script>
 </body>
 </html>
