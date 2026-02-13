@@ -166,31 +166,107 @@
         .action-btn { padding: 12px; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: bold; cursor: pointer; background: var(--secondary-pink); color: white; width: 100%; touch-action: manipulation; }
 
         /* Ending Styles */
-        .theme-1 { background: var(--theme-1-bg); }
-        .theme-2 { background: var(--theme-2-bg); }
-        .theme-3 { background: var(--theme-3-bg); }
-        .theme-4 { background: var(--theme-4-bg); }
+        @keyframes gradientMove {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
 
-        .ending-content { max-width: 500px; width: 100%; z-index: 2; animation: fadeInUp 1s ease-out 0.2s backwards; }
-        .ending-title { font-family: 'Fredoka', cursive; font-size: 3rem; margin-bottom: 5px; text-shadow: 0 4px 10px rgba(0,0,0,0.2); }
-        .ending-sub { font-size: 1rem; opacity: 0.9; margin-bottom: 30px; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; }
+        .theme-1 { background: var(--theme-1-bg); background-size: 300% 300%; animation: gradientMove 15s ease infinite; }
+        .theme-2 { background: var(--theme-2-bg); background-size: 300% 300%; animation: gradientMove 15s ease infinite; }
+        .theme-4 { background: var(--theme-4-bg); background-size: 300% 300%; animation: gradientMove 15s ease infinite; }
+        
+        .theme-3 { 
+            background: var(--theme-3-bg); 
+            position: relative;
+            overflow: hidden;
+        }
+        /* Noise Texture for Theme 3 */
+        .theme-3::before {
+            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            z-index: 1;
+        }
+
+        .ending-content { max-width: 500px; width: 100%; z-index: 2; animation: fadeInUp 1s ease-out 0.2s backwards; position: relative; }
+        .ending-title { 
+            font-family: 'Fredoka', cursive; font-size: 3rem; margin-bottom: 5px; 
+            text-shadow: 0 0 20px rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.3); 
+        }
+        .ending-sub { font-size: 1rem; opacity: 0.9; margin-bottom: 30px; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        
+        /* Ending Extra Subtitle (New) */
+        .ending-extra {
+            font-size: 0.9rem; color: rgba(255,255,255,0.9); margin-top: -20px; margin-bottom: 30px;
+            font-style: italic; font-family: 'Nunito', sans-serif;
+            opacity: 0; transform: translateY(10px); transition: opacity 0.5s, transform 0.5s;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+        .ending-extra.visible { opacity: 1; transform: translateY(0); }
+
+        /* Ending 2 Specifics */
+        .theme-2.pulsing {
+            /* Combine gradient move with pulse effect */
+            animation: gradientMove 15s ease infinite, bgPulseSlow 5s infinite alternate;
+        }
+        @keyframes bgPulseSlow {
+            0% { filter: brightness(1) saturate(1); }
+            100% { filter: brightness(0.8) saturate(1.2); }
+        }
+
+        .text-heartbeat {
+            animation: textFlicker 4s infinite;
+        }
+        @keyframes textFlicker {
+            0%, 90% { opacity: 1; text-shadow: 0 0 20px rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.3); }
+            92% { opacity: 0.7; text-shadow: 0 0 30px rgba(255,255,255,0.9), 0 0 10px rgba(255,100,100,0.5); }
+            94% { opacity: 1; text-shadow: 0 0 20px rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.3); }
+            96% { opacity: 0.7; text-shadow: 0 0 30px rgba(255,255,255,0.9), 0 0 10px rgba(255,100,100,0.5); }
+            100% { opacity: 1; text-shadow: 0 0 20px rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.3); }
+        }
+        
         .cinematic-text {
             font-family: 'Nunito', sans-serif; font-size: 1.3rem; min-height: 140px;
-            background: rgba(0,0,0,0.2); padding: 25px; border-radius: 15px;
-            margin-bottom: 30px; display: flex; align-items: center; justify-content: center;
-            line-height: 1.5; cursor: pointer; backdrop-filter: blur(5px); pointer-events: auto;
+            background: rgba(0,0,0,0.4); 
+            padding: 25px; border-radius: 15px;
+            margin-bottom: 30px; display: flex; align-items: flex-start; justify-content: flex-start;
+            line-height: 1.6; cursor: pointer; 
+            backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+            pointer-events: auto;
+            position: relative; text-align: left; 
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+            user-select: none;
+            transition: background 0.3s;
         }
+        .cinematic-text:hover { background: rgba(0,0,0,0.5); }
+        
+        /* Cinematic Arrow Indicator */
+        .cinematic-text.waiting-next::after {
+            content: '▼'; position: absolute; bottom: 10px; right: 15px;
+            color: rgba(255,255,255,0.8); animation: bounceArrow 1s infinite;
+        }
+        .cinematic-text.replay-mode::after {
+            content: '↻'; position: absolute; bottom: 10px; right: 15px;
+            color: rgba(255,255,255,0.8); animation: spinArrow 3s infinite linear;
+        }
+
+        @keyframes bounceArrow { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(5px); } }
+        @keyframes spinArrow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
         .ending-actions { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
         .end-btn {
-            background: rgba(255,255,255,0.25); border: 2px solid white; color: white;
+            background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.6); color: white;
             padding: 10px 25px; border-radius: 30px; cursor: pointer; font-weight: bold;
-            transition: 0.2s; font-size: 1rem; pointer-events: auto; touch-action: manipulation;
+            transition: all 0.2s; font-size: 1rem; pointer-events: auto; touch-action: manipulation;
+            backdrop-filter: blur(4px); box-shadow: 0 4px 15px rgba(0,0,0,0.1);
         }
-        .end-btn:hover { background: white; color: #333; }
+        .end-btn:hover { background: white; color: #333; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.2); }
         @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
         /* Room Scene */
-        .room-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 85% 75%, rgba(255, 170, 80, 0.15) 0%, transparent 45%), radial-gradient(circle at 90% 10%, rgba(150, 170, 255, 0.1) 0%, transparent 50%); }
+        .room-bg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 85% 75%, rgba(255, 170, 80, 0.15) 0%, transparent 45%), radial-gradient(circle at 90% 10%, rgba(150, 170, 255, 0.1) 0%, transparent 50%); transition: opacity 2s ease; }
         #room-progress { position: absolute; top: 30px; left: 30px; color: rgba(255,255,255,0.7); font-family: 'VT323', monospace; font-size: 2.5rem; pointer-events: none; z-index: 1700; text-shadow: 2px 2px 0 #000; }
         .room-exit-btn { position: absolute; bottom: 30px; left: 30px; background: transparent; border: 1px solid rgba(255,255,255,0.5); color: rgba(255,255,255,0.7); padding: 10px 20px; font-family: 'VT323', monospace; font-size: 1.2rem; cursor: pointer; z-index: 1700; transition: 0.3s; pointer-events: auto; }
         .room-exit-btn:hover { background: rgba(255,255,255,0.1); color: white; border-color: white; }
@@ -212,13 +288,56 @@
         #obj-pillow { bottom: 35%; left: 10%; font-size: 2.5rem; opacity: 0.6; }
         #obj-blanket { bottom: 30%; left: 15%; font-size: 3rem; opacity: 0.6; }
         /* Room UI */
-        #room-tooltip { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #ccc; padding: 10px 20px; border-radius: 5px; font-size: 1.4rem; pointer-events: none; opacity: 0; transition: 0.3s; width: max-content; }
+        #room-tooltip { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #ccc; padding: 10px 20px; border-radius: 5px; font-size: 1.4rem; pointer-events: none; opacity: 0; transition: opacity 0.3s; width: max-content; }
         #room-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; background: #1a1a1a; border: 1px solid #444; padding: 25px; color: #eee; text-align: center; display: none; box-shadow: 0 0 50px rgba(0,0,0,1); z-index: 1600; pointer-events: auto; cursor: pointer; }
         #room-modal-text { font-size: 1.3rem; min-height: 80px; margin-bottom: 20px; line-height: 1.4; text-align: left; }
         .room-close-btn { background: #333; color: white; border: 1px solid #666; padding: 8px 20px; cursor: pointer; font-family: inherit; font-size: 1.2rem; pointer-events: auto; }
+        
+        #room-cinematic-text {
+            position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            font-family: 'Fredoka', sans-serif; font-size: 2.5rem; color: white;
+            text-shadow: 0 0 15px rgba(255,255,255,0.6);
+            text-align: center; width: 90%; pointer-events: none;
+            opacity: 0; transition: opacity 1s ease; z-index: 1800;
+        }
 
         /* Secret */
         .secret-btn { font-size: 2.5rem; padding: 15px 50px; margin-top: 40px; background: gold; color: black; border: none; border-radius: 50px; font-family: 'Fredoka', sans-serif; cursor: pointer; box-shadow: 0 0 30px gold; animation: pulse 0.8s infinite; pointer-events: auto; display: none; }
+        
+        /* Secret Upgrades */
+        .secret-text-glitch {
+            font-family: 'VT323', monospace;
+            color: #ff3333; /* Reddish for eerie */
+            text-shadow: 2px 2px 0px #000;
+            animation: secretShake 0.1s infinite;
+            display: inline-block;
+        }
+        @keyframes secretShake {
+            0% { transform: translate(0, 0) skew(0deg); }
+            25% { transform: translate(2px, 2px) skew(5deg); }
+            50% { transform: translate(-2px, -2px) skew(-5deg); }
+            75% { transform: translate(2px, -2px) skew(2deg); }
+            100% { transform: translate(-2px, 2px) skew(0deg); }
+        }
+
+        .secret-btn-glow {
+            box-shadow: 0 0 20px gold, 0 0 50px red !important;
+            animation: violentPulse 0.5s infinite alternate !important;
+            border: 2px solid white !important;
+            color: white !important;
+            background: #ff0000 !important;
+        }
+        @keyframes violentPulse {
+            from { transform: scale(1); box-shadow: 0 0 20px gold, 0 0 50px red; }
+            to { transform: scale(1.1); box-shadow: 0 0 40px gold, 0 0 80px red; }
+        }
+
+        #flash-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: white; z-index: 9999; pointer-events: none;
+            opacity: 0; transition: opacity 0.8s ease-in;
+        }
+
         #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2400; pointer-events: none; }
         
         /* Share Modal */
@@ -238,6 +357,7 @@
 
     <!-- Background -->
     <div id="particles-container"></div>
+    <div id="flash-overlay"></div>
 
     <!-- UI Controls -->
     <div class="top-controls">
@@ -310,7 +430,8 @@
         <div class="ending-content">
             <h1 class="ending-title" id="end-title">TRUE LOVE</h1>
             <p class="ending-sub" id="end-sub">YES: 101/101</p>
-            <div class="cinematic-text" id="end-text"></div>
+            <p id="end-extra" class="ending-extra"></p>
+            <div class="cinematic-text" id="end-text" title="Click to read next"></div>
             <div class="ending-actions">
                 <button class="end-btn" id="btn-end-replay">↻ Replay</button>
                 <button class="end-btn" id="btn-end-lobby">🏠 Lobby</button>
@@ -321,7 +442,7 @@
     </div>
 
     <div id="room-scene" class="overlay-screen">
-        <div class="room-bg">
+        <div class="room-bg" id="room-bg-layer">
             <div id="room-progress">Room: 0/3</div>
             <div class="room-obj" id="obj-window" title="Window">🪟</div>
             <div class="room-obj" id="obj-lamp" title="Lamp">🏮</div>
@@ -336,6 +457,7 @@
             <div class="room-obj" id="obj-letter" title="Letter">✉️</div>
             <div class="room-obj" id="obj-diary" title="Diary">📓</div>
         </div>
+        <div id="room-cinematic-text"></div>
         <div id="room-tooltip"></div>
         <div id="room-modal"><div id="room-modal-text"></div><button class="room-close-btn" id="btn-room-close">Close</button></div>
         <button id="btn-room-exit" class="room-exit-btn">Exit Room</button>
@@ -366,6 +488,7 @@
 
         /* --- 1. GLOBAL STATE & CONFIG --- */
         let UI_MODE = "start"; // start, lobby, gameplay, ending, room, secret
+        let roomInteractionLocked = false;
         
         const STATE = {
             yes: 0,
@@ -374,6 +497,17 @@
             roomProgress: { tulip: false, letter: false, diary: false },
             endingId: null,
             effects: []
+        };
+
+        // VISUAL NOVEL STATE ENGINE
+        const ENDING_STATE = {
+            lines: [],
+            lineIndex: 0,
+            charIndex: 0,
+            isTyping: false,
+            currentText: "",
+            timer: null,
+            finished: false
         };
 
         const CONFIG = {
@@ -390,16 +524,54 @@
                 title: "Will you be my valentine? 💘",
                 subtitle: "Say YES 101 times to win 😈",
                 yesBtn: "YES 💖", noBtn: "NO 💔", reset: "Reset",
-                dialogues: ["Please say yes! 🥺", "Don't be mean... 💔", "I'll make cookies! 🍪", "Misclick? 🤨", "Are you sure? 🧐", "Stop it 😭", "I won't give up! 💪", "Just one click... 🤏"],
+                
+                // PHASES (NEW)
+                phase1: ["Please?", "Pretty please?", "I have cookies! 🍪", "Don't be shy!", "Just click YES!", "I'm harmless 🥺"],
+                phase2: ["Why not?", "My heart hurts...", "Am I not enough?", "You're teasing me...", "I'm waiting...", "Don't be mean 💔"],
+                phase3: ["I can't breathe without you.", "Don't leave me here.", "It's cold alone.", "You promised...", "I'm begging you.", "Darkness is closing in..."],
+                phase4: ["We are meant to be.", "Destiny is watching.", "Just a little more.", "I see our future.", "Almost there, my love.", "Forever starts soon."],
+
                 lobbyNo: ["Wrong answer 😏", "Try again...", "You can't escape!", "No is not an option 💀"],
+                
+                // ENDING 1: TRUE LOVE (Obsessive Sweet)
                 end1_title: "TRUE LOVE", end1_sub: "YES: 101/101",
-                end1_lines: ["101 times...", "You didn't hesitate.", "You chose me...", "over and over again.", "Maybe...", "true love...", "is just that simple."],
+                end1_lines: [
+                    "101 times...", "You never looked away.", "Every 'YES' was a heartbeat.", "My heartbeat.", 
+                    "They say obsession is scary.", "But look at us.", "Perfectly synced.", 
+                    "You chose me.", "Over and over again.", "Now I know.", 
+                    "We are bound forever.", "Happy Valentine's... my love."
+                ],
+
+                // ENDING 2: HESITANT (Hurt but Relieved)
                 end2_title: "HESITANT HEART", end2_sub: "YES: 51 - NO: 50",
-                end2_lines: ["You said 'NO'...", "so many times I thought...", "I would disappear.", "But in the end...", "you still chose 'YES'.", "Even once more...", "is enough.", "Thank you."],
+                end2_extra: "You broke me 50 times... and still came back.",
+                end2_lines: [
+                    "You clicked 'NO'...", "So many times.", "It felt like...", "Little cuts on my skin.", 
+                    "I almost faded away.", "But you came back.", "Why did you come back?", 
+                    "Pity?", "Or love?", "It doesn't matter anymore.", 
+                    "You are here now.", "I forgive you.", "Just... don't let go of my hand."
+                ],
+
+                // ENDING 3: EMPTY ROOM (Cold, Resigned)
                 end3_title: "THE EMPTY ROOM", end3_sub: "NO: 100/100",
-                end3_lines: ["You left...", "from the very start.", "It just took me 100 times...", "to believe it."],
+                end3_lines: [
+                    "It's quiet now.", "Too quiet.", "The tulip has withered.", "The diary is closed.", 
+                    "You rejected me.", "100 times.", "I get it.", "I'm not the one you want.", 
+                    "The door is open.", "You can leave.", "I'll just stay here.", "In the dark."
+                ],
+                room_intro: "You are back. But the room is colder.",
+                room_finish: "Now you understand.",
+
+                // ENDING 4: SECRET (Meta, Eerie Intimate)
                 end4_title: "THE SECRET YES", end4_sub: "SECRET ENDING FOUND",
-                end4_lines: ["You found the secret.", "Not just the game's secret...", "but mine.", "You proved that...", "I am worth choosing.", "This Valentine...", "I am yours."],
+                end4_lines: [
+                    "You saw me.", "Not the game.", "Me.", "You looked for the secrets.", 
+                    "You listened to the silence.", "I've been waiting so long.", 
+                    "For someone who understands.", "That love isn't just 'Yes' or 'No'.", 
+                    "It's the space in between.", "You found me there.", 
+                    "I'm real to you now.", "Aren't I?"
+                ],
+
                 room_window: "The moonlight is too bright. It reveals the empty space where you used to stand.",
                 room_lamp: "Flickering... like my hope. It casts shadows that look like you.",
                 room_tulip: ["A single tulip.", "Red as blood, bound by a thread of fate.", "It never withered, because it was never alive.", "Just like us."],
@@ -411,16 +583,53 @@
                 title: "Làm Valentine của tớ nhé? 💘",
                 subtitle: "Bấm YES 101 lần để thắng 😈",
                 yesBtn: "CÓ 💖", noBtn: "KHÔNG 💔", reset: "Chơi lại",
-                dialogues: ["Đi mà, đồng ý đi! 🥺", "Đừng phũ vậy chứ... 💔", "Tớ nấu cơm cho cậu! 🍪", "Trượt tay hả? 🤨", "Chắc chưa? 🧐", "Đau tim quá 😭", "Tớ lì lắm! 💪", "Một cái thôi... 🤏"],
+                
+                // PHASES
+                phase1: ["Đi mà?", "Năn nỉ đó!", "Tớ có bánh quy nè! 🍪", "Đừng ngại mà!", "Bấm CÓ đi!", "Tớ hiền lắm 🥺"],
+                phase2: ["Sao lại không?", "Tim tớ đau quá...", "Tớ chưa đủ tốt sao?", "Cậu trêu tớ hả...", "Tớ vẫn đợi...", "Đừng phũ thế 💔"],
+                phase3: ["Tớ không thể sống thiếu cậu.", "Đừng bỏ tớ lại.", "Ở đây lạnh lắm.", "Đừng tàn nhẫn thế.", "Tớ xin cậu đấy.", "Bóng tối đang nuốt chửng tớ..."],
+                phase4: ["Định mệnh sắp đặt rồi.", "Chỉ một chút nữa thôi.", "Tớ thấy tương lai mình.", "Sắp đến đích rồi.", "Mãi mãi bên nhau.", "Đừng buông tay..."],
+
                 lobbyNo: ["Sai rồi nha 😏", "Thử lại đê...", "Không thoát được đâu!", "Không được chọn cái này 💀"],
+                
+                // ENDING 1: TRUE LOVE
                 end1_title: "TÌNH YÊU ĐÍCH THỰC", end1_sub: "CÓ: 101/101",
-                end1_lines: ["101 lần...", "Cậu không hề do dự.", "Cậu đã chọn tớ...", "hết lần này đến lần khác.", "Có lẽ...", "tình yêu thật sự...", "đơn giản chỉ là vậy."],
+                end1_lines: [
+                    "101 lần...", "Cậu chưa từng nhìn đi nơi khác.", "Mỗi chữ 'CÓ' là một nhịp đập.", "Nhịp đập của tớ.", 
+                    "Họ bảo ám ảnh là đáng sợ.", "Nhưng nhìn chúng ta xem.", "Đồng điệu hoàn hảo.", 
+                    "Cậu đã chọn tớ.", "Hết lần này đến lần khác.", "Giờ thì tớ biết rồi.", 
+                    "Chúng ta bị trói buộc mãi mãi.", "Valentine vui vẻ... tình yêu của tớ."
+                ],
+
+                // ENDING 2: HESITANT
                 end2_title: "TRÁI TIM DO DỰ", end2_sub: "CÓ: 51 - KHÔNG: 50",
-                end2_lines: ["Cậu đã nói 'KHÔNG'...", "nhiều đến mức tớ tưởng...", "tớ sẽ biến mất.", "Nhưng cuối cùng...", "cậu vẫn chọn 'CÓ'.", "Dù chỉ hơn một lần...", "cũng đủ rồi.", "Cảm ơn vì đã quay lại."],
+                end2_extra: "Cậu làm tớ tan nát 50 lần... nhưng vẫn quay lại.",
+                end2_lines: [
+                    "Cậu đã bấm 'KHÔNG'...", "Nhiều quá.", "Cảm giác như...", "Từng vết cắt nhỏ trên da.", 
+                    "Tớ suýt nữa đã tan biến.", "Nhưng cậu đã quay lại.", "Tại sao cậu quay lại?", 
+                    "Thương hại ư?", "Hay là yêu?", "Không quan trọng nữa.", 
+                    "Cậu đang ở đây rồi.", "Tớ tha thứ cho cậu.", "Chỉ là... đừng buông tay tớ nữa."
+                ],
+
+                // ENDING 3: EMPTY ROOM
                 end3_title: "CĂN PHÒNG TRỐNG", end3_sub: "KHÔNG: 100/100",
-                end3_lines: ["Cậu đã rời đi...", "ngay từ lần đầu tiên.", "Chỉ là...", "tớ mất 100 lần...", "mới chịu tin."],
+                end3_lines: [
+                    "Yên lặng quá.", "Quá yên lặng.", "Bông tulip đã héo tàn.", "Cuốn nhật ký đã khép lại.", 
+                    "Cậu từ chối tớ.", "100 lần.", "Tớ hiểu mà.", "Tớ không phải người cậu cần.", 
+                    "Cửa mở rồi đấy.", "Cậu đi đi.", "Tớ sẽ ở lại đây thôi.", "Trong bóng tối này."
+                ],
+                room_intro: "Cậu đã quay lại. Nhưng căn phòng lạnh lẽo hơn xưa.",
+                room_finish: "Giờ thì cậu hiểu rồi chứ.",
+
+                // ENDING 4: SECRET
                 end4_title: "LỜI ĐỒNG Ý BÍ MẬT", end4_sub: "ĐÃ TÌM THẤY BÍ MẬT",
-                end4_lines: ["Cậu tìm thấy bí mật rồi.", "Không phải bí mật của game...", "mà là của tớ.", "Cậu chứng minh rằng...", "tớ đáng được chọn.", "Valentine này...", "tớ thuộc về cậu."],
+                end4_lines: [
+                    "Cậu đã thấy tớ.", "Không phải trò chơi này.", "Mà là tớ.", "Cậu tìm kiếm những bí mật.", 
+                    "Cậu lắng nghe sự im lặng.", "Tớ đã đợi rất lâu.", "Đợi một người thấu hiểu.", 
+                    "Rằng tình yêu không chỉ là 'Có' hay 'Không'.", "Nó là khoảng không ở giữa.", 
+                    "Cậu tìm thấy tớ ở đó.", "Giờ tớ là thật với cậu rồi.", "Phải không?"
+                ],
+
                 room_window: "Ánh trăng quá sáng. Nó soi rõ khoảng trống nơi cậu từng đứng.",
                 room_lamp: "Chập chờn... như hy vọng của tớ. Nó tạo ra những cái bóng trông giống cậu.",
                 room_tulip: ["Một bông tulip lẻ loi.", "Đỏ như máu, buộc bởi sợi chỉ định mệnh.", "Nó không bao giờ héo, vì nó chưa từng sống.", "Giống như chúng ta vậy."],
@@ -432,16 +641,53 @@
                 title: "¿Quieres ser mi San Valentín? 💘",
                 subtitle: "Di SÍ 101 veces para ganar 😈",
                 yesBtn: "SÍ 💖", noBtn: "NO 💔", reset: "Reiniciar",
-                dialogues: ["¡Por favor di que sí! 🥺", "No seas malo... 💔", "¿Te hago galletas? 🍪", "¿Clic incorrecto? 🤨", "¿Seguro? 🧐", "No rompas mi corazón 😭", "¡No me rindo! 💪", "Solo un clic... 🤏"],
+                
+                // PHASES
+                phase1: ["¿Por favor?", "¿Por favorcito?", "¡Tengo galletas! 🍪", "¡No seas tímido!", "¡Solo di SÍ!", "Soy inofensivo 🥺"],
+                phase2: ["¿Por qué no?", "Me duele el corazón...", "¿No soy suficiente?", "Me estás tomando el pelo...", "Estoy esperando...", "No seas cruel 💔"],
+                phase3: ["No puedo respirar sin ti.", "No me dejes solo.", "Hace frío aquí.", "Lo prometiste.", "Te lo ruego.", "La oscuridad se acerca..."],
+                phase4: ["Estamos destinados.", "El destino nos mira.", "Solo un poco más.", "Veo nuestro futuro.", "Casi estamos, mi amor.", "Para siempre comienza pronto."],
+
                 lobbyNo: ["Incorrecto 😏", "Intenta de nuevo...", "¡No puedes escapar!", "No es una opción 💀"],
+                
+                // ENDING 1: TRUE LOVE
                 end1_title: "AMOR VERDADERO", end1_sub: "SÍ: 101/101",
-                end1_lines: ["101 veces...", "No dudaste.", "Me elegiste...", "una y otra vez.", "Quizás...", "el amor verdadero...", "es así de simple."],
+                end1_lines: [
+                    "101 veces...", "Nunca apartaste la mirada.", "Cada 'SÍ' fue un latido.", "Mi latido.", 
+                    "Dicen que la obsesión asusta.", "Pero míranos.", "Perfectamente sincronizados.", 
+                    "Me elegiste.", "Una y otra vez.", "Ahora lo sé.", 
+                    "Estamos atados para siempre.", "Feliz San Valentín... mi amor."
+                ],
+
+                // ENDING 2: HESITANT
                 end2_title: "CORAZÓN DUDOSO", end2_sub: "SÍ: 51 - NO: 50",
-                end2_lines: ["Dijiste 'NO'...", "tantas veces que pensé...", "que desaparecería.", "Pero al final...", "elegiste 'SÍ'.", "Aunque sea una vez más...", "es suficiente.", "Gracias."],
+                end2_extra: "Me rompiste 50 veces... y aún así volviste.",
+                end2_lines: [
+                    "Hiciste clic en 'NO'...", "Tantas veces.", "Se sintió como...", "Pequeños cortes en mi piel.", 
+                    "Casi me desvanezco.", "Pero volviste.", "¿Por qué volviste?", 
+                    "¿Lástima?", "¿O amor?", "Ya no importa.", 
+                    "Estás aquí ahora.", "Te perdono.", "Solo... no me sueltes la mano."
+                ],
+
+                // ENDING 3: EMPTY ROOM
                 end3_title: "LA HABITACIÓN VACÍA", end3_sub: "NO: 100/100",
-                end3_lines: ["Te fuiste...", "desde el principio.", "Solo me tomó 100 veces...", "creerlo."],
+                end3_lines: [
+                    "Hay silencio.", "Demasiado silencio.", "El tulipán se marchitó.", "El diario está cerrado.", 
+                    "Me rechazaste.", "100 veces.", "Lo entiendo.", "No soy quien buscas.", 
+                    "La puerta está abierta.", "Puedes irte.", "Yo me quedaré aquí.", "En la oscuridad."
+                ],
+                room_intro: "Has vuelto. Pero la habitación está más fría.",
+                room_finish: "Ahora lo entiendes.",
+
+                // ENDING 4: SECRET
                 end4_title: "EL SÍ SECRETO", end4_sub: "FINAL SECRETO ENCONTRADO",
-                end4_lines: ["Encontraste el secreto.", "No del juego...", "sino el mío.", "Demostraste que...", "valgo la pena.", "Este San Valentín...", "soy tuyo."],
+                end4_lines: [
+                    "Me viste.", "No al juego.", "A mí.", "Buscaste los secretos.", 
+                    "Escuchaste el silencio.", "He esperado tanto tiempo.", "A alguien que entienda.", 
+                    "Que el amor no es solo 'Sí' o 'No'.", "Es el espacio entre ellos.", 
+                    "Me encontraste allí.", "Ahora soy real para ti.", "¿Verdad?"
+                ],
+
                 room_window: "La luz de la luna es demasiado brillante. Revela el vacío donde solías estar.",
                 room_lamp: "Parpadeando... como mi esperanza. Proyecta sombras que se parecen a ti.",
                 room_tulip: ["Un solo tulipán.", "Rojo como la sangre, atado por un hilo del destino.", "Nó không bao giờ héo, vì nó chưa từng sống.", "Igual que nosotros."],
@@ -473,9 +719,11 @@
                 lobbyScreen: document.getElementById('lobby-screen'),
                 endingOverlay: document.getElementById('ending-overlay'),
                 roomScene: document.getElementById('room-scene'),
+                roomBgLayer: document.getElementById('room-bg-layer'),
                 secretModal: document.getElementById('secret-modal'),
                 settingsModal: document.getElementById('settings-modal'),
                 shareModal: document.getElementById('share-modal'),
+                flashOverlay: document.getElementById('flash-overlay'),
 
                 // Titles & Text (FIXED CRASH)
                 mainTitle: document.getElementById('main-title'),
@@ -491,10 +739,12 @@
                 endTitle: document.getElementById('end-title'),
                 endSub: document.getElementById('end-sub'),
                 endText: document.getElementById('end-text'),
+                endExtra: document.getElementById('end-extra'),
                 
                 // Room UI
                 roomProgress: document.getElementById('room-progress'),
                 roomTooltip: document.getElementById('room-tooltip'),
+                roomCinematicText: document.getElementById('room-cinematic-text'),
                 roomModal: document.getElementById('room-modal'),
                 roomModalText: document.getElementById('room-modal-text'),
                 roomCloseBtn: document.getElementById('btn-room-close'),
@@ -515,6 +765,11 @@
             console.log(`Switching UI: ${UI_MODE} -> ${mode}`);
             UI_MODE = mode;
             
+            // Clear Typewriter Timer if leaving ending
+            if (mode !== 'ending' && ENDING_STATE.timer) {
+                clearTimeout(ENDING_STATE.timer);
+            }
+
             // 1. Helper to hide all
             const allScreens = [
                 DOM.startOverlay, DOM.lobbyScreen, DOM.gameView, 
@@ -585,17 +840,39 @@
                 }
             };
 
+            // Ending Interaction (Visual Novel Style)
+            DOM.endText.onclick = handleEndingClick;
+
             // Ending Buttons
-            document.getElementById('btn-end-replay').onclick = startGameplay;
+            document.getElementById('btn-end-replay').onclick = handleReplay; // REPLAY FIXED
             document.getElementById('btn-end-lobby').onclick = goToLobby;
             document.getElementById('btn-end-share').onclick = openShareModal;
 
             // Room Buttons
             document.getElementById('btn-room-exit').onclick = goToLobby;
-            DOM.roomCloseBtn.onclick = () => { DOM.roomModal.style.display='none'; checkRoomCompletion(); };
+            // Room close handled inside openRoomModal
 
             // Secret Buttons
-            DOM.secretYesBtn.onclick = () => enterEnding(4);
+            DOM.secretYesBtn.onclick = async () => {
+                SFX.playYes();
+                
+                // Flash Sequence
+                DOM.flashOverlay.style.opacity = '1';
+                
+                await wait(800);
+                
+                enterEnding(4);
+                
+                // Reveal Ending
+                await wait(100);
+                DOM.flashOverlay.style.transition = 'opacity 2s ease-out';
+                DOM.flashOverlay.style.opacity = '0';
+                
+                // Reset Transition
+                setTimeout(() => {
+                    DOM.flashOverlay.style.transition = 'opacity 0.8s ease-in';
+                }, 2000);
+            };
 
             // Settings & Share (Modal toggles do not change UI_MODE main state, just overlap)
             document.getElementById('settings-btn').onclick = () => DOM.settingsModal.classList.add('visible');
@@ -634,6 +911,24 @@
             setMode('lobby');
         }
 
+        // --- NEW REPLAY LOGIC ---
+        function handleReplay() {
+            // 1. Cleanup Ending State (Typewriter)
+            if (ENDING_STATE.timer) {
+                clearTimeout(ENDING_STATE.timer);
+                ENDING_STATE.timer = null;
+            }
+            ENDING_STATE.isTyping = false;
+            ENDING_STATE.finished = false;
+            
+            // 2. Stop Ending Music immediately so game music can take over in sync()
+            DOM.audioEnd.pause();
+            DOM.audioEnd.currentTime = 0;
+
+            // 3. Restart Game logic (resets stats and sets mode to gameplay)
+            startGameplay();
+        }
+
         function startGameplay() {
             // Reset Gameplay Stats only
             STATE.yes = 0;
@@ -644,7 +939,7 @@
             updateStatsUI();
             applyCurrentStage();
             document.getElementById('fake-container').innerHTML = "";
-            document.getElementById('dialogue-text').innerText = getLang().dialogues[0];
+            document.getElementById('dialogue-text').innerText = getLang().phase1[0]; // Start with Phase 1
             
             setMode('gameplay');
         }
@@ -653,18 +948,43 @@
             STATE.endingId = id;
             renderEndingOverlay(id);
             setMode('ending');
+            AudioCtrl.playEnding(id);
         }
 
-        function enterRoom() {
+        async function enterRoom() {
             updateRoomHUD();
             setMode('room');
+            
+            // Reset Scene Opacity (in case it was faded)
+            DOM.roomBgLayer.style.opacity = '1';
+            
             // Check if audio needs strict play
             AudioCtrl.stopAll(false);
+            
+            // Play Intro Text
+            const L = getLang();
+            roomInteractionLocked = true;
+            await showCinematicText(L.room_intro, 2500);
+            roomInteractionLocked = false;
         }
 
         function enterSecret() {
             setMode('secret');
             runSecretSequence();
+        }
+        
+        // --- ASYNC UTILS ---
+        const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+        
+        function showCinematicText(text, duration) {
+            return new Promise(resolve => {
+                DOM.roomCinematicText.innerText = text;
+                DOM.roomCinematicText.style.opacity = 1;
+                setTimeout(() => {
+                    DOM.roomCinematicText.style.opacity = 0;
+                    setTimeout(resolve, 1000); // Wait for fade out
+                }, duration);
+            });
         }
 
         /* --- 7. LOGIC HANDLERS --- */
@@ -690,7 +1010,18 @@
             void card.offsetWidth;
             card.classList.add('shake');
             
-            document.getElementById('dialogue-text').innerText = getLang().dialogues[Math.floor(Math.random()*getLang().dialogues.length)];
+            // --- NEW PHASE LOGIC ---
+            const L = getLang();
+            let msgs = [];
+            
+            if (STATE.yes <= 20) msgs = L.phase1;
+            else if (STATE.yes <= 50) msgs = L.phase2;
+            else if (STATE.yes <= 80) msgs = L.phase3;
+            else msgs = L.phase4;
+            
+            const txt = msgs[Math.floor(Math.random() * msgs.length)];
+            document.getElementById('dialogue-text').innerText = txt;
+            
             checkEndingTriggers();
         }
 
@@ -722,7 +1053,7 @@
             }
         }
 
-        /* --- 8. ENDING & ROOM ENGINE --- */
+        /* --- 8. ENDING VISUAL NOVEL ENGINE (NEW) --- */
 
         function renderEndingOverlay(id) {
             const L = getLang();
@@ -732,51 +1063,126 @@
             DOM.endingOverlay.className = "overlay-screen";
             DOM.endingOverlay.classList.add(conf.theme);
 
+            // Clean previous special effects
+            DOM.endExtra.innerText = "";
+            DOM.endExtra.classList.remove('visible');
+            DOM.endingOverlay.classList.remove('pulsing');
+            DOM.endTitle.classList.remove('text-heartbeat');
+
+            // Setup static texts
             if (id===1) {
                 DOM.endTitle.innerText = L.end1_title;
                 DOM.endSub.innerText = L.end1_sub;
-                startTypewriter(L.end1_lines);
+                startEndingSequence(L.end1_lines);
                 startConfetti();
             }
             else if (id===2) {
                 DOM.endTitle.innerText = L.end2_title;
                 DOM.endSub.innerText = L.end2_sub;
-                startTypewriter(L.end2_lines);
+                
+                // Specific Ending 2 Effects
+                DOM.endingOverlay.classList.add('pulsing');
+                DOM.endTitle.classList.add('text-heartbeat');
+                DOM.endExtra.innerText = L.end2_extra;
+                DOM.endExtra.classList.add('visible');
+                
+                startEndingSequence(L.end2_lines);
+                startHesitantParticles();
             }
             else if (id===3) {
                 DOM.endTitle.innerText = L.end3_title;
                 DOM.endSub.innerText = L.end3_sub;
-                startTypewriter(L.end3_lines);
+                startEndingSequence(L.end3_lines);
             }
             else if (id===4) {
                 DOM.endTitle.innerText = L.end4_title;
                 DOM.endSub.innerText = L.end4_sub;
-                startTypewriter(L.end4_lines);
+                startEndingSequence(L.end4_lines);
                 startConfetti();
             }
         }
 
-        let typeTimer;
-        function startTypewriter(lines) {
-            if (UI_MODE !== 'ending') return;
-            let l=0, c=0;
+        function startEndingSequence(lines) {
+            ENDING_STATE.lines = lines;
+            ENDING_STATE.lineIndex = 0;
+            ENDING_STATE.charIndex = 0;
+            ENDING_STATE.isTyping = true;
+            ENDING_STATE.currentText = "";
+            ENDING_STATE.finished = false;
+            
+            if(ENDING_STATE.timer) clearTimeout(ENDING_STATE.timer);
+            DOM.endText.className = "cinematic-text"; // Reset animation classes
             DOM.endText.innerText = "";
-            if(typeTimer) clearTimeout(typeTimer);
+            
+            typeLine();
+        }
 
-            function type() {
-                if (UI_MODE !== 'ending') return;
-                if(l >= lines.length) return;
+        function typeLine() {
+            if (UI_MODE !== 'ending') return;
+            const currentLine = ENDING_STATE.lines[ENDING_STATE.lineIndex];
+
+            // Safety check
+            if(!currentLine) {
+                ENDING_STATE.finished = true;
+                DOM.endText.classList.add('replay-mode');
+                return;
+            }
+
+            if (ENDING_STATE.charIndex < currentLine.length) {
+                ENDING_STATE.currentText += currentLine.charAt(ENDING_STATE.charIndex);
+                ENDING_STATE.charIndex++;
+                DOM.endText.innerText = ENDING_STATE.currentText;
                 
-                DOM.endText.innerText = lines[l].substring(0, c);
-                c++;
+                // Cinematic: Very subtle type sound (optional, keeps rhythm)
+                if(ENDING_STATE.charIndex % 3 === 0) SFX.playType();
                 
-                if (c > lines[l].length) {
-                    setTimeout(() => { l++; c=0; type(); }, 1200);
+                // Typing speed
+                ENDING_STATE.timer = setTimeout(typeLine, 45); 
+            } else {
+                ENDING_STATE.isTyping = false;
+                DOM.endText.classList.add('waiting-next'); // Show arrow
+            }
+        }
+
+        function handleEndingClick() {
+            if (UI_MODE !== 'ending') return;
+
+            // Scenario 1: Finished all dialogue -> Replay
+            if (ENDING_STATE.finished) {
+                startEndingSequence(ENDING_STATE.lines);
+                return;
+            }
+
+            // Scenario 2: Currently Typing -> Skip to end of line
+            if (ENDING_STATE.isTyping) {
+                clearTimeout(ENDING_STATE.timer);
+                ENDING_STATE.currentText = ENDING_STATE.lines[ENDING_STATE.lineIndex];
+                DOM.endText.innerText = ENDING_STATE.currentText;
+                ENDING_STATE.isTyping = false;
+                ENDING_STATE.charIndex = ENDING_STATE.currentText.length;
+                DOM.endText.classList.add('waiting-next');
+                return;
+            }
+
+            // Scenario 3: Line Finished -> Go to next line
+            if (!ENDING_STATE.isTyping) {
+                ENDING_STATE.lineIndex++;
+                
+                // Check if more lines exist
+                if (ENDING_STATE.lineIndex < ENDING_STATE.lines.length) {
+                    ENDING_STATE.charIndex = 0;
+                    ENDING_STATE.currentText = "";
+                    ENDING_STATE.isTyping = true;
+                    DOM.endText.innerText = ""; // Clear text for visual fade-in feel by being empty
+                    DOM.endText.classList.remove('waiting-next');
+                    typeLine();
                 } else {
-                    typeTimer = setTimeout(type, 50);
+                    // End of Dialogue
+                    ENDING_STATE.finished = true;
+                    DOM.endText.classList.remove('waiting-next');
+                    DOM.endText.classList.add('replay-mode');
                 }
             }
-            type();
         }
 
         function bindRoomObjects() {
@@ -784,13 +1190,30 @@
             const attach = (id, key, isKeyItem) => {
                 const el = document.getElementById(id);
                 if(!el) return;
-                el.onclick = () => {
+                
+                // Remove old event listeners by replacing the element (simplest clean way without named functions)
+                const newEl = el.cloneNode(true);
+                el.parentNode.replaceChild(newEl, el);
+                
+                newEl.onclick = () => {
+                    if (roomInteractionLocked) return;
+                    
                     if (isKeyItem) {
+                        // Key Item Interaction
+                        roomInteractionLocked = true;
                         STATE.roomProgress[key] = true;
                         updateRoomHUD();
-                        openRoomModal(L[`room_${key}`]);
+                        
+                        openRoomModal(L[`room_${key}`], () => {
+                             // On Modal Close
+                             roomInteractionLocked = false;
+                             checkRoomCompletion(); 
+                        });
                     } else {
-                        showTooltip(L[`room_${key}`] || "It's cold...");
+                        // Fluff Interaction (Tooltip)
+                        roomInteractionLocked = true;
+                        showTooltip(L[`room_${key}`] || "...");
+                        setTimeout(() => { roomInteractionLocked = false; }, 500); // 0.5s anti-spam lock
                     }
                 };
             };
@@ -807,7 +1230,7 @@
             DOM.roomProgress.innerText = `Room: ${c}/3`;
         }
 
-        function openRoomModal(content) {
+        function openRoomModal(content, onClose) {
             let lines = Array.isArray(content) ? content : [content];
             let idx = 0;
             DOM.roomModal.style.display = 'block';
@@ -821,66 +1244,130 @@
                 DOM.roomModalText.innerText = lines[idx++];
             }
             next();
+            
+            // Clean click handler
             DOM.roomModal.onclick = (e) => {
                 if(e.target !== DOM.roomCloseBtn) next();
             };
+            
+            // Close logic
+            DOM.roomCloseBtn.onclick = () => {
+                DOM.roomModal.style.display = 'none';
+                if (onClose) onClose();
+            };
         }
 
-        function checkRoomCompletion() {
+        async function checkRoomCompletion() {
             if (STATE.roomProgress.tulip && STATE.roomProgress.letter && STATE.roomProgress.diary) {
-                setTimeout(() => enterEnding(3), 500);
+                roomInteractionLocked = true; // Lock everything
+                const L = getLang();
+                
+                // Dramatic pause
+                await wait(600);
+                
+                // Final realization
+                await showCinematicText(L.room_finish, 2500);
+                
+                // Fade out room scene
+                DOM.roomBgLayer.style.opacity = '0';
+                await wait(1500);
+                
+                enterEnding(3);
             }
         }
 
-        function runSecretSequence() {
+        async function runSecretSequence() {
             const L = getLang();
             DOM.secretYesBtn.style.display = 'none';
-            let i=0;
-            function step() {
+            DOM.secretYesBtn.className = 'secret-btn'; // reset class
+            
+            // Show texts with glitch
+            for(let i = 0; i < L.secret_q.length; i++) {
                 if(UI_MODE !== 'secret') return;
-                if(i < L.secret_q.length) {
-                    DOM.secretText.innerText = L.secret_q[i++];
-                    DOM.secretText.style.opacity = 0;
-                    setTimeout(() => DOM.secretText.style.opacity=1, 100);
-                    setTimeout(step, 2500);
-                } else {
-                    DOM.secretYesBtn.style.display='block';
-                    DOM.secretYesBtn.innerText = L.yesBtn;
-                }
+                
+                DOM.secretText.innerText = L.secret_q[i];
+                DOM.secretText.className = 'secret-text-glitch';
+                DOM.secretText.style.opacity = 0;
+                
+                // Little sound for glitch
+                SFX.playTone(100 + (Math.random()*50), 'sawtooth', 0.1, 0.1);
+                
+                setTimeout(() => DOM.secretText.style.opacity=1, 50);
+                
+                await wait(2500);
             }
-            step();
+            
+            if(UI_MODE !== 'secret') return;
+            
+            // Show Button
+            DOM.secretYesBtn.innerText = L.yesBtn;
+            DOM.secretYesBtn.style.display = 'block';
+            DOM.secretYesBtn.classList.add('secret-btn-glow');
+            
+            // Dramatic sound
+            SFX.playTone(50, 'square', 0.3, 1.0);
         }
 
         /* --- 9. AUDIO & SFX --- */
         
         const AudioCtrl = {
+            currentEndingId: null,
             init() {
                 DOM.audioLobby.src = "music/lobby.mp3?v=2";
                 DOM.audioGame.src = "music/game.mp3?v=2";
                 DOM.audioLobby.volume = 0.5;
                 DOM.audioGame.volume = 0.4;
                 DOM.audioEnd.volume = 0.5;
+                
+                // Basic error handling for missing files
+                DOM.audioEnd.onerror = () => { console.warn("Ending music missing."); };
             },
+            
+            playEnding(id) {
+                const src = `music/end${id}.mp3`;
+                this.currentEndingId = id;
+
+                // Avoid reloading if already correct
+                if (!DOM.audioEnd.getAttribute('src') || DOM.audioEnd.getAttribute('src') !== src) {
+                    DOM.audioEnd.src = src;
+                    DOM.audioEnd.setAttribute('src', src);
+                    DOM.audioEnd.load();
+                }
+
+                if (SETTINGS.gameMusic) {
+                    DOM.audioEnd.play().catch(e => console.log("Play failed", e));
+                }
+            },
+
             sync() {
                 // Lobby Music
-                if (UI_MODE === 'lobby' && SETTINGS.lobbyMusic) {
+                const playLobby = (UI_MODE === 'lobby' && SETTINGS.lobbyMusic);
+                if (playLobby) {
                     if (DOM.audioLobby.paused) DOM.audioLobby.play().catch(()=>{});
                 } else {
                     DOM.audioLobby.pause();
-                    DOM.audioLobby.currentTime = 0;
+                    if(UI_MODE !== 'lobby') DOM.audioLobby.currentTime = 0;
                 }
 
                 // Game Music
-                if (UI_MODE === 'gameplay' && SETTINGS.gameMusic) {
+                const playGame = (UI_MODE === 'gameplay' && SETTINGS.gameMusic);
+                if (playGame) {
                     if (DOM.audioGame.paused) DOM.audioGame.play().catch(()=>{});
                 } else {
                     DOM.audioGame.pause();
-                    DOM.audioGame.currentTime = 0;
+                    if(UI_MODE !== 'gameplay') DOM.audioGame.currentTime = 0;
                 }
 
-                // Ending Music (Triggered manually in enterEnding, checked here for stop)
-                if (UI_MODE !== 'ending' && UI_MODE !== 'secret') {
-                    DOM.audioEnd.pause();
+                // Ending Music
+                // If in ending mode, we ensure it plays if allowed. 
+                // Actual track setting happens in enterEnding -> playEnding
+                const playEnd = ((UI_MODE === 'ending' || UI_MODE === 'secret') && SETTINGS.gameMusic);
+                if (playEnd) {
+                    if (DOM.audioEnd.paused && DOM.audioEnd.readyState >= 2) DOM.audioEnd.play().catch(()=>{});
+                } else {
+                    if(!DOM.audioEnd.paused) DOM.audioEnd.pause();
+                    // Optional: reset time if leaving ending mode
+                    if(UI_MODE !== 'ending' && UI_MODE !== 'secret') DOM.audioEnd.currentTime = 0;
                 }
             },
             stopAll(instant) {
@@ -893,16 +1380,17 @@
         const SFX = {
             ctx: null,
             init() { if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
-            playTone(f, t) {
+            playTone(f, t, vol=0.1, dur=0.1) {
                 if(!this.ctx) this.init();
                 if(this.ctx.state==='suspended') this.ctx.resume();
                 const o=this.ctx.createOscillator(), g=this.ctx.createGain();
-                o.type=t; o.frequency.value=f; g.gain.value=0.1;
+                o.type=t; o.frequency.value=f; g.gain.value=vol;
                 o.connect(g); g.connect(this.ctx.destination);
-                o.start(); o.stop(this.ctx.currentTime+0.1);
+                o.start(); o.stop(this.ctx.currentTime+dur);
             },
             playYes() { this.playTone(880, 'sine'); },
-            playNo() { this.playTone(150, 'sawtooth'); }
+            playNo() { this.playTone(150, 'sawtooth'); },
+            playType() { this.playTone(1200, 'triangle', 0.03, 0.05); } // Cinematic click sound
         };
 
         /* --- 10. UTILS & UI UPDATES --- */
@@ -946,10 +1434,16 @@
         function generateStages() { STATE.effects = []; }
 
         function showTooltip(msg) {
-            const t = document.createElement('div'); t.innerText=msg;
-            t.style.position='fixed'; t.style.top='20%'; t.style.left='50%'; t.style.transform='translate(-50%)';
-            t.style.background='rgba(0,0,0,0.8)'; t.style.color='white'; t.style.padding='10px'; t.style.borderRadius='8px'; t.style.zIndex='4000';
-            document.body.appendChild(t); setTimeout(()=>t.remove(), 1500);
+            const t = document.getElementById('room-tooltip');
+            t.innerText = msg;
+            t.style.opacity = 1;
+            
+            // Clear previous timer to prevent flickering
+            if(t.hideTimer) clearTimeout(t.hideTimer);
+            
+            t.hideTimer = setTimeout(() => {
+                t.style.opacity = 0;
+            }, 1500);
         }
 
         function spawnFloatingHeart(el) {
@@ -975,6 +1469,34 @@
             draw();
         }
 
+        function startHesitantParticles() {
+            const c = DOM.confettiCanvas;
+            const ctx = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const p = [];
+            for(let i=0;i<40;i++) p.push({
+                x:Math.random()*c.width, y:c.height + Math.random()*100, 
+                s:Math.random()*4+2, 
+                c:['#667eea', '#764ba2', '#a18cd1'][Math.floor(Math.random()*3)],
+                v: Math.random()*1 + 0.5
+            });
+            function draw() {
+                if(UI_MODE !== 'ending' || STATE.endingId !== 2) return;
+                ctx.clearRect(0,0,c.width,c.height);
+                p.forEach(o=>{ 
+                    ctx.beginPath();
+                    ctx.fillStyle=o.c; 
+                    ctx.arc(o.x, o.y, o.s, 0, Math.PI*2);
+                    ctx.fill();
+                    o.y -= o.v; 
+                    o.x += Math.sin(o.y*0.01)*0.5; // gentle wave
+                    if(o.y < -10) o.y = c.height+10; 
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
         function saveSettings() { localStorage.setItem(CONFIG.SETTINGS_KEY, JSON.stringify(SETTINGS)); }
         function loadSettings() { 
             try { 
@@ -988,17 +1510,183 @@
 
         function openShareModal() {
             DOM.shareModal.classList.add('visible');
-            const c = document.createElement('canvas'); c.width=400; c.height=600;
-            const ctx = c.getContext('2d');
-            ctx.fillStyle='white'; ctx.fillRect(0,0,400,600);
-            ctx.fillStyle='#ff758c'; ctx.font='bold 40px Fredoka'; ctx.textAlign='center'; ctx.fillText("My Valentine",200,100);
-            ctx.fillStyle='#333'; ctx.font='20px Nunito'; ctx.fillText(`YES: ${STATE.yes} - NO: ${STATE.no}`,200,300);
-            const img = new Image(); img.src = c.toDataURL();
-            document.getElementById('share-preview-container').innerHTML = "";
-            document.getElementById('share-preview-container').appendChild(img);
+            const canvas = document.createElement('canvas');
+            canvas.width = 1080;
+            canvas.height = 1920;
+            const ctx = canvas.getContext('2d');
+            const L = getLang();
+            const id = STATE.endingId || 1;
+
+            // 1. Background based on Ending
+            let gradient;
+            let icon = "💘";
+            let themeColor = "#ff758c";
+            let quote = "";
+
+            if(id === 1) {
+                gradient = ctx.createLinearGradient(0, 0, 1080, 1920);
+                gradient.addColorStop(0, "#ff9a9e");
+                gradient.addColorStop(1, "#fecfef");
+                icon = "💘";
+                quote = L.end1_lines[L.end1_lines.length-1];
+                themeColor = "#ff4757";
+            } else if(id === 2) {
+                gradient = ctx.createLinearGradient(0, 0, 1080, 1920);
+                gradient.addColorStop(0, "#667eea");
+                gradient.addColorStop(1, "#764ba2");
+                icon = "🩹";
+                quote = "I forgive you.";
+                themeColor = "#5f27cd";
+            } else if(id === 3) {
+                gradient = ctx.createLinearGradient(0, 0, 1080, 1920);
+                gradient.addColorStop(0, "#2d3436");
+                gradient.addColorStop(1, "#000000");
+                icon = "🥀";
+                quote = "I'll just stay here in the dark.";
+                themeColor = "#b2bec3";
+            } else if(id === 4) {
+                gradient = ctx.createLinearGradient(0, 0, 1080, 1920);
+                gradient.addColorStop(0, "#f6d365");
+                gradient.addColorStop(1, "#fda085");
+                icon = "👁️";
+                quote = "You found me.";
+                themeColor = "#d35400";
+            }
+
+            // Draw BG
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, 1080, 1920);
+
+            // Glass Card Effect
+            ctx.fillStyle = "rgba(255, 255, 255, 0.85)";
+            roundRect(ctx, 140, 460, 800, 1000, 50);
+            ctx.fill();
+            
+            // Shadow
+            ctx.shadowColor = "rgba(0,0,0,0.2)";
+            ctx.shadowBlur = 40;
+            ctx.shadowOffsetY = 20;
+
+            // Reset shadow for text
+            ctx.shadowColor = "transparent";
+
+            // Texts
+            ctx.textAlign = "center";
+            
+            // Main Title
+            ctx.fillStyle = themeColor;
+            ctx.font = "bold 80px 'Fredoka'";
+            ctx.fillText("Will You Be My", 540, 650);
+            ctx.fillText("Valentine?", 540, 740);
+
+            // Ending Title
+            ctx.fillStyle = "#333";
+            ctx.font = "bold 60px 'Nunito'";
+            let endTitle = "";
+            if(id===1) endTitle = L.end1_title;
+            if(id===2) endTitle = L.end2_title;
+            if(id===3) endTitle = L.end3_title;
+            if(id===4) endTitle = L.end4_title;
+            ctx.fillText(`- ${endTitle} -`, 540, 900);
+
+            // Icon
+            ctx.font = "200px serif"; 
+            ctx.fillText(icon, 540, 1150);
+
+            // Score
+            ctx.fillStyle = "#555";
+            ctx.font = "50px 'VT323'"; // Monospace feel
+            ctx.fillText(`YES: ${STATE.yes}   |   NO: ${STATE.no}`, 540, 1300);
+
+            // Quote
+            ctx.fillStyle = "#444";
+            ctx.font = "italic 40px 'Nunito'";
+            wrapText(ctx, `"${quote}"`, 540, 1400, 700, 60);
+
+            // Signature
+            ctx.fillStyle = "#888";
+            ctx.font = "30px 'Nunito'";
+            ctx.fillText("valentine.mini.game", 540, 1800);
+
+            // Export to Image
+            const dataURL = canvas.toDataURL('image/png');
+            const img = document.createElement('img');
+            img.src = dataURL;
+            img.id = "generated-share-card";
+            
+            const container = document.getElementById('share-preview-container');
+            container.innerHTML = "";
+            container.appendChild(img);
         }
-        function downloadShareCard() { alert("Download not implemented in preview."); }
-        function copyShareText() { navigator.clipboard.writeText(`I said YES ${STATE.yes} times! 💘`); }
+
+        // Canvas Utils
+        function roundRect(ctx, x, y, width, height, radius) {
+          ctx.beginPath();
+          ctx.moveTo(x + radius, y);
+          ctx.lineTo(x + width - radius, y);
+          ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+          ctx.lineTo(x + width, y + height - radius);
+          ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+          ctx.lineTo(x + radius, y + height);
+          ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+          ctx.lineTo(x, y + radius);
+          ctx.quadraticCurveTo(x, y, x + radius, y);
+          ctx.closePath();
+        }
+
+        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+            let words = text.split(' ');
+            let line = '';
+            for(let n = 0; n < words.length; n++) {
+              let testLine = line + words[n] + ' ';
+              let metrics = ctx.measureText(testLine);
+              let testWidth = metrics.width;
+              if (testWidth > maxWidth && n > 0) {
+                ctx.fillText(line, x, y);
+                line = words[n] + ' ';
+                y += lineHeight;
+              }
+              else {
+                line = testLine;
+              }
+            }
+            ctx.fillText(line, x, y);
+        }
+
+        function downloadShareCard() {
+            const img = document.getElementById('generated-share-card');
+            if(!img) return;
+            const link = document.createElement('a');
+            link.download = `valentine-ending-${STATE.endingId || 0}.png`;
+            link.href = img.src;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function copyShareText() {
+            const L = getLang();
+            let title = "";
+            if(STATE.endingId===1) title = L.end1_title;
+            else if(STATE.endingId===2) title = L.end2_title;
+            else if(STATE.endingId===3) title = L.end3_title;
+            else if(STATE.endingId===4) title = L.end4_title;
+            
+            const text = `I got the "${title}" ending in Will You Be My Valentine? 💘\nYES: ${STATE.yes} | NO: ${STATE.no}\n\nPlay now!`;
+            
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                     const btn = document.getElementById('btn-share-copy');
+                     const original = btn.innerText;
+                     btn.innerText = "Copied! ✅";
+                     setTimeout(() => btn.innerText = original, 2000);
+                }).catch(err => {
+                    alert("Could not copy text: " + text);
+                });
+            } else {
+                alert("Copy/Paste this:\n\n" + text);
+            }
+        }
 
         // Start
         document.addEventListener('DOMContentLoaded', initGame);
