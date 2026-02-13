@@ -511,7 +511,7 @@
             console.error("Global Error: " + msg);
         };
 
-        /* --- CONFIG & STATE --- */
+        /* --- 1. DATA & CONSTANTS --- */
         const CONFIG = {
             YES_GOAL: 101,
             NO_GOAL: 100,
@@ -520,28 +520,17 @@
 
         let SETTINGS = { lobbyMusic: true, gameMusic: true, lang: 'en' };
 
-        // CLEAN STATE MACHINE
+        // STATE MACHINE
         const STATE = {
-            mode: 'start', // 'start' | 'lobby' | 'gameplay' | 'ending' | 'room' | 'secret'
-            yesCount: 0,
-            noCount: 0,
-            scoreClicked: false, 
-            isEnding: false,
-            currentEnding: 0, 
-            usingSynth: false,
-            effects: [],
-            roomProgress: { tulip: false, letter: false, diary: false }
+            screen: "START", // START | LOBBY | GAME | ENDING | ROOM | SECRET
+            yes: 0,
+            no: 0,
+            scoreClicked: false,
+            endingId: null,
+            roomProgress: { tulip: false, letter: false, diary: false },
+            effects: []
         };
 
-        /* --- MODAL STATE --- */
-        let modalState = {
-            lines: [],
-            idx: 0,
-            typing: false,
-            timer: null
-        };
-
-        /* --- LANGUAGE DATA --- */
         const LANG = {
             en: {
                 title: "Will you be my valentine? 💘",
@@ -549,7 +538,6 @@
                 yesBtn: "YES 💖", noBtn: "NO 💔", reset: "Reset",
                 dialogues: ["Please say yes! 🥺", "Don't be mean... 💔", "I'll make cookies! 🍪", "Misclick? 🤨", "Are you sure? 🧐", "Stop it 😭", "I won't give up! 💪", "Just one click... 🤏"],
                 lobbyNo: ["Wrong answer 😏", "Try again...", "You can't escape!", "No is not an option 💀"],
-                settings: "Settings ⚙️", lblLobby: "Lobby Music", lblGame: "Game Music", lblLang: "Language", close: "Close",
                 end1_title: "TRUE LOVE", end1_sub: "YES: 101/101",
                 end1_lines: ["101 times...", "You didn't hesitate.", "You chose me...", "over and over again.", "Maybe...", "true love...", "is just that simple."],
                 end2_title: "HESITANT HEART", end2_sub: "YES: 51 - NO: 50",
@@ -558,29 +546,11 @@
                 end3_lines: ["You left...", "from the very start.", "It just took me 100 times...", "to believe it."],
                 end4_title: "THE SECRET YES", end4_sub: "SECRET ENDING FOUND",
                 end4_lines: ["You found the secret.", "Not just the game's secret...", "but mine.", "You proved that...", "I am worth choosing.", "This Valentine...", "I am yours."],
-                
-                // Share Quotes
-                share_quotes: {
-                    1: "True love is 101 times YES.",
-                    2: "Hesitant, but eventually sure.",
-                    3: "The room remains empty.",
-                    4: "You found the hidden truth."
-                },
-
-                // Room Descriptions (Poetic Horror)
                 room_window: "The moonlight is too bright. It reveals the empty space where you used to stand.",
                 room_lamp: "Flickering... like my hope. It casts shadows that look like you.",
                 room_tulip: ["A single tulip.", "Red as blood, bound by a thread of fate.", "It never withered, because it was never alive.", "Just like us."],
                 room_letter: ["My hands shook when I wrote this.", "Every word was a plea.", "But you never opened it.", "Now it's just ink on dead paper."],
                 room_diary: ["Page 1: I met you.", "Page 50: I loved you.", "Page 100: You left.", "The rest of the pages are blank."],
-                room_clock: "The hands are frozen at the exact moment you said 'No'.",
-                room_mirror: "I looked for myself, but I only saw the ghost of who I was when you loved me.",
-                room_frame: "A picture of us laughing. The glass is cracked right down the middle, separating our hands.",
-                room_chair: "Pulled back from the table, waiting for a guest who will never arrive.",
-                room_carpet: "Stained with shadows. The footprints only lead towards the door, never back inside.",
-                room_pillow: "It still smells like your shampoo. Or maybe that's just my memory playing tricks.",
-                room_blanket: "Cold and heavy. It feels like a shroud covering a dream that died.",
-                
                 secret_q: ["You think this is enough?", "If you truly want it...", "Say YES one last time."]
             },
             vi: {
@@ -589,7 +559,6 @@
                 yesBtn: "CÓ 💖", noBtn: "KHÔNG 💔", reset: "Chơi lại",
                 dialogues: ["Đi mà, đồng ý đi! 🥺", "Đừng phũ vậy chứ... 💔", "Tớ nấu cơm cho cậu! 🍪", "Trượt tay hả? 🤨", "Chắc chưa? 🧐", "Đau tim quá 😭", "Tớ lì lắm! 💪", "Một cái thôi... 🤏"],
                 lobbyNo: ["Sai rồi nha 😏", "Thử lại đê...", "Không thoát được đâu!", "Không được chọn cái này 💀"],
-                settings: "Cài đặt ⚙️", lblLobby: "Nhạc chờ", lblGame: "Nhạc game", lblLang: "Ngôn ngữ", close: "Đóng",
                 end1_title: "TÌNH YÊU ĐÍCH THỰC", end1_sub: "CÓ: 101/101",
                 end1_lines: ["101 lần...", "Cậu không hề do dự.", "Cậu đã chọn tớ...", "hết lần này đến lần khác.", "Có lẽ...", "tình yêu thật sự...", "đơn giản chỉ là vậy."],
                 end2_title: "TRÁI TIM DO DỰ", end2_sub: "CÓ: 51 - KHÔNG: 50",
@@ -598,30 +567,12 @@
                 end3_lines: ["Cậu đã rời đi...", "ngay từ lần đầu tiên.", "Chỉ là...", "tớ mất 100 lần...", "mới chịu tin."],
                 end4_title: "LỜI ĐỒNG Ý BÍ MẬT", end4_sub: "ĐÃ TÌM THẤY BÍ MẬT",
                 end4_lines: ["Cậu tìm thấy bí mật rồi.", "Không phải bí mật của game...", "mà là của tớ.", "Cậu chứng minh rằng...", "tớ đáng được chọn.", "Valentine này...", "tớ thuộc về cậu."],
-                
-                // Share Quotes
-                share_quotes: {
-                    1: "Tình yêu thật sự là 101 lần CÓ.",
-                    2: "Do dự, nhưng cuối cùng vẫn chắc chắn.",
-                    3: "Căn phòng vẫn trống rỗng.",
-                    4: "Cậu đã tìm thấy sự thật ẩn giấu."
-                },
-
-                // Room Descriptions (Poetic Horror)
                 room_window: "Ánh trăng quá sáng. Nó soi rõ khoảng trống nơi cậu từng đứng.",
                 room_lamp: "Chập chờn... như hy vọng của tớ. Nó tạo ra những cái bóng trông giống cậu.",
                 room_tulip: ["Một bông tulip lẻ loi.", "Đỏ như máu, buộc bởi sợi chỉ định mệnh.", "Nó không bao giờ héo, vì nó chưa từng sống.", "Giống như chúng ta vậy."],
                 room_letter: ["Tay tớ run rẩy khi viết những dòng này.", "Từng chữ là một lời cầu xin.", "Nhưng cậu chưa bao giờ mở nó.", "Giờ chỉ còn là mực trên giấy chết."],
                 room_diary: ["Trang 1: Tớ gặp cậu.", "Trang 50: Tớ yêu cậu.", "Trang 100: Cậu rời đi.", "Những trang còn lại đều trắng xóa."],
-                room_clock: "Kim đồng hồ đông cứng ngay khoảnh khắc cậu nói 'Không'.",
-                room_mirror: "Tớ tìm kiếm chính mình, nhưng chỉ thấy bóng ma của kẻ mà cậu từng thương hại.",
-                room_frame: "Bức ảnh chúng ta cười. Mặt kính nứt ngay chính giữa, chia cắt đôi bàn tay.",
-                room_chair: "Được kéo ra khỏi bàn, chờ đợi một vị khách sẽ không bao giờ đến.",
-                room_carpet: "Manchada de sombras. Las huellas solo conducen hacia la puerta, nunca de regreso.",
-                room_pillow: "Todavía huele a tu champú. O tal vez sea solo mi memoria jugándome trucos.",
-                room_blanket: "Fría y pesada. Se siente como un sudario cubriendo un sueño que murió.",
-
-                secret_q: ["¿Crees que es suficiente?", "Si realmente lo quieres...", "Di SÍ una última vez."]
+                secret_q: ["Bạn nghĩ thế là đủ?", "Nếu bạn thực sự muốn...", "Hãy nói CÓ một lần cuối."]
             },
             es: {
                 title: "¿Quieres ser mi San Valentín? 💘",
@@ -629,7 +580,6 @@
                 yesBtn: "SÍ 💖", noBtn: "NO 💔", reset: "Reiniciar",
                 dialogues: ["¡Por favor di que sí! 🥺", "No seas malo... 💔", "¿Te hago galletas? 🍪", "¿Clic incorrecto? 🤨", "¿Seguro? 🧐", "No rompas mi corazón 😭", "¡No me rindo! 💪", "Solo un clic... 🤏"],
                 lobbyNo: ["Incorrecto 😏", "Intenta de nuevo...", "¡No puedes escapar!", "No es una opción 💀"],
-                settings: "Ajustes ⚙️", lblLobby: "Música Lobby", lblGame: "Música Juego", lblLang: "Idioma", close: "Cerrar",
                 end1_title: "AMOR VERDADERO", end1_sub: "SÍ: 101/101",
                 end1_lines: ["101 veces...", "No dudaste.", "Me elegiste...", "una y otra vez.", "Quizás...", "el amor verdadero...", "es así de simple."],
                 end2_title: "CORAZÓN DUDOSO", end2_sub: "SÍ: 51 - NO: 50",
@@ -638,36 +588,24 @@
                 end3_lines: ["Te fuiste...", "desde el principio.", "Solo me tomó 100 veces...", "creerlo."],
                 end4_title: "EL SÍ SECRETO", end4_sub: "FINAL SECRETO ENCONTRADO",
                 end4_lines: ["Encontraste el secreto.", "No del juego...", "sino el mío.", "Demostraste que...", "valgo la pena.", "Este San Valentín...", "soy tuyo."],
-                
-                // Share Quotes
-                share_quotes: {
-                    1: "El amor verdadero es 101 veces SÍ.",
-                    2: "Dudoso, pero finalmente seguro.",
-                    3: "La habitación permanece vacía.",
-                    4: "Encontraste la verdad oculta."
-                },
-
-                // Room Descriptions (Poetic Horror)
                 room_window: "La luz de la luna es demasiado brillante. Revela el vacío donde solías estar.",
                 room_lamp: "Parpadeando... como mi esperanza. Proyecta sombras que se parecen a ti.",
                 room_tulip: ["Un solo tulipán.", "Rojo como la sangre, atado por un hilo del destino.", "Nó không bao giờ héo, vì nó chưa từng sống.", "Igual que nosotros."],
                 room_letter: ["Mis manos temblaban al escribir esto.", "Cada palabra era una súplica.", "Pero nunca la abriste.", "Ahora es solo tinta en papel muerto."],
                 room_diary: ["Página 1: Te conocí.", "Página 50: Te amé.", "Página 100: Te fuiste.", "El resto de las páginas están en blanco."],
-                room_clock: "Las manecillas se congelaron en el momento exacto en que dijiste 'No'.",
-                room_mirror: "Me busqué a mí mismo, pero solo vi el fantasma de quien era cuando me amabas.",
-                room_frame: "Una foto nuestra riendo. El cristal está roto justo en el medio, separando nuestras manos.",
-                room_chair: "Apartada de la mesa, esperando a un invitado que nunca llegará.",
-                room_carpet: "Manchada de sombras. Las huellas solo conducen hacia la puerta, nunca de regreso.",
-                room_pillow: "Todavía huele a tu champú. O tal vez sea solo mi memoria jugándome trucos.",
-                room_blanket: "Fría y pesada. Se siente como un sudario cubriendo un sueño que murió.",
-
                 secret_q: ["¿Crees que es suficiente?", "Si realmente lo quieres...", "Di SÍ una última vez."]
             }
         };
 
-        /* --- DOM CACHE --- */
-        let DOM = {};
+        const ENDINGS_CONFIG = {
+            1: { theme: 'theme-1', musicId: 1 },
+            2: { theme: 'theme-2', musicId: 2 },
+            3: { theme: 'theme-3', musicId: 3 },
+            4: { theme: 'theme-4', musicId: 4 }
+        };
 
+        /* --- 2. DOM CACHE --- */
+        let DOM = {};
         function cacheDOM() {
             DOM = {
                 // Audio
@@ -675,803 +613,250 @@
                 audioGame: document.getElementById('bgm-game'),
                 audioEnd: document.getElementById('bgm-end'),
 
-                // Screens / Containers
+                // Containers
                 gameView: document.getElementById('game-view'),
                 startOverlay: document.getElementById('start-overlay'),
                 lobbyScreen: document.getElementById('lobby-screen'),
-                settingsModal: document.getElementById('settings-modal'),
                 endingOverlay: document.getElementById('ending-overlay'),
                 roomScene: document.getElementById('room-scene'),
                 secretModal: document.getElementById('secret-modal'),
-                
-                // Start Screen
-                startBtn: document.getElementById('btn-start-game'),
+                settingsModal: document.getElementById('settings-modal'),
+                shareModal: document.getElementById('share-modal'),
 
-                // Main Game UI
-                mainCard: document.getElementById('main-card'),
-                mainTitle: document.getElementById('main-title'),
-                dialogue: document.getElementById('dialogue-text'),
-                stageIndicator: document.getElementById('stage-indicator'),
-                buttonArea: document.getElementById('button-area'),
+                // UI Elements
                 yesBtn: document.getElementById('btn-yes'),
                 noBtn: document.getElementById('btn-no'),
-                fakeContainer: document.getElementById('fake-container'),
-
-                // Lobby UI
-                lobbyCard: document.querySelector('.lobby-card'),
-                lobbyTitle: document.getElementById('lobby-title'),
-                lobbySubtitle: document.getElementById('lobby-subtitle'),
-                lobbyYes: document.getElementById('lobby-btn-yes'),
-                lobbyNo: document.getElementById('lobby-btn-no'),
-                lobbyMsg: document.getElementById('lobby-msg'),
-                
-                // Settings UI
-                settingsBtn: document.getElementById('settings-btn'),
-                resetBtn: document.getElementById('reset-btn'),
-                closeSettingsBtn: document.getElementById('close-settings'),
-                langSelect: document.getElementById('lang-select'),
-                toggleLobby: document.getElementById('toggle-lobby-music'),
-                toggleGame: document.getElementById('toggle-game-music'),
-                stTitle: document.getElementById('st-title'),
-                stLobbyMusic: document.getElementById('st-lobby-music'),
-                stGameMusic: document.getElementById('st-game-music'),
-                stLanguage: document.getElementById('st-language'),
-
-                // Ending UI
-                endTitle: document.getElementById('end-title'),
-                endSub: document.getElementById('end-sub'),
-                endText: document.getElementById('end-text'),
-                endReplayBtn: document.getElementById('btn-end-replay'),
-                endLobbyBtn: document.getElementById('btn-end-lobby'),
-                endShareBtn: document.getElementById('btn-end-share'),
-                confettiCanvas: document.getElementById('confetti-canvas'),
-
-                // Secret UI
-                secretText: document.getElementById('secret-text'),
-                secretYesBtn: document.getElementById('btn-secret-yes'),
-
-                // Stats UI
-                lblYesTrigger: document.getElementById('lbl-yes-trigger'),
+                dialogue: document.getElementById('dialogue-text'),
                 valYes: document.getElementById('val-yes'),
                 valNo: document.getElementById('val-no'),
                 valChoice: document.getElementById('val-choice'),
                 barYes: document.getElementById('bar-yes'),
                 barNo: document.getElementById('bar-no'),
                 barChoice: document.getElementById('bar-choice'),
+                stageIndicator: document.getElementById('stage-indicator'),
+                fakeContainer: document.getElementById('fake-container'),
+                lblYesTrigger: document.getElementById('lbl-yes-trigger'),
+
+                // Ending Text
+                endTitle: document.getElementById('end-title'),
+                endSub: document.getElementById('end-sub'),
+                endText: document.getElementById('end-text'),
                 
-                // Room UI
+                // Room
+                roomProgress: document.getElementById('room-progress'),
                 roomTooltip: document.getElementById('room-tooltip'),
                 roomModal: document.getElementById('room-modal'),
                 roomModalText: document.getElementById('room-modal-text'),
                 roomCloseBtn: document.getElementById('btn-room-close'),
-                roomProgress: document.getElementById('room-progress'),
-                roomExitBtn: document.getElementById('btn-room-exit'),
 
-                // Share Modal UI
-                shareModal: document.getElementById('share-modal'),
-                sharePreview: document.getElementById('share-preview-container'),
-                btnShareDownload: document.getElementById('btn-share-download'),
-                btnShareCopy: document.getElementById('btn-share-copy'),
-                btnShareClose: document.getElementById('btn-share-close')
+                // Secret
+                secretText: document.getElementById('secret-text'),
+                secretYesBtn: document.getElementById('btn-secret-yes'),
+
+                // Confetti
+                confettiCanvas: document.getElementById('confetti-canvas'),
+                sharePreview: document.getElementById('share-preview-container')
             };
         }
 
-        /* --- AUDIO MANAGER --- */
-        const AudioCtrl = {
-            ambientOsc: null,
-            ambientGain: null,
-
-            async init() {
-                if (!DOM.audioLobby) return;
-                
-                // Set volume to 0 for fade-ins
-                DOM.audioLobby.volume = 0;
-                DOM.audioGame.volume = 0;
-                DOM.audioEnd.volume = 0;
-
-                const v = "?v=2";
-                DOM.audioLobby.src = "music/lobby.mp3" + v;
-                DOM.audioGame.src = "music/game.mp3" + v;
-                
-                try {
-                    await fetch(DOM.audioLobby.src, {method:'HEAD'});
-                    STATE.usingSynth = false;
-                } catch(e) {
-                    console.warn("Audio fetch failed, utilizing Synth fallback", e);
-                    STATE.usingSynth = true; 
-                }
-            },
-            
-            // --- FADING HELPERS ---
-            fadeIn(audio, maxVol) {
-                if(!audio) return;
-                if(audio.fadeTimer && audio.isFadingOut) {
-                    clearInterval(audio.fadeTimer);
-                    audio.fadeTimer = null;
-                }
-                if(audio.fadeTimer) return; // Already fading in or active
-
-                if(audio.paused) {
-                    audio.volume = 0;
-                    audio.play().catch(e => console.warn("Auto-play prevented", e));
-                }
-                
-                audio.isFadingOut = false;
-                const step = maxVol / 12; // 0.6s (12 * 50ms)
-                
-                audio.fadeTimer = setInterval(() => {
-                    if(audio.volume < maxVol - step) audio.volume += step;
-                    else {
-                        audio.volume = maxVol;
-                        clearInterval(audio.fadeTimer);
-                        audio.fadeTimer = null;
-                    }
-                }, 50);
-            },
-
-            fadeOut(audio) {
-                if(!audio) return;
-                if(audio.paused) return;
-                
-                if(audio.fadeTimer && !audio.isFadingOut) {
-                    clearInterval(audio.fadeTimer);
-                    audio.fadeTimer = null;
-                }
-                if(audio.fadeTimer) return; // Already fading out
-
-                audio.isFadingOut = true;
-                const step = audio.volume / 12;
-
-                audio.fadeTimer = setInterval(() => {
-                    if(audio.volume > step) audio.volume -= step;
-                    else {
-                        audio.volume = 0;
-                        audio.pause();
-                        clearInterval(audio.fadeTimer);
-                        audio.fadeTimer = null;
-                        audio.isFadingOut = false;
-                    }
-                }, 50);
-            },
-
-            // --- AMBIENT ROOM HUM ---
-            playRoomAmbience() {
-                // Ensure everything else is quiet
-                this.fadeOut(DOM.audioLobby);
-                this.fadeOut(DOM.audioGame);
-                this.fadeOut(DOM.audioEnd);
-                SynthMusic.stop();
-
-                if (this.ambientOsc) return; // Already playing
-                
-                // Lazy access SFX ctx
-                if (!SFX.ctx) return;
-                if(SFX.ctx.state === 'suspended') SFX.ctx.resume();
-
-                this.ambientOsc = SFX.ctx.createOscillator();
-                this.ambientGain = SFX.ctx.createGain();
-
-                // Very low hum
-                this.ambientOsc.type = 'sine';
-                this.ambientOsc.frequency.value = 50; 
-                
-                // Very low volume
-                this.ambientGain.gain.value = 0; 
-
-                this.ambientOsc.connect(this.ambientGain);
-                this.ambientGain.connect(SFX.ctx.destination);
-
-                this.ambientOsc.start();
-                
-                // Web Audio Ramp for smooth fade in
-                this.ambientGain.gain.linearRampToValueAtTime(0.05, SFX.ctx.currentTime + 2);
-            },
-
-            stopRoomAmbience() {
-                if (this.ambientOsc && this.ambientGain) {
-                    const osc = this.ambientOsc;
-                    const gain = this.ambientGain;
-                    this.ambientOsc = null;
-                    this.ambientGain = null;
-
-                    // Fade out
-                    if(SFX.ctx) {
-                        gain.gain.setValueAtTime(gain.gain.value, SFX.ctx.currentTime);
-                        gain.gain.linearRampToValueAtTime(0, SFX.ctx.currentTime + 1);
-                    }
-                    
-                    setTimeout(() => {
-                        try {
-                            osc.stop();
-                            osc.disconnect();
-                            gain.disconnect();
-                        } catch(e) {}
-                    }, 1000);
-                }
-            },
-
-            // --- MAIN ACTIONS ---
-            playLobby() { this.update(); },
-            playGame() { this.update(); },
-
-            playEnding(type) {
-                // Priority: Stop everything else
-                this.fadeOut(DOM.audioLobby);
-                this.fadeOut(DOM.audioGame);
-                SynthMusic.stop();
-
-                // Specific check for room ending
-                if(type === 3) {
-                    this.playRoomAmbience();
-                    return; 
-                } else {
-                    this.stopRoomAmbience();
-                }
-
-                if(!SETTINGS.gameMusic) return; // Respect setting
-
-                let src = "";
-                if(type === 1) src = "music/victory_love.mp3?v=2";
-                if(type === 2) src = "music/ending_bittersweet.mp3?v=2";
-                if(type === 4) src = "music/music_box.mp3?v=2";
-                // Type 3 (Room) handled above
-
-                if(src && DOM.audioEnd) {
-                    // Prevent restart if already playing same track (simple check)
-                    // Note: DOM.audioEnd.src might be full URL, checking includes
-                    if (!DOM.audioEnd.src.includes(src) || DOM.audioEnd.paused) {
-                         DOM.audioEnd.src = src;
-                         this.fadeIn(DOM.audioEnd, 0.5);
-                    }
-                }
-            },
-            
-            stopAll() {
-                this.fadeOut(DOM.audioLobby);
-                this.fadeOut(DOM.audioGame);
-                this.fadeOut(DOM.audioEnd);
-                this.stopRoomAmbience();
-                SynthMusic.stop();
-            },
-            
-            update() {
-                // STATE A: Start Overlay Visible -> Silence
-                if(STATE.mode === 'start') {
-                    this.stopAll();
-                    return;
-                }
-
-                // STATE D: Ending Active -> Ending Music Only
-                if(STATE.mode === 'ending' || STATE.mode === 'room' || STATE.mode === 'secret') {
-                    this.fadeOut(DOM.audioLobby);
-                    this.fadeOut(DOM.audioGame);
-                    SynthMusic.stop();
-                    // Ending music is triggered once via playEnding(), we don't restart it here
-                    // However, if we are in Ending 3, ambience might be running. 
-                    // We don't want to stop it here repeatedly.
-                    if(!SETTINGS.gameMusic && STATE.mode !== 'room') this.fadeOut(DOM.audioEnd);
-                    return;
-                }
-
-                // Ensure ambience is stopped if we are not in Ending
-                this.stopRoomAmbience();
-
-                // STATE B: Lobby Visible -> Lobby Music
-                if(STATE.mode === 'lobby') {
-                    this.fadeOut(DOM.audioGame);
-                    this.fadeOut(DOM.audioEnd);
-                    
-                    if(SETTINGS.lobbyMusic) {
-                        if(STATE.usingSynth) {
-                             SynthMusic.start();
-                        } else {
-                             SynthMusic.stop();
-                             this.fadeIn(DOM.audioLobby, 0.5);
-                        }
-                    } else {
-                        this.fadeOut(DOM.audioLobby);
-                        SynthMusic.stop();
-                    }
-                    return;
-                }
-
-                // STATE C: Gameplay Active -> Game Music
-                if(STATE.mode === 'gameplay') {
-                    this.fadeOut(DOM.audioLobby);
-                    this.fadeOut(DOM.audioEnd);
-                    SynthMusic.stop(); 
-
-                    if(SETTINGS.gameMusic) {
-                        this.fadeIn(DOM.audioGame, 0.4);
-                    } else {
-                        this.fadeOut(DOM.audioGame);
-                    }
-                }
-            }
-        };
-
-        const SFX = {
-            ctx: new (window.AudioContext || window.webkitAudioContext)(),
-            playTone(f,t,d) {
-                if(this.ctx.state==='suspended') this.ctx.resume();
-                const o=this.ctx.createOscillator(), g=this.ctx.createGain();
-                o.type=t; o.frequency.value=f; g.gain.value=0.1;
-                o.connect(g); g.connect(this.ctx.destination);
-                o.start(); o.stop(this.ctx.currentTime+d);
-            },
-            playYes() { this.playTone(880, 'sine', 0.1); },
-            playNo() { this.playTone(150, 'sawtooth', 0.2); }
-        };
-
-        const SynthMusic = {
-            active: false,
-            start() { if(this.active) return; this.active=true; this.loop(); },
-            stop() { this.active=false; },
-            loop() { if(!this.active) return; SFX.playTone(500,'sine',0.1); setTimeout(()=>this.loop(), 500); }
-        };
-
-        /* --- LOGIC MERGE --- */
+        /* --- 3. FLOW CONTROLLER --- */
         function initGame() {
-            try {
-                cacheDOM(); 
-                loadSettings();
-                generateStages();
-                AudioCtrl.init().catch(err => console.warn("Audio Init Warning:", err));
-                
-                if(DOM.toggleLobby) DOM.toggleLobby.checked = SETTINGS.lobbyMusic;
-                if(DOM.toggleGame) DOM.toggleGame.checked = SETTINGS.gameMusic;
-                if(DOM.langSelect) DOM.langSelect.value = SETTINGS.lang;
-                
-                updateTexts();
-                updateStatsUI();
+            cacheDOM();
+            loadSettings();
+            generateStages();
+            AudioCtrl.init();
+            
+            // Set initial language texts
+            updateTexts();
 
-                // INITIAL STATE
-                setMode('start');
+            // Bind all events once
+            bindEvents();
 
-                // Bind Events using DOM cache
-                if(DOM.startBtn) DOM.startBtn.onclick = () => {
-                    console.log("Start Button Clicked");
-                    SFX.ctx.resume();
-                    goToLobby();
-                };
-
-                if(DOM.lobbyYes) DOM.lobbyYes.onclick = () => {
-                    console.log("Lobby YES Clicked");
-                    SFX.playYes();
-                    startGameplay();
-                };
-                if(DOM.lobbyNo) DOM.lobbyNo.onclick = () => {
-                    console.log("Lobby NO Clicked");
-                    SFX.playNo();
-                    const L = getLang();
-                    if(DOM.lobbyMsg) DOM.lobbyMsg.innerText = L.lobbyNo[Math.floor(Math.random()*L.lobbyNo.length)];
-                };
-
-                // Add touchstart for mobile responsiveness just in case
-                if(DOM.yesBtn) { DOM.yesBtn.onclick = handleYes; DOM.yesBtn.ontouchstart = handleYes; }
-                if(DOM.noBtn) { DOM.noBtn.onclick = handleNo; DOM.noBtn.ontouchstart = handleNo; }
-                
-                if(DOM.lblYesTrigger) DOM.lblYesTrigger.onclick = () => {
-                    if(!STATE.scoreClicked) {
-                        STATE.scoreClicked = true;
-                        DOM.lblYesTrigger.style.color = "gold";
-                        DOM.lblYesTrigger.style.textShadow = "0 0 5px gold";
-                        showTooltip("✨ Secret Found!");
-                    }
-                };
-                
-                if(DOM.endReplayBtn) DOM.endReplayBtn.onclick = () => {
-                    resetProgressAndStartGameplay();
-                };
-                if(DOM.endLobbyBtn) DOM.endLobbyBtn.onclick = () => {
-                    goToLobby();
-                };
-                if(DOM.endShareBtn) DOM.endShareBtn.onclick = openShareModal;
-
-                if(DOM.settingsBtn) DOM.settingsBtn.onclick = () => DOM.settingsModal && DOM.settingsModal.classList.remove('hidden');
-                if(DOM.closeSettingsBtn) DOM.closeSettingsBtn.onclick = () => DOM.settingsModal && DOM.settingsModal.classList.add('hidden');
-                
-                if(DOM.toggleLobby) DOM.toggleLobby.onchange = (e) => { SETTINGS.lobbyMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
-                if(DOM.toggleGame) DOM.toggleGame.onchange = (e) => { SETTINGS.gameMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
-                if(DOM.langSelect) DOM.langSelect.onchange = (e) => { SETTINGS.lang = e.target.value; saveSettings(); updateTexts(); };
-                
-                if(DOM.resetBtn) DOM.resetBtn.onclick = () => { 
-                    if(confirm(getLang().reset + "?")) {
-                        goToLobby();
-                    }
-                };
-
-                // Share Modal Events
-                if(DOM.btnShareClose) DOM.btnShareClose.onclick = () => DOM.shareModal.classList.add('hidden');
-                if(DOM.btnShareDownload) DOM.btnShareDownload.onclick = downloadShareCard;
-                if(DOM.btnShareCopy) DOM.btnShareCopy.onclick = copyShareText;
-
-                createParticles();
-
-            } catch (err) {
-                console.error("Critical Init Error:", err);
-                alert("Game failed to load. Please refresh.");
-            }
+            // Start in start screen
+            goTo('START');
         }
 
-        // --- CORE STATE FUNCTIONS ---
-        
-        function setMode(newMode) {
-            console.log(`State Transition: ${STATE.mode} -> ${newMode}`);
-            STATE.mode = newMode;
+        function goTo(screen, payload = {}) {
+            console.log(`Transitioning to: ${screen}`, payload);
+            STATE.screen = screen;
             
-            // 1. Hide ALL Overlays first
-            const overlays = [DOM.startOverlay, DOM.lobbyScreen, DOM.endingOverlay, DOM.roomScene, DOM.secretModal];
-            overlays.forEach(el => {
-                if(el) {
+            // Handle State Logic for Screen Entry
+            if (screen === 'LOBBY') {
+                resetGameplayStats();
+                AudioCtrl.playLobby();
+            } 
+            else if (screen === 'GAME') {
+                resetGameplayStats();
+                AudioCtrl.playGameplay();
+            }
+            else if (screen === 'ENDING') {
+                STATE.endingId = payload.endingId;
+                AudioCtrl.playEnding(payload.endingId);
+            }
+            else if (screen === 'ROOM') {
+                AudioCtrl.playRoom();
+            }
+            else if (screen === 'SECRET') {
+                AudioCtrl.stopAll(); // Silence for suspense
+                runSecretSequence();
+            }
+
+            renderScreen();
+        }
+
+        /* --- 4. RENDER SYSTEM --- */
+        function renderScreen() {
+            // Hide everything first
+            const screens = [
+                DOM.startOverlay, DOM.lobbyScreen, DOM.gameView, 
+                DOM.endingOverlay, DOM.roomScene, DOM.secretModal
+            ];
+            
+            screens.forEach(el => {
+                if (el) {
                     el.classList.add('hidden');
                     el.classList.remove('visible');
-                    el.style.pointerEvents = 'none'; // Critical for blocking clicks
+                    el.style.pointerEvents = 'none';
+                    el.style.opacity = '0';
                 }
             });
 
-            // 2. Handle Game View Opacity/Interaction
-            if(DOM.gameView) {
-                if (newMode === 'gameplay' || newMode === 'lobby') {
-                    DOM.gameView.style.opacity = '1';
-                    DOM.gameView.style.pointerEvents = 'auto';
-                } else {
-                    DOM.gameView.style.opacity = '0';
-                    DOM.gameView.style.pointerEvents = 'none';
-                }
+            // Show active screen
+            let activeEl = null;
+            if (STATE.screen === 'START') activeEl = DOM.startOverlay;
+            else if (STATE.screen === 'LOBBY') activeEl = DOM.lobbyScreen;
+            else if (STATE.screen === 'GAME') activeEl = DOM.gameView;
+            else if (STATE.screen === 'ENDING') {
+                activeEl = DOM.endingOverlay;
+                renderEndingContent(STATE.endingId);
             }
+            else if (STATE.screen === 'ROOM') {
+                activeEl = DOM.roomScene;
+                updateRoomHUD();
+                bindRoomObjects();
+            }
+            else if (STATE.screen === 'SECRET') activeEl = DOM.secretModal;
+
+            if (activeEl) {
+                activeEl.classList.remove('hidden');
+                activeEl.classList.add('visible');
+                activeEl.style.pointerEvents = 'auto';
+                activeEl.style.opacity = '1';
+            }
+        }
+
+        /* --- 5. GAMEPLAY LOGIC --- */
+        function handleYes() {
+            if (STATE.screen !== 'GAME') return;
             
-            // 3. Show Specific Overlay
-            if(newMode === 'start' && DOM.startOverlay) {
-                DOM.startOverlay.classList.remove('hidden');
-                DOM.startOverlay.classList.add('visible');
-                DOM.startOverlay.style.pointerEvents = 'auto';
-            }
-            else if(newMode === 'lobby' && DOM.lobbyScreen) {
-                DOM.lobbyScreen.classList.remove('hidden');
-                DOM.lobbyScreen.classList.add('visible');
-                DOM.lobbyScreen.style.pointerEvents = 'auto';
-            }
-            else if(newMode === 'ending' && DOM.endingOverlay) {
-                DOM.endingOverlay.classList.remove('hidden');
-                DOM.endingOverlay.classList.add('visible');
-                DOM.endingOverlay.style.pointerEvents = 'auto';
-            }
-            else if(newMode === 'room' && DOM.roomScene) {
-                DOM.roomScene.classList.remove('hidden');
-                DOM.roomScene.classList.add('visible');
-                DOM.roomScene.style.pointerEvents = 'auto';
-            }
-            else if(newMode === 'secret' && DOM.secretModal) {
-                DOM.secretModal.classList.remove('hidden');
-                DOM.secretModal.classList.add('visible');
-                DOM.secretModal.style.pointerEvents = 'auto';
-            }
-
-            // 4. Update Audio
-            AudioCtrl.update();
-        }
-
-        function resetProgress() {
-            STATE.yesCount = 0;
-            STATE.noCount = 0;
-            STATE.scoreClicked = false;
-            STATE.isEnding = false;
-            STATE.currentEnding = 0;
-            STATE.roomProgress = { tulip: false, letter: false, diary: false };
-            
-            // Reset UI
-            updateStatsUI();
-            if(DOM.dialogue) DOM.dialogue.innerText = getLang().dialogues[0] || "Please say yes! 🥺";
-            const container = document.getElementById('fake-container');
-            if(container) container.innerHTML = "";
-            applyCurrentStage();
-        }
-
-        function goToLobby() {
-            resetProgress();
-            setMode('lobby');
-        }
-
-        function startGameplay() {
-            resetProgress();
-            setMode('gameplay');
-        }
-        
-        function resetProgressAndStartGameplay() {
-            resetProgress();
-            setMode('gameplay');
-        }
-
-        // --- HANDLERS ---
-
-        function handleYes(e) {
-            if(e) e.preventDefault();
-            
-            if(STATE.mode !== 'gameplay') return;
-            
-            STATE.yesCount++;
+            STATE.yes++;
             SFX.playYes();
-            updateStatsUI();
+            updateUI();
             
-            if(checkEndingTriggers()) return;
-            
-            if(DOM.yesBtn) spawnFloatingHeart(DOM.yesBtn);
-            if(DOM.dialogue) DOM.dialogue.innerText = "Yay! 💘";
-            
+            if (DOM.yesBtn) spawnFloatingHeart(DOM.yesBtn);
             applyCurrentStage();
+            checkEndings();
         }
 
-        function handleNo(e) {
-            if(e) e.preventDefault();
-            
-            if(STATE.mode !== 'gameplay') return;
+        function handleNo() {
+            if (STATE.screen !== 'GAME') return;
 
-            STATE.noCount++;
+            STATE.no++;
             SFX.playNo();
-            updateStatsUI();
+            updateUI();
             
-            if(checkEndingTriggers()) return;
-            
-            if(DOM.mainCard) {
+            if (DOM.mainCard) {
                 DOM.mainCard.classList.remove('shake');
                 void DOM.mainCard.offsetWidth;
                 DOM.mainCard.classList.add('shake');
             }
-            if(DOM.dialogue) DOM.dialogue.innerText = getLang().dialogues[Math.floor(Math.random()*getLang().dialogues.length)];
-        }
-
-        function checkEndingTriggers() {
-            // STRICT GUARDS
-            if(STATE.mode !== 'gameplay') return false;
-            if(STATE.isEnding) return true;
-
-            // 1. Secret Modal Trigger
-            if (STATE.yesCount === 100 && STATE.scoreClicked) {
-                triggerSecretModal();
-                return true;
-            }
-
-            // 2. Ending 1: YES >= 101
-            if (STATE.yesCount >= CONFIG.YES_GOAL) {
-                enterEnding(1);
-                return true;
-            }
-
-            // 3. Ending 2: YES=51 AND NO=50
-            if (STATE.yesCount === 51 && STATE.noCount === 50) {
-                enterEnding(2);
-                return true;
-            }
-
-            // 4. Ending 3: NO >= 100
-            if (STATE.noCount >= CONFIG.NO_GOAL) {
-                enterEnding(3);
-                return true;
-            }
-
-            return false;
-        }
-
-        function enterEnding(id) {
-            console.log("Entering Ending:", id);
-            STATE.isEnding = true;
-            STATE.currentEnding = id; 
-
-            if(id === 3) {
-                setMode('room');
-                AudioCtrl.playEnding(3);
-                setTimeout(() => {
-                    initRoomScene();
-                }, 500);
-            } else {
-                setMode('ending');
-                AudioCtrl.playEnding(id);
-                renderEndingOverlay(id);
-            }
-        }
-
-        function formatProgress(current, max) {
-            const c = Math.min(current, max);
-            return `${c.toString().padStart(2, '0')}/${max}`;
-        }
-
-        function formatStage(current, max) {
-            return `Stage: ${formatProgress(current, max)}`;
-        }
-
-        function updateStatsUI() {
-            const total = STATE.yesCount + STATE.noCount;
-            const dYes = Math.min(STATE.yesCount, CONFIG.YES_GOAL);
-            const dNo = Math.min(STATE.noCount, CONFIG.NO_GOAL);
-            const dTotal = Math.min(total, CONFIG.YES_GOAL);
-
-            if(DOM.valYes) DOM.valYes.innerText = formatProgress(dYes, CONFIG.YES_GOAL);
-            if(DOM.valNo) DOM.valNo.innerText = formatProgress(dNo, CONFIG.NO_GOAL);
-            if(DOM.valChoice) DOM.valChoice.innerText = formatProgress(dTotal, CONFIG.YES_GOAL);
-
-            if(DOM.barYes) DOM.barYes.style.width = ((dYes/CONFIG.YES_GOAL)*100) + "%";
-            if(DOM.barNo) DOM.barNo.style.width = ((dNo/CONFIG.NO_GOAL)*100) + "%";
-            if(DOM.barChoice) DOM.barChoice.style.width = ((dTotal/CONFIG.YES_GOAL)*100) + "%";
-
-            // Stage represents "current step we are on", so it is YES count + 1.
-            // But if we are done (101), we just cap it at 101.
-            const currentStage = Math.min(STATE.yesCount + 1, CONFIG.YES_GOAL);
-            if(DOM.stageIndicator) DOM.stageIndicator.innerText = formatStage(currentStage, CONFIG.YES_GOAL);
-        }
-
-        function renderEndingOverlay(id) {
-            const L = getLang();
-            let title="", sub="", lines=[], theme="theme-1";
-            if(id===1) { 
-                title=L.end1_title; 
-                sub=`YES: ${formatProgress(STATE.yesCount, CONFIG.YES_GOAL)}`; 
-                lines=L.end1_lines; 
-                theme="theme-1"; 
-            }
-            if(id===2) { title=L.end2_title; sub=L.end2_sub; lines=L.end2_lines; theme="theme-2"; }
-            if(id===4) { title=L.end4_title; sub=L.end4_sub; lines=L.end4_lines; theme="theme-4"; }
-            if(id==='3_final') { 
-                title=L.end3_title; 
-                sub=`NO: ${formatProgress(STATE.noCount, CONFIG.NO_GOAL)}`; 
-                lines=L.end3_lines; 
-                theme="theme-3"; 
-            }
-            if(DOM.endingOverlay) {
-                DOM.endingOverlay.className = ""; 
-                DOM.endingOverlay.classList.add(theme);
-            }
-            if(DOM.endTitle) DOM.endTitle.innerText = title;
-            if(DOM.endSub) DOM.endSub.innerText = sub;
-            startTypewriter(lines);
-            if(id===1 || id===4) startConfetti();
-        }
-        
-        function updateRoomHUD() {
-            if(!DOM.roomProgress) return;
-            const c = (STATE.roomProgress.tulip?1:0) + (STATE.roomProgress.letter?1:0) + (STATE.roomProgress.diary?1:0);
-            DOM.roomProgress.innerText = `Room: ${c}/3`;
-        }
-
-        function initRoomScene() {
-            updateRoomHUD(); 
-            const L = getLang();
-            const bindObj = (id, textKey, isMain, keyName) => {
-                const el = document.getElementById(id);
-                if(!el) return;
-                el.onclick = () => {
-                    if(isMain) {
-                        STATE.roomProgress[keyName] = true;
-                        updateRoomHUD();
-                        openRoomModal(L[textKey]);
-                    } else {
-                        if(DOM.roomTooltip) {
-                            DOM.roomTooltip.innerText = L[textKey];
-                            DOM.roomTooltip.style.opacity = 1;
-                            setTimeout(()=>DOM.roomTooltip.style.opacity=0, 2000);
-                        }
-                    }
-                };
-            };
-            // Main Objects
-            bindObj('obj-window', 'room_window', false);
-            bindObj('obj-lamp', 'room_lamp', false);
-            bindObj('obj-tulip', 'room_tulip', true, 'tulip');
-            bindObj('obj-letter', 'room_letter', true, 'letter');
-            bindObj('obj-diary', 'room_diary', true, 'diary');
-
-            // Extra Horror Objects
-            bindObj('obj-clock', 'room_clock', false);
-            bindObj('obj-mirror', 'room_mirror', false);
-            bindObj('obj-pillow', 'room_pillow', false);
-            bindObj('obj-blanket', 'room_blanket', false);
-            bindObj('obj-carpet', 'room_carpet', false);
-            bindObj('obj-chair', 'room_chair', false);
-            bindObj('obj-frame', 'room_frame', false);
-
-            if(DOM.roomCloseBtn) DOM.roomCloseBtn.onclick = () => { 
-                if(DOM.roomModal) DOM.roomModal.style.display = 'none'; 
-                checkRoomComplete();
-            };
-            
-            // Setup Modal Click Advance
-            if(DOM.roomModal) {
-                DOM.roomModal.onclick = (e) => advanceModal(e);
-            }
-
-            // Exit Button Logic
-            if(DOM.roomExitBtn) {
-                // Exit Room -> Go back to lobby (resets progress automatically)
-                goToLobby();
-            }
-        }
-        
-        function openRoomModal(content) {
-            modalState.lines = Array.isArray(content) ? content : [content];
-            modalState.idx = 0;
-            if(DOM.roomModal) DOM.roomModal.style.display = 'block';
-            if(DOM.roomCloseBtn) DOM.roomCloseBtn.style.display = 'none';
-            playModalLine();
-        }
-        
-        function playModalLine() {
-            const text = modalState.lines[modalState.idx];
-            if(DOM.roomModalText) DOM.roomModalText.innerText = "";
-            modalState.typing = true;
-            let i = 0;
-            if(modalState.timer) clearTimeout(modalState.timer);
-            
-            function type() {
-                if(!modalState.typing) return;
-                if(DOM.roomModalText) DOM.roomModalText.innerText = text.substring(0, i++);
-                if(i <= text.length) modalState.timer = setTimeout(type, 40);
-                else modalState.typing = false;
-            }
-            type();
-        }
-        
-        function advanceModal(e) {
-            // Prevent close button click from triggering advance logic if they overlap
-            if(e.target === DOM.roomCloseBtn) return;
-            
-            if(modalState.typing) {
-                // Instant finish
-                modalState.typing = false;
-                clearTimeout(modalState.timer);
-                if(DOM.roomModalText) DOM.roomModalText.innerText = modalState.lines[modalState.idx];
-            } else {
-                // Next line
-                modalState.idx++;
-                if(modalState.idx < modalState.lines.length) {
-                    playModalLine();
-                } else {
-                    // Finished
-                    if(DOM.roomCloseBtn) DOM.roomCloseBtn.style.display = 'inline-block';
-                }
-            }
-        }
-
-        function checkRoomComplete() {
-            if(STATE.roomProgress.tulip && STATE.roomProgress.letter && STATE.roomProgress.diary) {
-                setTimeout(() => {
-                     AudioCtrl.stopRoomAmbience(); 
-                     renderEndingOverlay('3_final');
-                     setMode('ending');
-                }, 500);
-            }
-        }
-
-        function triggerSecretModal() {
-            if (STATE.isEnding) return;
-            setMode('secret');
             
             const L = getLang();
-            if(DOM.secretYesBtn) DOM.secretYesBtn.style.display = 'none';
-            
-            let i = 0;
-            const seq = () => {
-                // Only run if still in secret mode
-                if (STATE.mode !== 'secret') return; 
+            DOM.dialogue.innerText = L.dialogues[Math.floor(Math.random() * L.dialogues.length)];
+            checkEndings();
+        }
 
-                if(i < L.secret_q.length) {
-                    if(DOM.secretText) {
-                        DOM.secretText.innerText = L.secret_q[i++];
-                        DOM.secretText.style.opacity = 0;
-                        setTimeout(() => DOM.secretText.style.opacity=1, 100);
-                    }
-                    setTimeout(seq, 2000);
-                } else {
-                    if(DOM.secretYesBtn) {
-                        DOM.secretYesBtn.innerText = L.yesBtn;
-                        DOM.secretYesBtn.style.display = 'block';
-                    }
-                }
-            };
-            seq();
+        function checkEndings() {
+            // 1. Secret Ending
+            if (STATE.yes === 100 && STATE.scoreClicked) {
+                goTo('SECRET');
+                return;
+            }
             
-            if(DOM.secretYesBtn) DOM.secretYesBtn.onclick = () => {
-                enterEnding(4);
-            };
+            // 2. Ending 1 (True Love)
+            if (STATE.yes >= CONFIG.YES_GOAL) {
+                goTo('ENDING', { endingId: 1 });
+                return;
+            }
+
+            // 3. Ending 2 (Hesitant)
+            if (STATE.yes === 51 && STATE.no === 50) {
+                goTo('ENDING', { endingId: 2 });
+                return;
+            }
+
+            // 4. Ending 3 (Room)
+            if (STATE.no >= CONFIG.NO_GOAL) {
+                goTo('ROOM');
+                return;
+            }
+        }
+
+        function resetGameplayStats() {
+            STATE.yes = 0;
+            STATE.no = 0;
+            STATE.endingId = null;
+            STATE.scoreClicked = false;
+            STATE.roomProgress = { tulip: false, letter: false, diary: false };
+            
+            updateUI();
+            
+            if (DOM.dialogue) DOM.dialogue.innerText = getLang().dialogues[0] || "Please say yes!";
+            if (DOM.fakeContainer) DOM.fakeContainer.innerHTML = "";
+            applyCurrentStage();
+        }
+
+        function updateUI() {
+            if (DOM.valYes) DOM.valYes.innerText = `${Math.min(STATE.yes, CONFIG.YES_GOAL)}/${CONFIG.YES_GOAL}`;
+            if (DOM.valNo) DOM.valNo.innerText = `${Math.min(STATE.no, CONFIG.NO_GOAL)}/${CONFIG.NO_GOAL}`;
+            if (DOM.valChoice) DOM.valChoice.innerText = `${Math.min(STATE.yes + STATE.no, CONFIG.YES_GOAL)}/${CONFIG.YES_GOAL}`;
+            
+            if (DOM.barYes) DOM.barYes.style.width = ((Math.min(STATE.yes, CONFIG.YES_GOAL)/CONFIG.YES_GOAL)*100) + "%";
+            if (DOM.barNo) DOM.barNo.style.width = ((Math.min(STATE.no, CONFIG.NO_GOAL)/CONFIG.NO_GOAL)*100) + "%";
+            if (DOM.barChoice) DOM.barChoice.style.width = ((Math.min(STATE.yes + STATE.no, CONFIG.YES_GOAL)/CONFIG.YES_GOAL)*100) + "%";
+            
+            if (DOM.stageIndicator) DOM.stageIndicator.innerText = `Stage: ${Math.min(STATE.yes + 1, CONFIG.YES_GOAL)}/101`;
+        }
+
+        /* --- 6. ENDING SCRIPT ENGINE --- */
+        function renderEndingContent(id) {
+            const L = getLang();
+            const config = ENDINGS_CONFIG[id];
+            
+            // Reset overlay classes
+            DOM.endingOverlay.className = 'visible'; // Keep visible base class
+            DOM.endingOverlay.classList.add(config.theme);
+
+            // Set Text
+            if (id === 1) {
+                DOM.endTitle.innerText = L.end1_title;
+                DOM.endSub.innerText = L.end1_sub;
+                startTypewriter(L.end1_lines);
+                startConfetti();
+            } else if (id === 2) {
+                DOM.endTitle.innerText = L.end2_title;
+                DOM.endSub.innerText = L.end2_sub;
+                startTypewriter(L.end2_lines);
+            } else if (id === 3) {
+                DOM.endTitle.innerText = L.end3_title;
+                DOM.endSub.innerText = L.end3_sub;
+                startTypewriter(L.end3_lines);
+            } else if (id === 4) {
+                DOM.endTitle.innerText = L.end4_title;
+                DOM.endSub.innerText = L.end4_sub;
+                startTypewriter(L.end4_lines);
+                startConfetti();
+            }
         }
 
         let typeTimer;
@@ -1484,8 +869,7 @@
             if(typeTimer) clearTimeout(typeTimer);
 
             function type() {
-                // Stop if we left ending mode
-                if (STATE.mode !== 'ending') return;
+                if (STATE.screen !== 'ENDING') return; // Stop if screen changed
 
                 if(l >= lines.length) return;
                 el.innerText = lines[l].substring(0, c);
@@ -1497,6 +881,7 @@
                 }
             }
             type();
+            // Allow skip
             el.onclick = () => {
                 clearTimeout(typeTimer);
                 el.innerText = lines[l];
@@ -1504,258 +889,279 @@
             };
         }
 
-        /* --- SHARE CARD LOGIC --- */
-        let shareCardCanvas = document.createElement('canvas');
-        
-        function openShareModal() {
-            if(DOM.shareModal) {
-                DOM.shareModal.classList.remove('hidden');
-                DOM.sharePreview.innerHTML = "Generating...";
-                setTimeout(generateShareCard, 100);
-            }
-        }
-
-        function generateShareCard() {
+        /* --- 7. ROOM & SECRET --- */
+        function bindRoomObjects() {
             const L = getLang();
-            const ctx = shareCardCanvas.getContext('2d');
-            const w = 600, h = 900; // Taller for better layout
-            shareCardCanvas.width = w; shareCardCanvas.height = h;
-
-            // Determine Ending ID
-            let id = STATE.currentEnding;
-            
-            // Fallback logic if ID is missing (e.g. legacy save or weird state)
-            if(!id) {
-                 if(STATE.yesCount >= 101) id=1;
-                 else if(STATE.yesCount === 51 && STATE.noCount === 50) id=2;
-                 else if(STATE.scoreClicked && STATE.yesCount === 100) id=4;
-                 else if(STATE.noCount >= 100) id=3;
-                 else id=1;
-            }
-            if(id === '3_final') id = 3;
-
-            // Theme Configs
-            const themes = {
-                1: { // Pink Romantic
-                    bg: (c) => { 
-                        const g = c.createLinearGradient(0,0,w,h); 
-                        g.addColorStop(0, '#ff9a9e'); g.addColorStop(1, '#fecfef'); 
-                        return g; 
-                    },
-                    border: '#ffffff',
-                    textMain: '#ffffff',
-                    textSub: '#fff0f5',
-                    accent: 'rgba(255,255,255,0.3)',
-                    shadow: '#ff758c',
-                    icon: '💖',
-                    fontTitle: 'Fredoka',
-                    quote: L.share_quotes[1],
-                    title: L.end1_title,
-                    sub: L.end1_sub
-                },
-                2: { // Purple Melancholy
-                    bg: (c) => { 
-                        // Purple requested:
-                        const p = c.createLinearGradient(0,0,w,h);
-                        p.addColorStop(0, '#667eea'); p.addColorStop(1, '#764ba2');
-                        return p; 
-                    },
-                    border: '#e0c3fc',
-                    textMain: '#ffffff',
-                    textSub: '#e0c3fc',
-                    accent: 'rgba(0,0,0,0.2)',
-                    shadow: '#4a00e0',
-                    icon: '💔',
-                    fontTitle: 'Nunito',
-                    quote: L.share_quotes[2],
-                    title: L.end2_title,
-                    sub: L.end2_sub
-                },
-                3: { // Dark Horror Noir
-                    bg: (c) => { 
-                        const g = c.createRadialGradient(w/2, h/3, 50, w/2, h/2, 800);
-                        g.addColorStop(0, '#2c3e50'); g.addColorStop(0.6, '#000000'); 
-                        return g; 
-                    },
-                    border: '#555555',
-                    textMain: '#dcdcdc',
-                    textSub: '#a9a9a9',
-                    accent: 'rgba(255,255,255,0.05)',
-                    shadow: '#000000',
-                    icon: '🕯️', // Lamp/Moon
-                    fontTitle: 'VT323',
-                    quote: L.share_quotes[3],
-                    title: L.end3_title,
-                    sub: L.end3_sub
-                },
-                4: { // Gold Secret Divine
-                    bg: (c) => { 
-                        const g = c.createLinearGradient(0,0,w,h); 
-                        g.addColorStop(0, '#f6d365'); g.addColorStop(0.5, '#fda085'); g.addColorStop(1, '#f6d365');
-                        return g; 
-                    },
-                    border: '#fff8dc',
-                    textMain: '#ffffff',
-                    textSub: '#fffacd',
-                    accent: 'rgba(255,255,255,0.4)',
-                    shadow: '#d4af37',
-                    icon: '👑',
-                    fontTitle: 'Fredoka',
-                    quote: L.share_quotes[4],
-                    title: L.end4_title,
-                    sub: L.end4_sub
-                }
+            const bind = (id, key, isProgress) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                
+                // Remove old listeners to prevent duplication using cloneNode trick is risky with refs, 
+                // but since we hide/show containers, binding once in init is better, or strictly handling here.
+                // We will use a flag on the element or just overwrite onclick.
+                
+                el.onclick = () => {
+                    if (isProgress) {
+                        STATE.roomProgress[key] = true;
+                        updateRoomHUD();
+                        openRoomModal(L[`room_${key}`]);
+                    } else {
+                        // Ambient object
+                        if(DOM.roomTooltip) {
+                            DOM.roomTooltip.innerText = L[`room_${key}`];
+                            DOM.roomTooltip.style.opacity = 1;
+                            setTimeout(()=>DOM.roomTooltip.style.opacity=0, 2000);
+                        }
+                    }
+                };
             };
-
-            const t = themes[id] || themes[1];
-
-            // --- DRAWING ---
             
-            // 1. Background
-            ctx.fillStyle = t.bg(ctx);
-            ctx.fillRect(0,0,w,h);
-
-            // 2. Border
-            ctx.strokeStyle = t.border;
-            ctx.lineWidth = 15;
-            ctx.strokeRect(25, 25, w-50, h-50);
+            // Re-bind is okay here because room objects are static
+            bind('obj-window', 'window', false);
+            bind('obj-lamp', 'lamp', false);
+            bind('obj-tulip', 'tulip', true);
+            bind('obj-letter', 'letter', true);
+            bind('obj-diary', 'diary', true);
             
-            // 3. Inner Box (Glass effect)
-            ctx.fillStyle = t.accent;
-            ctx.fillRect(50, 50, w-100, h-100);
-            
-            // Setup Text
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            
-            // 4. Icon
-            ctx.font = '120px serif'; // Emoji
-            ctx.shadowColor = t.shadow;
-            ctx.shadowBlur = 30;
-            ctx.fillText(t.icon, w/2, 180);
-            ctx.shadowBlur = 0; // Reset
-
-            // 5. Title
-            ctx.fillStyle = t.textMain;
-            ctx.font = `bold 60px ${t.fontTitle}`;
-            ctx.shadowColor = 'rgba(0,0,0,0.3)';
-            ctx.shadowBlur = 10;
-            ctx.fillText(t.title, w/2, 320);
-            ctx.shadowBlur = 0;
-
-            // 6. Subtitle
-            ctx.fillStyle = t.textSub;
-            ctx.font = '30px Nunito';
-            ctx.fillText(t.sub, w/2, 380);
-
-            // 7. Stats Box
-            const boxY = 450;
-            const boxH = 200;
-            ctx.fillStyle = 'rgba(0,0,0,0.2)';
-            if(id === 3) ctx.fillStyle = 'rgba(255,255,255,0.05)'; // lighter for dark theme
-            if(id === 4) ctx.fillStyle = 'rgba(255,255,255,0.3)'; // brighter for gold
-            
-            // Manual Round Rect for compat
-            ctx.beginPath();
-            const r = 20, x=100, y=boxY, bw=w-200, bh=boxH;
-            ctx.moveTo(x+r, y);
-            ctx.arcTo(x+bw, y, x+bw, y+bh, r);
-            ctx.arcTo(x+bw, y+bh, x, y+bh, r);
-            ctx.arcTo(x, y+bh, x, y, r);
-            ctx.arcTo(x, y, x+bw, y, r);
-            ctx.closePath();
-            ctx.fill();
-            
-            ctx.fillStyle = t.textMain;
-            ctx.font = 'bold 50px VT323'; // Stats always look cool in pixel font or monospace
-            ctx.fillText(`YES: ${STATE.yesCount}`, w/2, boxY + 60);
-            ctx.fillText(`NO:  ${STATE.noCount}`, w/2, boxY + 140);
-            
-            // 8. Quote
-            ctx.fillStyle = t.textSub;
-            ctx.font = 'italic 28px Noto Sans';
-            ctx.fillText(`"${t.quote}"`, w/2, 720);
-
-            // 9. Footer
-            ctx.font = '20px Nunito';
-            ctx.fillStyle = t.textSub;
-            ctx.globalAlpha = 0.8;
-            ctx.fillText(new Date().toLocaleDateString(), w/2, 820);
-            ctx.fillText("Valentine's Game 2025", w/2, 850);
-            ctx.globalAlpha = 1.0;
-
-            // Output
-            const img = new Image();
-            img.src = shareCardCanvas.toDataURL('image/png');
-            DOM.sharePreview.innerHTML = "";
-            DOM.sharePreview.appendChild(img);
-        }
-
-        function downloadShareCard() {
-            const link = document.createElement('a');
-            link.download = `Valentine_Result_${Date.now()}.png`;
-            link.href = shareCardCanvas.toDataURL('image/png');
-            link.click();
-        }
-
-        function copyShareText() {
-            const L = getLang();
-            let id = STATE.currentEnding;
-            // Fallback logic if ID is missing
-            if(!id) {
-                 if(STATE.yesCount >= 101) id=1;
-                 else if(STATE.yesCount === 51 && STATE.noCount === 50) id=2;
-                 else if(STATE.scoreClicked && STATE.yesCount === 100) id=4;
-                 else if(STATE.noCount >= 100) id=3;
-                 else id=1;
-            }
-            if(id === '3_final') id = 3;
-
-            let title = "";
-            if(id===1) title = L.end1_title;
-            else if(id===2) title = L.end2_title;
-            else if(id===3) title = L.end3_title;
-            else if(id===4) title = L.end4_title;
-
-            const quote = L.share_quotes[id] || "Happy Valentine's!";
-            
-            // Generate formatted text
-            const txt = `${title} 💘\nScore: ${STATE.yesCount} YES / ${STATE.noCount} NO\n"${quote}"\n#ValentineGame`;
-            
-            navigator.clipboard.writeText(txt).then(() => {
-                const b = DOM.btnShareCopy;
-                const og = b.innerText;
-                b.innerText = "Copied! ✅";
-                setTimeout(() => b.innerText = og, 2000);
-            }).catch(err => {
-                console.error("Copy failed", err);
-                alert("Could not copy text. Please copy manually!");
+            // Extras
+            ['clock','mirror','frame','chair','carpet','pillow','blanket'].forEach(k => {
+                const el = document.getElementById('obj-'+k);
+                if(el) el.onclick = () => {
+                    DOM.roomTooltip.innerText = "It's cold...";
+                    DOM.roomTooltip.style.opacity = 1;
+                    setTimeout(()=>DOM.roomTooltip.style.opacity=0, 2000);
+                };
             });
         }
 
+        function updateRoomHUD() {
+            const count = (STATE.roomProgress.tulip?1:0) + (STATE.roomProgress.letter?1:0) + (STATE.roomProgress.diary?1:0);
+            DOM.roomProgress.innerText = `Room: ${count}/3`;
+        }
+
+        function openRoomModal(content) {
+            let lines = Array.isArray(content) ? content : [content];
+            let idx = 0;
+            
+            DOM.roomModal.style.display = 'block';
+            DOM.roomCloseBtn.style.display = 'none';
+            DOM.roomModalText.innerText = "";
+            
+            function next() {
+                if (idx >= lines.length) {
+                    DOM.roomCloseBtn.style.display = 'inline-block';
+                    return;
+                }
+                DOM.roomModalText.innerText = lines[idx];
+                idx++;
+                // Simple timeout for read pace if auto, but we prefer click to advance?
+                // For simplicity, let's just show text. If array, user clicks modal to advance.
+            }
+            
+            next();
+            
+            DOM.roomModal.onclick = (e) => {
+                if (e.target !== DOM.roomCloseBtn) next();
+            };
+        }
+
+        function checkRoomCompletion() {
+            if (STATE.roomProgress.tulip && STATE.roomProgress.letter && STATE.roomProgress.diary) {
+                setTimeout(() => {
+                    goTo('ENDING', { endingId: 3 });
+                }, 1000);
+            }
+        }
+
+        function runSecretSequence() {
+            const L = getLang();
+            DOM.secretYesBtn.style.display = 'none';
+            let i = 0;
+            
+            function showLine() {
+                if (STATE.screen !== 'SECRET') return;
+                
+                if (i < L.secret_q.length) {
+                    DOM.secretText.innerText = L.secret_q[i];
+                    DOM.secretText.style.opacity = 0;
+                    setTimeout(() => DOM.secretText.style.opacity = 1, 100);
+                    i++;
+                    setTimeout(showLine, 2500);
+                } else {
+                    DOM.secretYesBtn.style.display = 'block';
+                    DOM.secretYesBtn.innerText = L.yesBtn;
+                }
+            }
+            showLine();
+        }
+
+        /* --- 8. EVENTS & AUDIO --- */
+        function bindEvents() {
+            // Start Screen
+            DOM.startBtn.onclick = () => {
+                SFX.ctx.resume();
+                goTo('LOBBY');
+            };
+
+            // Lobby
+            document.getElementById('lobby-btn-yes').onclick = () => {
+                SFX.playYes();
+                goTo('GAME');
+            };
+            document.getElementById('lobby-btn-no').onclick = () => {
+                SFX.playNo();
+                const L = getLang();
+                document.getElementById('lobby-msg').innerText = L.lobbyNo[Math.floor(Math.random()*L.lobbyNo.length)];
+            };
+
+            // Game
+            DOM.yesBtn.onclick = handleYes;
+            DOM.noBtn.onclick = handleNo;
+            DOM.lblYesTrigger.onclick = () => {
+                if (!STATE.scoreClicked) {
+                    STATE.scoreClicked = true;
+                    DOM.lblYesTrigger.style.color = "gold";
+                    DOM.lblYesTrigger.style.textShadow = "0 0 5px gold";
+                    showTooltip("✨ Secret Found!");
+                }
+            };
+
+            // Ending Actions
+            DOM.endReplayBtn.onclick = () => {
+                goTo('GAME');
+            };
+            DOM.endLobbyBtn.onclick = () => {
+                goTo('LOBBY');
+            };
+            DOM.endShareBtn.onclick = openShareModal;
+
+            // Room Actions
+            DOM.roomCloseBtn.onclick = () => {
+                DOM.roomModal.style.display = 'none';
+                checkRoomCompletion();
+            };
+            document.getElementById('btn-room-exit').onclick = () => {
+                goTo('LOBBY');
+            };
+
+            // Secret Actions
+            DOM.secretYesBtn.onclick = () => {
+                goTo('ENDING', { endingId: 4 });
+            };
+
+            // Settings
+            document.getElementById('settings-btn').onclick = () => DOM.settingsModal.classList.remove('hidden');
+            document.getElementById('close-settings').onclick = () => DOM.settingsModal.classList.add('hidden');
+            document.getElementById('toggle-lobby-music').onchange = (e) => { SETTINGS.lobbyMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
+            document.getElementById('toggle-game-music').onchange = (e) => { SETTINGS.gameMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
+            document.getElementById('lang-select').onchange = (e) => { SETTINGS.lang = e.target.value; saveSettings(); updateTexts(); };
+            document.getElementById('reset-btn').onclick = () => { if(confirm(getLang().reset+"?")) goTo('LOBBY'); };
+
+            // Share
+            document.getElementById('btn-share-close').onclick = () => DOM.shareModal.classList.add('hidden');
+            document.getElementById('btn-share-download').onclick = downloadShareCard;
+            document.getElementById('btn-share-copy').onclick = copyShareText;
+        }
+
+        const AudioCtrl = {
+            init() {
+                DOM.audioLobby.volume = 0;
+                DOM.audioGame.volume = 0;
+                DOM.audioEnd.volume = 0;
+                DOM.audioLobby.src = "music/lobby.mp3?v=2";
+                DOM.audioGame.src = "music/game.mp3?v=2";
+            },
+            playLobby() {
+                this.stopAll(false);
+                if (SETTINGS.lobbyMusic) this.fadeIn(DOM.audioLobby);
+            },
+            playGameplay() {
+                this.stopAll(false);
+                if (SETTINGS.gameMusic) this.fadeIn(DOM.audioGame);
+            },
+            playEnding(id) {
+                this.stopAll(false);
+                if (SETTINGS.gameMusic) {
+                    let src = "";
+                    if (id === 1) src = "music/victory_love.mp3";
+                    if (id === 2) src = "music/ending_bittersweet.mp3";
+                    if (id === 4) src = "music/music_box.mp3";
+                    
+                    if (src && DOM.audioEnd) {
+                        DOM.audioEnd.src = src + "?v=2";
+                        this.fadeIn(DOM.audioEnd);
+                    }
+                }
+            },
+            playRoom() {
+                this.stopAll(false);
+                // Room has ambient hum if implemented, or silence
+            },
+            stopAll(instant = true) {
+                [DOM.audioLobby, DOM.audioGame, DOM.audioEnd].forEach(a => {
+                    if (instant) {
+                        a.pause();
+                        a.currentTime = 0;
+                    } else {
+                        this.fadeOut(a);
+                    }
+                });
+            },
+            fadeIn(audio) {
+                if(!audio) return;
+                audio.volume = 0;
+                audio.play().catch(e => console.warn(e));
+                let vol = 0;
+                const i = setInterval(() => {
+                    vol += 0.05;
+                    if(vol >= 0.5) { vol = 0.5; clearInterval(i); }
+                    audio.volume = vol;
+                }, 100);
+            },
+            fadeOut(audio) {
+                if(!audio) return;
+                let vol = audio.volume;
+                const i = setInterval(() => {
+                    vol -= 0.05;
+                    if(vol <= 0) { vol = 0; audio.pause(); clearInterval(i); }
+                    audio.volume = vol;
+                }, 100);
+            },
+            update() {
+                // Refresh volume based on settings
+                if (!SETTINGS.lobbyMusic && STATE.screen === 'LOBBY') DOM.audioLobby.pause();
+                if (!SETTINGS.gameMusic && STATE.screen === 'GAME') DOM.audioGame.pause();
+            }
+        };
+
+        const SFX = {
+            ctx: new (window.AudioContext || window.webkitAudioContext)(),
+            playTone(f, t) {
+                if(this.ctx.state === 'suspended') this.ctx.resume();
+                const o = this.ctx.createOscillator();
+                const g = this.ctx.createGain();
+                o.type = t; o.frequency.value = f;
+                g.gain.value = 0.1;
+                o.connect(g); g.connect(this.ctx.destination);
+                o.start(); o.stop(this.ctx.currentTime + 0.1);
+            },
+            playYes() { this.playTone(880, 'sine'); },
+            playNo() { this.playTone(150, 'sawtooth'); }
+        };
+
+        /* --- 9. UTILS & VISUALS --- */
         function getLang() { return LANG[SETTINGS.lang] || LANG['en']; }
         
         function updateTexts() {
             const L = getLang();
-            if(DOM.mainTitle) DOM.mainTitle.innerText = L.title;
-            if(DOM.yesBtn) DOM.yesBtn.innerText = L.yesBtn; 
-            if(DOM.noBtn) DOM.noBtn.innerText = L.noBtn;
-            
-            // Replaced setText helper with DOM references
-            if(DOM.lobbyTitle) DOM.lobbyTitle.innerText = L.title;
-            if(DOM.lobbySubtitle) DOM.lobbySubtitle.innerText = L.subtitle;
-            if(DOM.lobbyYes) DOM.lobbyYes.innerText = L.yesBtn;
-            if(DOM.lobbyNo) DOM.lobbyNo.innerText = L.noBtn;
-            if(DOM.stTitle) DOM.stTitle.innerText = L.settings;
-            if(DOM.stLobbyMusic) DOM.stLobbyMusic.innerText = L.lblLobby;
-            if(DOM.stGameMusic) DOM.stGameMusic.innerText = L.lblGame;
-            if(DOM.stLanguage) DOM.stLanguage.innerText = L.lblLang;
-            if(DOM.closeSettingsBtn) DOM.closeSettingsBtn.innerText = L.close;
+            DOM.mainTitle.innerText = L.title;
+            DOM.yesBtn.innerText = L.yesBtn;
+            DOM.noBtn.innerText = L.noBtn;
+            DOM.lobbyTitle.innerText = L.title;
+            DOM.lobbySubtitle.innerText = L.subtitle;
         }
 
         function createParticles() {
-            const container = document.getElementById('particles-container');
-            if(!container) return;
             for(let i=0; i<20; i++) {
                 const p = document.createElement('div');
                 p.className = 'heart-particle';
@@ -1763,12 +1169,12 @@
                 p.style.left = Math.random()*100+'vw';
                 p.style.animationDuration = (Math.random()*5+5)+'s';
                 p.style.fontSize = (Math.random()*20+10)+'px';
-                container.appendChild(p);
+                document.getElementById('particles-container').appendChild(p);
             }
         }
-        
+
         function spawnFloatingHeart(el) {
-            const h = document.createElement('div'); h.innerText="💖"; 
+            const h = document.createElement('div'); h.innerText="💖";
             h.style.position='fixed'; h.style.left=el.getBoundingClientRect().left+'px'; h.style.top=el.getBoundingClientRect().top+'px';
             h.style.transition='1s'; h.style.zIndex='100'; document.body.appendChild(h);
             requestAnimationFrame(()=>{ h.style.transform='translate(0,-100px)'; h.style.opacity='0'; });
@@ -1783,67 +1189,68 @@
         }
 
         function startConfetti() {
-            const c=document.getElementById('confetti-canvas');
-            if(!c) return;
-            const x=c.getContext('2d');
-            c.width=window.innerWidth; c.height=window.innerHeight;
-            const p=[]; for(let i=0;i<100;i++) p.push({x:Math.random()*c.width,y:-10,c:['gold','pink','white'][Math.floor(Math.random()*3)],s:Math.random()*5+2});
-            function draw(){ if(STATE.isEnding) { x.clearRect(0,0,c.width,c.height); p.forEach(o=>{x.fillStyle=o.c;x.fillRect(o.x,o.y,o.s,o.s);o.y+=o.s;if(o.y>c.height)o.y=-10}); requestAnimationFrame(draw); } }
+            const c = DOM.confettiCanvas;
+            const ctx = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const p = [];
+            for(let i=0; i<50; i++) p.push({x:Math.random()*c.width, y:-10, s:Math.random()*5+2, c:['gold','pink','white'][Math.floor(Math.random()*3)]});
+            
+            function draw() {
+                if(STATE.screen !== 'ENDING') return;
+                ctx.clearRect(0,0,c.width,c.height);
+                p.forEach(o => {
+                    ctx.fillStyle = o.c; ctx.fillRect(o.x, o.y, o.s, o.s);
+                    o.y += o.s; if(o.y > c.height) o.y = -10;
+                });
+                requestAnimationFrame(draw);
+            }
             draw();
         }
 
-        const EffectGen = {
-            static: () => ({ init: ()=>{} }),
-            wiggle: (i) => ({ init: ()=>{ if(DOM.yesBtn) { DOM.yesBtn.style.position='relative'; let t=0; const l=()=>{ if(STATE.yesCount>15)return; DOM.yesBtn.style.transform=`translate(${Math.sin(t++)*i}px,0)`; requestAnimationFrame(l); }; l(); } } }),
-            run: () => ({ init: ()=>{ if(DOM.yesBtn) { DOM.yesBtn.style.position='absolute'; DOM.yesBtn.onmouseenter=()=>{ DOM.yesBtn.style.left=Math.random()*80+'%'; DOM.yesBtn.style.top=Math.random()*80+'%'; } } } }),
-            clone: () => { 
-                const container = document.getElementById('fake-container');
-                if(!container || !DOM.yesBtn) return;
-                for(let i=0;i<5;i++){ const b=DOM.yesBtn.cloneNode(true); b.className='game-btn btn-yes fake-btn'; b.style.left=Math.random()*80+'%'; b.style.top=Math.random()*80+'%'; b.onclick=()=>{SFX.playNo();handleNo(null);b.remove()}; container.appendChild(b); } 
-            }
-        };
-
-        function generateStages() {
-            STATE.effects = [];
-            for(let i=0; i<102; i++) {
-                if(i<10) STATE.effects.push(EffectGen.static());
-                else if(i<20) STATE.effects.push(EffectGen.wiggle(2));
-                else if(i<30) STATE.effects.push(EffectGen.run());
-                else if(i<40) STATE.effects.push({init:()=>{ if(DOM.yesBtn) DOM.yesBtn.style.opacity=0.5 }});
-                else if(i<50) STATE.effects.push({init:()=>EffectGen.clone()});
-                else STATE.effects.push(EffectGen.static());
-            }
-        }
-
+        /* --- STAGE EFFECTS (Simplified) --- */
         function applyCurrentStage() {
-            // Aggressive reset for stability
-            if(DOM.yesBtn) {
-                DOM.yesBtn.style.position='relative'; 
-                DOM.yesBtn.style.left='auto'; 
-                DOM.yesBtn.style.top='auto'; 
-                DOM.yesBtn.style.opacity='1';
-                DOM.yesBtn.style.transform='none';
-                DOM.yesBtn.onmouseenter=null;
-            }
-            if(STATE.yesCount >= 100) return; 
-            
-            const container = document.getElementById('fake-container');
-            if(container) container.innerHTML = "";
-            const ef = STATE.effects[STATE.yesCount];
-            if(ef && ef.init) ef.init();
+            // Very simple visual effects based on progress
+            if (STATE.yes > 10 && STATE.yes < 20) DOM.yesBtn.style.transform = `rotate(${Math.random()*10-5}deg)`;
+            else DOM.yesBtn.style.transform = 'none';
         }
+        
+        function generateStages() { STATE.effects = []; } // Placeholder if needed
 
+        /* --- SETTINGS SAVE --- */
         function saveSettings() { localStorage.setItem(CONFIG.SETTINGS_KEY, JSON.stringify(SETTINGS)); }
         function loadSettings() { 
             try {
-                const s=JSON.parse(localStorage.getItem(CONFIG.SETTINGS_KEY)); 
-                if(s) SETTINGS=s; 
-            } catch(e) { console.error("Settings corrupted"); }
+                const s = JSON.parse(localStorage.getItem(CONFIG.SETTINGS_KEY));
+                if(s) SETTINGS = s;
+                // Update toggle UI
+                document.getElementById('toggle-lobby-music').checked = SETTINGS.lobbyMusic;
+                document.getElementById('toggle-game-music').checked = SETTINGS.gameMusic;
+                document.getElementById('lang-select').value = SETTINGS.lang;
+            } catch(e) {} 
         }
 
-        if(document.readyState !== 'loading') initGame();
-        else document.addEventListener('DOMContentLoaded', initGame);
+        /* --- SHARE CARD --- */
+        function openShareModal() {
+            DOM.shareModal.classList.remove('hidden');
+            DOM.sharePreview.innerHTML = "Generating...";
+            setTimeout(() => {
+                const canvas = document.createElement('canvas');
+                canvas.width = 400; canvas.height = 600;
+                const ctx = canvas.getContext('2d');
+                ctx.fillStyle = 'white'; ctx.fillRect(0,0,400,600);
+                ctx.fillStyle = '#ff758c'; ctx.font = '30px Fredoka'; ctx.fillText('My Valentine', 100, 100);
+                ctx.fillStyle = 'black'; ctx.font = '20px Nunito';
+                ctx.fillText(`YES: ${STATE.yes}`, 100, 200);
+                ctx.fillText(`NO: ${STATE.no}`, 100, 250);
+                const img = new Image(); img.src = canvas.toDataURL();
+                DOM.sharePreview.innerHTML = ""; DOM.sharePreview.appendChild(img);
+            }, 100);
+        }
+        function downloadShareCard() { alert("Download feature placeholder"); }
+        function copyShareText() { navigator.clipboard.writeText(`Valentine Game Result: ${STATE.yes} YES - ${STATE.no} NO`); }
 
+        // BOOT
+        document.addEventListener('DOMContentLoaded', initGame);
     </script>
 </body>
 </html>
