@@ -514,24 +514,23 @@
         /* --- CONFIG & STATE --- */
         const CONFIG = {
             YES_GOAL: 101,
-            NO_GOAL: 100
+            NO_GOAL: 100,
+            SETTINGS_KEY: 'val_settings_mega_v2'
         };
 
         let SETTINGS = { lobbyMusic: true, gameMusic: true, lang: 'en' };
 
-        // MERGED STATE - CLEAN STATE MACHINE
+        // CLEAN STATE MACHINE
         const STATE = {
-            mode: 'start', // 'start' | 'lobby' | 'gameplay' | 'ending' | 'room'
+            mode: 'start', // 'start' | 'lobby' | 'gameplay' | 'ending' | 'room' | 'secret'
             yesCount: 0,
             noCount: 0,
-            startTime: null,
             scoreClicked: false, 
             isEnding: false,
             currentEnding: 0, 
             usingSynth: false,
             effects: [],
-            roomProgress: { tulip: false, letter: false, diary: false },
-            ignoreEndingCheck: false 
+            roomProgress: { tulip: false, letter: false, diary: false }
         };
 
         /* --- MODAL STATE --- */
@@ -936,23 +935,21 @@
             },
             
             update() {
-                const isStartOverlay = DOM.startOverlay && !DOM.startOverlay.classList.contains('hidden');
-
                 // STATE A: Start Overlay Visible -> Silence
-                if(isStartOverlay) {
+                if(STATE.mode === 'start') {
                     this.stopAll();
                     return;
                 }
 
                 // STATE D: Ending Active -> Ending Music Only
-                if(STATE.isEnding) {
+                if(STATE.mode === 'ending' || STATE.mode === 'room' || STATE.mode === 'secret') {
                     this.fadeOut(DOM.audioLobby);
                     this.fadeOut(DOM.audioGame);
                     SynthMusic.stop();
                     // Ending music is triggered once via playEnding(), we don't restart it here
                     // However, if we are in Ending 3, ambience might be running. 
                     // We don't want to stop it here repeatedly.
-                    if(!SETTINGS.gameMusic && !STATE.roomProgress) this.fadeOut(DOM.audioEnd);
+                    if(!SETTINGS.gameMusic && STATE.mode !== 'room') this.fadeOut(DOM.audioEnd);
                     return;
                 }
 
@@ -979,14 +976,16 @@
                 }
 
                 // STATE C: Gameplay Active -> Game Music
-                this.fadeOut(DOM.audioLobby);
-                this.fadeOut(DOM.audioEnd);
-                SynthMusic.stop(); 
+                if(STATE.mode === 'gameplay') {
+                    this.fadeOut(DOM.audioLobby);
+                    this.fadeOut(DOM.audioEnd);
+                    SynthMusic.stop(); 
 
-                if(SETTINGS.gameMusic) {
-                    this.fadeIn(DOM.audioGame, 0.4);
-                } else {
-                    this.fadeOut(DOM.audioGame);
+                    if(SETTINGS.gameMusic) {
+                        this.fadeIn(DOM.audioGame, 0.4);
+                    } else {
+                        this.fadeOut(DOM.audioGame);
+                    }
                 }
             }
         };
@@ -1015,8 +1014,7 @@
         function initGame() {
             try {
                 cacheDOM(); 
-                // loadSettings(); // DISABLED: Removed persistence
-                // loadGame(); // DISABLED: Removed persistence
+                loadSettings();
                 generateStages();
                 AudioCtrl.init().catch(err => console.warn("Audio Init Warning:", err));
                 
@@ -1027,22 +1025,14 @@
                 updateTexts();
                 updateStatsUI();
 
-                // Set initial mode
-                STATE.mode = 'start';
-                if (DOM.startOverlay) DOM.startOverlay.classList.remove('hidden');
+                // INITIAL STATE
+                setMode('start');
 
                 // Bind Events using DOM cache
                 if(DOM.startBtn) DOM.startBtn.onclick = () => {
                     console.log("Start Button Clicked");
                     SFX.ctx.resume();
-                    
-                    if(DOM.startOverlay) {
-                        DOM.startOverlay.classList.add('hidden');
-                        DOM.startOverlay.classList.remove('visible');
-                    }
-                    
-                    resetProgress();
-                    showLobby();
+                    goToLobby();
                 };
 
                 if(DOM.lobbyYes) DOM.lobbyYes.onclick = () => {
@@ -1071,27 +1061,23 @@
                 };
                 
                 if(DOM.endReplayBtn) DOM.endReplayBtn.onclick = () => {
-                    resetProgress();
-                    showLobby();
-                    startGameplay();
+                    resetProgressAndStartGameplay();
                 };
                 if(DOM.endLobbyBtn) DOM.endLobbyBtn.onclick = () => {
-                    resetProgress();
-                    showLobby();
+                    goToLobby();
                 };
                 if(DOM.endShareBtn) DOM.endShareBtn.onclick = openShareModal;
 
                 if(DOM.settingsBtn) DOM.settingsBtn.onclick = () => DOM.settingsModal && DOM.settingsModal.classList.remove('hidden');
                 if(DOM.closeSettingsBtn) DOM.closeSettingsBtn.onclick = () => DOM.settingsModal && DOM.settingsModal.classList.add('hidden');
                 
-                if(DOM.toggleLobby) DOM.toggleLobby.onchange = (e) => { SETTINGS.lobbyMusic = e.target.checked; AudioCtrl.update(); };
-                if(DOM.toggleGame) DOM.toggleGame.onchange = (e) => { SETTINGS.gameMusic = e.target.checked; AudioCtrl.update(); };
-                if(DOM.langSelect) DOM.langSelect.onchange = (e) => { SETTINGS.lang = e.target.value; updateTexts(); };
+                if(DOM.toggleLobby) DOM.toggleLobby.onchange = (e) => { SETTINGS.lobbyMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
+                if(DOM.toggleGame) DOM.toggleGame.onchange = (e) => { SETTINGS.gameMusic = e.target.checked; saveSettings(); AudioCtrl.update(); };
+                if(DOM.langSelect) DOM.langSelect.onchange = (e) => { SETTINGS.lang = e.target.value; saveSettings(); updateTexts(); };
                 
                 if(DOM.resetBtn) DOM.resetBtn.onclick = () => { 
                     if(confirm(getLang().reset + "?")) {
-                        resetProgress();
-                        showLobby();
+                        goToLobby();
                     }
                 };
 
@@ -1108,18 +1094,73 @@
             }
         }
 
-        // --- CORE FUNCTIONS ---
+        // --- CORE STATE FUNCTIONS ---
+        
+        function setMode(newMode) {
+            console.log(`State Transition: ${STATE.mode} -> ${newMode}`);
+            STATE.mode = newMode;
+            
+            // 1. Hide ALL Overlays first
+            const overlays = [DOM.startOverlay, DOM.lobbyScreen, DOM.endingOverlay, DOM.roomScene, DOM.secretModal];
+            overlays.forEach(el => {
+                if(el) {
+                    el.classList.add('hidden');
+                    el.classList.remove('visible');
+                    el.style.pointerEvents = 'none'; // Critical for blocking clicks
+                }
+            });
+
+            // 2. Handle Game View Opacity/Interaction
+            if(DOM.gameView) {
+                if (newMode === 'gameplay' || newMode === 'lobby') {
+                    DOM.gameView.style.opacity = '1';
+                    DOM.gameView.style.pointerEvents = 'auto';
+                } else {
+                    DOM.gameView.style.opacity = '0';
+                    DOM.gameView.style.pointerEvents = 'none';
+                }
+            }
+            
+            // 3. Show Specific Overlay
+            if(newMode === 'start' && DOM.startOverlay) {
+                DOM.startOverlay.classList.remove('hidden');
+                DOM.startOverlay.classList.add('visible');
+                DOM.startOverlay.style.pointerEvents = 'auto';
+            }
+            else if(newMode === 'lobby' && DOM.lobbyScreen) {
+                DOM.lobbyScreen.classList.remove('hidden');
+                DOM.lobbyScreen.classList.add('visible');
+                DOM.lobbyScreen.style.pointerEvents = 'auto';
+            }
+            else if(newMode === 'ending' && DOM.endingOverlay) {
+                DOM.endingOverlay.classList.remove('hidden');
+                DOM.endingOverlay.classList.add('visible');
+                DOM.endingOverlay.style.pointerEvents = 'auto';
+            }
+            else if(newMode === 'room' && DOM.roomScene) {
+                DOM.roomScene.classList.remove('hidden');
+                DOM.roomScene.classList.add('visible');
+                DOM.roomScene.style.pointerEvents = 'auto';
+            }
+            else if(newMode === 'secret' && DOM.secretModal) {
+                DOM.secretModal.classList.remove('hidden');
+                DOM.secretModal.classList.add('visible');
+                DOM.secretModal.style.pointerEvents = 'auto';
+            }
+
+            // 4. Update Audio
+            AudioCtrl.update();
+        }
 
         function resetProgress() {
-            console.log("Resetting Progress");
             STATE.yesCount = 0;
             STATE.noCount = 0;
             STATE.scoreClicked = false;
+            STATE.isEnding = false;
+            STATE.currentEnding = 0;
             STATE.roomProgress = { tulip: false, letter: false, diary: false };
-            STATE.effects = [];
-            generateStages();
-
-            // UI Reset
+            
+            // Reset UI
             updateStatsUI();
             if(DOM.dialogue) DOM.dialogue.innerText = getLang().dialogues[0] || "Please say yes! 🥺";
             const container = document.getElementById('fake-container');
@@ -1127,71 +1168,26 @@
             applyCurrentStage();
         }
 
-        function showLobby() {
-            console.log("Showing Lobby");
-            STATE.mode = 'lobby';
-            STATE.isEnding = false;
-            STATE.currentEnding = 0;
-
-            // Hide Endings/Room
-            if(DOM.endingOverlay) {
-                DOM.endingOverlay.classList.remove('visible');
-                DOM.endingOverlay.style.pointerEvents = 'none';
-                DOM.endingOverlay.className = ''; 
-                DOM.endingOverlay.id = 'ending-overlay';
-            }
-            if(DOM.roomScene) {
-                DOM.roomScene.classList.remove('visible');
-                DOM.roomScene.style.opacity = 0;
-            }
-            if(DOM.secretModal) DOM.secretModal.classList.remove('visible');
-
-            // Show Lobby
-            if(DOM.lobbyScreen) {
-                DOM.lobbyScreen.classList.remove('hidden');
-                DOM.lobbyScreen.classList.add('visible');
-            }
-
-            // Game View: Visible but behind
-            if(DOM.gameView) {
-                DOM.gameView.style.opacity = '1';
-                DOM.gameView.style.pointerEvents = 'auto';
-            }
-
-            // Enable Buttons just in case
-            if(DOM.yesBtn) DOM.yesBtn.disabled = false;
-            if(DOM.noBtn) DOM.noBtn.disabled = false;
-
-            AudioCtrl.playLobby();
+        function goToLobby() {
+            resetProgress();
+            setMode('lobby');
         }
 
         function startGameplay() {
-            console.log("Starting Gameplay");
-            STATE.mode = 'gameplay';
-            STATE.isEnding = false;
-            
-            // Hide Lobby
-            if(DOM.lobbyScreen) {
-                DOM.lobbyScreen.classList.remove('visible');
-                DOM.lobbyScreen.classList.add('hidden');
-            }
-
-            // Ensure Game View active
-            if(DOM.gameView) {
-                DOM.gameView.style.opacity = '1';
-                DOM.gameView.style.pointerEvents = 'auto';
-            }
-
-            AudioCtrl.playGame();
+            resetProgress();
+            setMode('gameplay');
+        }
+        
+        function resetProgressAndStartGameplay() {
+            resetProgress();
+            setMode('gameplay');
         }
 
         // --- HANDLERS ---
 
         function handleYes(e) {
             if(e) e.preventDefault();
-            console.log("Handle YES. Mode:", STATE.mode);
             
-            // STRICT MODE GUARD
             if(STATE.mode !== 'gameplay') return;
             
             STATE.yesCount++;
@@ -1208,9 +1204,7 @@
 
         function handleNo(e) {
             if(e) e.preventDefault();
-            console.log("Handle NO. Mode:", STATE.mode);
             
-            // STRICT MODE GUARD
             if(STATE.mode !== 'gameplay') return;
 
             STATE.noCount++;
@@ -1262,21 +1256,16 @@
         function enterEnding(id) {
             console.log("Entering Ending:", id);
             STATE.isEnding = true;
-            STATE.mode = (id === 3) ? 'room' : 'ending';
             STATE.currentEnding = id; 
-            
-            if(DOM.gameView) {
-                DOM.gameView.style.opacity = '0';
-                DOM.gameView.style.pointerEvents = 'none';
-            }
-            
+
             if(id === 3) {
+                setMode('room');
                 AudioCtrl.playEnding(3);
                 setTimeout(() => {
-                    if(DOM.roomScene) DOM.roomScene.classList.add('visible');
                     initRoomScene();
-                }, 1000);
+                }, 500);
             } else {
+                setMode('ending');
                 AudioCtrl.playEnding(id);
                 renderEndingOverlay(id);
             }
@@ -1331,7 +1320,6 @@
             if(DOM.endingOverlay) {
                 DOM.endingOverlay.className = ""; 
                 DOM.endingOverlay.classList.add(theme);
-                DOM.endingOverlay.classList.add('visible');
             }
             if(DOM.endTitle) DOM.endTitle.innerText = title;
             if(DOM.endSub) DOM.endSub.innerText = sub;
@@ -1394,8 +1382,7 @@
             // Exit Button Logic
             if(DOM.roomExitBtn) {
                 // Exit Room -> Go back to lobby (resets progress automatically)
-                resetProgress();
-                showLobby();
+                goToLobby();
             }
         }
         
@@ -1447,29 +1434,25 @@
         function checkRoomComplete() {
             if(STATE.roomProgress.tulip && STATE.roomProgress.letter && STATE.roomProgress.diary) {
                 setTimeout(() => {
-                    if(DOM.roomScene) {
-                        DOM.roomScene.style.opacity = 0;
-                        setTimeout(() => {
-                            DOM.roomScene.classList.remove('visible');
-                            AudioCtrl.stopRoomAmbience(); // Stop the hum when leaving room
-                            renderEndingOverlay('3_final');
-                            STATE.currentEnding = '3_final';
-                            STATE.mode = 'ending'; // Ensure mode update
-                        }, 1500);
-                    }
+                     AudioCtrl.stopRoomAmbience(); 
+                     renderEndingOverlay('3_final');
+                     setMode('ending');
                 }, 500);
             }
         }
 
         function triggerSecretModal() {
             if (STATE.isEnding) return;
-            STATE.isEnding = true; 
-            STATE.mode = 'ending';
+            setMode('secret');
+            
             const L = getLang();
-            if(DOM.secretModal) DOM.secretModal.classList.add('visible');
             if(DOM.secretYesBtn) DOM.secretYesBtn.style.display = 'none';
+            
             let i = 0;
             const seq = () => {
+                // Only run if still in secret mode
+                if (STATE.mode !== 'secret') return; 
+
                 if(i < L.secret_q.length) {
                     if(DOM.secretText) {
                         DOM.secretText.innerText = L.secret_q[i++];
@@ -1485,8 +1468,8 @@
                 }
             };
             seq();
+            
             if(DOM.secretYesBtn) DOM.secretYesBtn.onclick = () => {
-                if(DOM.secretModal) DOM.secretModal.classList.remove('visible');
                 enterEnding(4);
             };
         }
@@ -1497,7 +1480,13 @@
             const el = DOM.endText;
             if(!el) return;
             el.innerText = "";
+            
+            if(typeTimer) clearTimeout(typeTimer);
+
             function type() {
+                // Stop if we left ending mode
+                if (STATE.mode !== 'ending') return;
+
                 if(l >= lines.length) return;
                 el.innerText = lines[l].substring(0, c);
                 c++;
@@ -1799,7 +1788,7 @@
             const x=c.getContext('2d');
             c.width=window.innerWidth; c.height=window.innerHeight;
             const p=[]; for(let i=0;i<100;i++) p.push({x:Math.random()*c.width,y:-10,c:['gold','pink','white'][Math.floor(Math.random()*3)],s:Math.random()*5+2});
-            function draw(){ if(!STATE.isEnding) return; x.clearRect(0,0,c.width,c.height); p.forEach(o=>{x.fillStyle=o.c;x.fillRect(o.x,o.y,o.s,o.s);o.y+=o.s;if(o.y>c.height)o.y=-10}); requestAnimationFrame(draw); }
+            function draw(){ if(STATE.isEnding) { x.clearRect(0,0,c.width,c.height); p.forEach(o=>{x.fillStyle=o.c;x.fillRect(o.x,o.y,o.s,o.s);o.y+=o.s;if(o.y>c.height)o.y=-10}); requestAnimationFrame(draw); } }
             draw();
         }
 
@@ -1842,6 +1831,14 @@
             if(container) container.innerHTML = "";
             const ef = STATE.effects[STATE.yesCount];
             if(ef && ef.init) ef.init();
+        }
+
+        function saveSettings() { localStorage.setItem(CONFIG.SETTINGS_KEY, JSON.stringify(SETTINGS)); }
+        function loadSettings() { 
+            try {
+                const s=JSON.parse(localStorage.getItem(CONFIG.SETTINGS_KEY)); 
+                if(s) SETTINGS=s; 
+            } catch(e) { console.error("Settings corrupted"); }
         }
 
         if(document.readyState !== 'loading') initGame();
