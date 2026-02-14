@@ -1493,7 +1493,7 @@
             DOM.roomBgLayer.style.opacity = '1';
             
             // Check if audio needs strict play
-            AudioCtrl.stopAll(false);
+            // AudioCtrl.stopAll(false); // Let sync handle it now
             
             // Play Intro Text
             const L = getLang();
@@ -1865,238 +1865,216 @@
 
         /* --- 10. AUDIO & SFX --- */
         
-        const MUSIC_CONFIG = {
-            lobby: ["lobby1.mp3", "lobby2.mp3"],
-            gameplay: ["gameplay1.mp3", "gameplay2.mp3", "gameplay3.mp3", "gameplay4.mp3", "gameplay5.mp3", "gameplay6.mp3"],
-            endings: {
-                1: ["ending1_true_love1.mp3", "ending1_true_love2.mp3"],
-                2: ["ending2_hesitant_heart1.mp3", "ending2_hesitant_heart2.mp3"],
-                3: ["ending3_empty_room1.mp3", "ending3_empty_room2.mp3"],
-                4: ["ending4_secret_yes1.mp3", "ending4_secret_yes2.mp3"]
-            }
+        const MUSIC_POOLS = {
+            lobby: [
+                "music/lobby1.mp3",
+                "music/lobby2.mp3"
+            ],
+            gameplay: [
+                "music/gameplay1.mp3", "music/gameplay2.mp3", "music/gameplay3.mp3",
+                "music/gameplay4.mp3", "music/gameplay5.mp3", "music/gameplay6.mp3"
+            ],
+            ending1: [
+                "music/ending1_true_love1.mp3", "music/ending1_true_love2.mp3"
+            ],
+            ending2: [
+                "music/ending2_hesitant_heart1.mp3", "music/ending2_hesitant_heart2.mp3"
+            ],
+            ending3: [
+                "music/ending3_empty_room1.mp3", "music/ending3_empty_room2.mp3"
+            ],
+            ending4: [
+                "music/ending4_secret_yes1.mp3", "music/ending4_secret_yes2.mp3"
+            ]
         };
 
         const AudioCtrl = {
-            currentMode: null,
+            audioUnlocked: false,
+            currentPool: null,
             fadeIntervals: new Map(),
-            hasInteracted: false, // Gesture Flag
-            // Track history to avoid repeats
-            history: {
+            lastTracks: {
                 lobby: null,
                 gameplay: null,
-                ending: {}
+                ending1: null, ending2: null, ending3: null, ending4: null
             },
-
-            // Cache busting helper
-            getPath(filename) {
-                return `music/${filename}?v=2`;
-            },
-
+            
             init() {
-                // Set initial volumes but don't play yet
-                if(DOM.audioLobby) DOM.audioLobby.volume = 0.35;
-                if(DOM.audioGame) DOM.audioGame.volume = 0.35;
-                if(DOM.audioEnd) DOM.audioEnd.volume = 0.45; // Default ending vol
-                
-                // Error handling
-                const logError = (e) => console.warn("Audio Load Error:", e);
-                DOM.audioLobby.onerror = logError;
-                DOM.audioGame.onerror = logError;
-                DOM.audioEnd.onerror = logError;
+                // Initial volume setup
+                if(DOM.audioLobby) DOM.audioLobby.volume = 0;
+                if(DOM.audioGame) DOM.audioGame.volume = 0;
+                if(DOM.audioEnd) DOM.audioEnd.volume = 0;
             },
 
             initUserGesture() {
-                if (this.hasInteracted) return;
-                this.hasInteracted = true;
-                
-                // Wake up AudioContext if suspended
+                if (this.audioUnlocked) return;
+                this.audioUnlocked = true;
                 if (SFX.ctx && SFX.ctx.state === 'suspended') {
                     SFX.ctx.resume().catch(e => console.log("SFX Context resume failed:", e));
                 }
+                // Trigger sync to start pending music
+                this.sync(); 
             },
-            
-            getRandomTrack(listName, endingId = null) {
-                let list = [];
-                // Normalize endingId
-                let lookupId = endingId;
-                if(lookupId === '3_final') lookupId = 3;
 
-                if(listName === 'lobby') list = MUSIC_CONFIG.lobby;
-                else if(listName === 'gameplay') list = MUSIC_CONFIG.gameplay;
-                else if(listName === 'ending') list = MUSIC_CONFIG.endings[lookupId] || MUSIC_CONFIG.endings[1];
+            // 2) Random Track Selection Rule
+            pickRandomTrack(poolKey) {
+                const list = MUSIC_POOLS[poolKey];
+                if (!list || list.length === 0) return null;
                 
-                if(!list || list.length === 0) return null;
-
-                // Avoid repeat logic
-                let candidates = list;
-                let last = null;
-
-                if(listName === 'lobby') last = this.history.lobby;
-                else if(listName === 'gameplay') last = this.history.gameplay;
-                else if(listName === 'ending') last = this.history.ending[lookupId];
-
-                if(list.length > 1 && last) {
-                    candidates = list.filter(t => t !== last);
-                    // Fallback if filtering removed all options (shouldn't happen with logic above but safe check)
-                    if (candidates.length === 0) candidates = list;
-                }
-
-                const file = candidates[Math.floor(Math.random() * candidates.length)];
-
-                // Update history
-                if(listName === 'lobby') this.history.lobby = file;
-                else if(listName === 'gameplay') this.history.gameplay = file;
-                else if(listName === 'ending') this.history.ending[lookupId] = file;
-
-                return this.getPath(file);
-            },
-
-            async playTrack(el, src, targetVol = null) {
-                if(!src) return;
-                try {
-                    // Avoid reloading if exact same source to prevent stutter
-                    if(el.getAttribute('src') !== src) {
-                        el.src = src;
-                        el.load();
-                    }
-                    if(el.paused) {
-                        // Crucial: Use a promise to catch autoplay policies
-                        const playPromise = el.play();
-                        if(playPromise !== undefined) {
-                            playPromise
-                                .then(() => {
-                                    // Play successful, start fade in
-                                    this.fadeIn(el, targetVol);
-                                })
-                                .catch(error => {
-                                    console.warn("Autoplay prevented or load error (waiting for interaction):", error);
-                                    // Fallback: If blocked, we rely on next gesture to fix it,
-                                    // but we assume initUserGesture() was called correctly on Start.
-                                });
-                        }
-                    }
-                } catch(e) {
-                    console.warn("PlayTrack Error:", e);
-                }
-            },
-            
-            fadeIn(el, targetVol = null) {
-                this.clearFade(el);
-                
-                let maxVol = 0.5;
-                if (targetVol !== null) {
-                    maxVol = targetVol;
-                } else {
-                    if(el === DOM.audioLobby) maxVol = 0.35;
-                    else if(el === DOM.audioGame) maxVol = 0.35;
-                    else if(el === DOM.audioEnd) maxVol = 0.45;
+                let candidate = list[0];
+                if (list.length > 1) {
+                    const last = this.lastTracks[poolKey];
+                    const candidates = list.filter(t => t !== last);
+                    const pool = candidates.length > 0 ? candidates : list;
+                    candidate = pool[Math.floor(Math.random() * pool.length)];
                 }
                 
-                // Ensure we don't jump to 0 if we are already fading
-                if (el.volume === 0 || el.paused) el.volume = 0;
-                
-                const step = maxVol / 10;
-                const interval = setInterval(() => {
-                    if(el.volume + step < maxVol) {
-                        el.volume += step;
-                    } else {
-                        el.volume = maxVol;
-                        clearInterval(interval);
-                        this.fadeIntervals.delete(el);
-                    }
-                }, 30); // 300ms total
-                
-                this.fadeIntervals.set(el, interval);
+                this.lastTracks[poolKey] = candidate;
+                return candidate;
             },
-            
-            fadeOut(el) {
-                if(el.paused) return;
-                this.clearFade(el);
+
+            // 3) Centralized BGM Switching
+            switchBGM(targetEl, poolKey) {
+                // Identify elements to stop
+                const all = [DOM.audioLobby, DOM.audioGame, DOM.audioEnd];
+                const others = all.filter(el => el !== targetEl);
+
+                // Stop others
+                others.forEach(el => this.fadeOutAndStop(el));
+
+                // If we shouldn't play music (settings), stop target too
+                const settingsAllow = (poolKey === 'lobby') ? SETTINGS.lobbyMusic : SETTINGS.gameMusic;
                 
-                const step = el.volume / 10;
-                const interval = setInterval(() => {
-                    if(el.volume - step > 0) {
+                if (!settingsAllow) {
+                    this.fadeOutAndStop(targetEl);
+                    return;
+                }
+
+                const track = this.pickRandomTrack(poolKey);
+                if (!track) return;
+
+                console.log(`BGM: ${poolKey} -> ${track}`);
+                
+                this.playSafe(targetEl, track);
+            },
+
+            fadeOutAndStop(el) {
+                if(this.fadeIntervals.has(el)) {
+                    clearInterval(this.fadeIntervals.get(el));
+                    this.fadeIntervals.delete(el);
+                }
+                
+                if (el.paused) return;
+
+                const step = 0.05;
+                const fade = setInterval(() => {
+                    if (el.volume > step) {
                         el.volume -= step;
                     } else {
                         el.volume = 0;
                         el.pause();
                         el.currentTime = 0;
-                        clearInterval(interval);
-                        this.fadeIntervals.delete(el);
+                        clearInterval(fade);
                     }
-                }, 30);
-                
-                this.fadeIntervals.set(el, interval);
+                }, 50);
+                this.fadeIntervals.set(el, fade);
             },
-            
-            clearFade(el) {
+
+            playSafe(el, src) {
                 if(this.fadeIntervals.has(el)) {
                     clearInterval(this.fadeIntervals.get(el));
                     this.fadeIntervals.delete(el);
                 }
+
+                // 6) Avoid Autoplay Crash
+                if (!this.audioUnlocked) return;
+
+                try {
+                    el.src = src;
+                    el.loop = true;
+                    el.volume = 0; // Start at 0 for fade in
+                    const p = el.play();
+                    if (p !== undefined) {
+                        p.then(() => {
+                            this.fadeIn(el);
+                        }).catch(e => {
+                            console.warn("Autoplay blocked:", e);
+                        });
+                    }
+                } catch(e) {
+                    console.warn("Audio error:", e);
+                }
+            },
+
+            fadeIn(el) {
+                let targetVol = 0.4; // Default max volume
+                if (el === DOM.audioEnd) targetVol = 0.5;
+
+                const step = 0.02;
+                const fade = setInterval(() => {
+                    if (el.volume < targetVol - step) {
+                        el.volume += step;
+                    } else {
+                        el.volume = targetVol;
+                        clearInterval(fade);
+                    }
+                }, 30);
+                this.fadeIntervals.set(el, fade);
+            },
+
+            stopAll() {
+                [DOM.audioLobby, DOM.audioGame, DOM.audioEnd].forEach(el => this.fadeOutAndStop(el));
+                this.currentPool = null;
             },
 
             playEnding(id) {
-                const src = this.getRandomTrack('ending', id);
-                
-                let vol = 0.45;
-                if (id === 3 || id === '3_final') vol = 0.25;
-
-                // Stop other tracks explicitly just in case sync didn't catch them (safe)
-                this.fadeOut(DOM.audioLobby);
-                this.fadeOut(DOM.audioGame);
-
-                if(src && SETTINGS.gameMusic) { // Use gameMusic toggle for endings too
-                     this.playTrack(DOM.audioEnd, src, vol);
-                }
-            },
-            
-            stopAll(instant = false) {
-                [DOM.audioLobby, DOM.audioGame, DOM.audioEnd].forEach(el => {
-                    if(instant) {
-                        el.pause();
-                        el.currentTime = 0;
-                    } else {
-                        this.fadeOut(el);
-                    }
-                });
+                // Kept for compatibility if called directly, but sync() handles this now
+                // Just trigger sync
+                this.sync();
             },
 
+            // 5) When to Switch Music (Logic)
             sync() {
-                const targetMode = UI_MODE;
-                
-                // 1. Detect Mode Switch
-                if(this.currentMode !== targetMode) {
-                    // Fade out old tracks
-                    if(this.currentMode === 'lobby') this.fadeOut(DOM.audioLobby);
-                    if(this.currentMode === 'gameplay') this.fadeOut(DOM.audioGame);
-                    if(this.currentMode === 'ending' || this.currentMode === 'secret' || this.currentMode === 'room') this.fadeOut(DOM.audioEnd);
+                if (!this.audioUnlocked) return;
 
-                    this.currentMode = targetMode;
+                let targetPool = null;
+                let targetEl = null;
 
-                    // Play new tracks (if settings allow)
-                    if(targetMode === 'lobby' && SETTINGS.lobbyMusic) {
-                        this.playTrack(DOM.audioLobby, this.getRandomTrack('lobby'));
-                    }
-                    if(targetMode === 'gameplay' && SETTINGS.gameMusic) {
-                        this.playTrack(DOM.audioGame, this.getRandomTrack('gameplay'));
-                    }
+                if (UI_MODE === 'lobby') {
+                    targetPool = 'lobby';
+                    targetEl = DOM.audioLobby;
+                } else if (UI_MODE === 'gameplay') {
+                    targetPool = 'gameplay';
+                    targetEl = DOM.audioGame;
+                } else if (UI_MODE === 'ending') {
+                    const eid = STATE.endingId;
+                    if (eid === 1) targetPool = 'ending1';
+                    else if (eid === 2) targetPool = 'ending2';
+                    else if (eid === 3 || eid === '3_final') targetPool = 'ending3';
+                    else if (eid === 4) targetPool = 'ending4';
+                    
+                    targetEl = DOM.audioEnd;
+                } else if (UI_MODE === 'room') {
+                    // Room usually implies no music or ambience, or keeping previous if desired.
+                    // Assuming silence based on "Switching UI to endingX starts endingX BGM".
+                    // Room is not an ending UI strictly but leads to one.
+                    this.stopAll();
+                    return;
+                } else if (UI_MODE === 'secret') {
+                    this.stopAll();
+                    return;
                 }
-                
-                // 2. Handle Mute Toggle (Same Mode)
-                if(targetMode === 'lobby') {
-                    if(SETTINGS.lobbyMusic && DOM.audioLobby.paused) {
-                         this.playTrack(DOM.audioLobby, this.getRandomTrack('lobby'));
-                    } else if(!SETTINGS.lobbyMusic && !DOM.audioLobby.paused) {
-                        this.fadeOut(DOM.audioLobby);
+
+                if (targetPool && targetEl) {
+                    if (this.currentPool === targetPool) {
+                        // Dynamic setting check
+                        const settingsAllow = (targetPool === 'lobby') ? SETTINGS.lobbyMusic : SETTINGS.gameMusic;
+                        if (!settingsAllow && !targetEl.paused) this.fadeOutAndStop(targetEl);
+                        if (settingsAllow && targetEl.paused) this.playSafe(targetEl, this.lastTracks[targetPool] || this.pickRandomTrack(targetPool));
+                        return;
                     }
-                }
-                if(targetMode === 'gameplay') {
-                    if(SETTINGS.gameMusic && DOM.audioGame.paused) {
-                         this.playTrack(DOM.audioGame, this.getRandomTrack('gameplay'));
-                    } else if(!SETTINGS.gameMusic && !DOM.audioGame.paused) {
-                        this.fadeOut(DOM.audioGame);
-                    }
+
+                    this.currentPool = targetPool;
+                    this.switchBGM(targetEl, targetPool);
                 }
             }
         };
@@ -2203,317 +2181,4 @@
         function startConfetti() {
             const c = DOM.confettiCanvas;
             const ctx = c.getContext('2d');
-            c.width = window.innerWidth; c.height = window.innerHeight;
-            const p = [];
-            for(let i=0;i<50;i++) p.push({x:Math.random()*c.width, y:-10, s:Math.random()*5+2, c:['gold','pink','white'][Math.floor(Math.random()*3)]});
-            function draw() {
-                if(UI_MODE !== 'ending') return;
-                ctx.clearRect(0,0,c.width,c.height);
-                p.forEach(o=>{ ctx.fillStyle=o.c; ctx.fillRect(o.x,o.y,o.s,o.s); o.y+=o.s; if(o.y>c.height)o.y=-10; });
-                requestAnimationFrame(draw);
-            }
-            draw();
-        }
-
-        function startHesitantParticles() {
-            const c = DOM.confettiCanvas;
-            const ctx = c.getContext('2d');
-            c.width = window.innerWidth; c.height = window.innerHeight;
-            const p = [];
-            for(let i=0;i<40;i++) p.push({
-                x:Math.random()*c.width, y:c.height + Math.random()*100, 
-                s:Math.random()*4+2, 
-                c:['#667eea', '#764ba2', '#a18cd1'][Math.floor(Math.random()*3)],
-                v: Math.random()*1 + 0.5
-            });
-            function draw() {
-                if(UI_MODE !== 'ending' || STATE.endingId !== 2) return;
-                ctx.clearRect(0,0,c.width,c.height);
-                p.forEach(o=>{ 
-                    ctx.beginPath();
-                    ctx.fillStyle=o.c; 
-                    ctx.arc(o.x, o.y, o.s, 0, Math.PI*2);
-                    ctx.fill();
-                    o.y -= o.v; 
-                    o.x += Math.sin(o.y*0.01)*0.5; // gentle wave
-                    if(o.y < -10) o.y = c.height+10; 
-                });
-                requestAnimationFrame(draw);
-            }
-            draw();
-        }
-
-        /* --- SHARE CARD UPGRADE --- */
-
-        function getEndingQuote(endingId) {
-            const lang = SETTINGS.lang || 'en';
-            const Q = {
-                1: {
-                    en: "Love is a decision. You chose me 101 times.",
-                    vi: "Tình yêu là lựa chọn. Và cậu đã chọn tớ 101 lần.",
-                    es: "El amor es una decisión. Me elegiste 101 veces."
-                },
-                2: {
-                    en: "Even if you hesitated... you came back.",
-                    vi: "Dù do dự... cậu vẫn quay về.",
-                    es: "Aunque dudaste... regresaste."
-                },
-                3: {
-                    en: "The lamp is still burning. Nobody came home.",
-                    vi: "Đèn vẫn cháy. Nhưng chẳng ai quay về.",
-                    es: "La lámpara sigue encendida. Nadie volvió."
-                },
-                4: {
-                    en: "You found the secret. Now promise me you’ll stay.",
-                    vi: "Cậu tìm thấy bí mật. Giờ hãy hứa là sẽ ở lại.",
-                    es: "Encontraste el secreto. Prométeme que te quedarás."
-                }
-            };
-            // Default to quote for ending 1 if not found, or handle '3_final' as 3
-            const safeId = (endingId === '3_final') ? 3 : endingId;
-            return (Q[safeId] && Q[safeId][lang]) ? Q[safeId][lang] : Q[1].en;
-        }
-
-        function openShareModal() {
-            const modal = document.getElementById("share-modal");
-            if(!modal) return;
-
-            modal.classList.add("visible"); // Use existing overlay logic
-
-            const id = SHARE_CARD.lastEndingId || 1;
-            
-            // Update Text
-            const titleEl = document.getElementById("share-title");
-            const subEl = document.getElementById("share-sub");
-            if(titleEl) titleEl.innerText = "Share Card 💌";
-            if(subEl) subEl.innerText = `ENDING ${String(id).padStart(2,'0')}/04`;
-
-            // Render Canvas
-            renderShareCardCanvas(id);
-        }
-
-        function closeShareModal() {
-            const modal = document.getElementById("share-modal");
-            if(modal) modal.classList.remove("visible");
-        }
-
-        function renderShareCardCanvas(endingId) {
-            const canvas = document.getElementById("share-canvas");
-            if(!canvas) return;
-            const ctx = canvas.getContext("2d");
-
-            // If already generated for this ending, reuse cached image to prevent flicker
-            if(SHARE_CARD.cachedDataURL && SHARE_CARD.lastEndingId === endingId) {
-                const img = new Image();
-                img.onload = ()=> ctx.drawImage(img, 0, 0);
-                img.src = SHARE_CARD.cachedDataURL;
-                return;
-            }
-
-            const W = canvas.width;
-            const H = canvas.height;
-
-            // Clear
-            ctx.clearRect(0,0,W,H);
-
-            // Theme palettes
-            const themes = {
-                1: { bg1:"#ff9a9e", bg2:"#fecfef", accent:"#ff4d6d", text:"#ffffff" },
-                2: { bg1:"#667eea", bg2:"#764ba2", accent:"#ffeaa7", text:"#ffffff" },
-                3: { bg1:"#050505", bg2:"#1a1a1a", accent:"#ffd27d", text:"#eaeaea" },
-                4: { bg1:"#f6d365", bg2:"#fda085", accent:"#2d3436", text:"#ffffff" }
-            };
-
-            const T = themes[endingId] || themes[1];
-
-            // Background gradient
-            const grad = ctx.createLinearGradient(0,0,W,H);
-            grad.addColorStop(0, T.bg1);
-            grad.addColorStop(1, T.bg2);
-            ctx.fillStyle = grad;
-            ctx.fillRect(0,0,W,H);
-
-            // Add vignette
-            const vignette = ctx.createRadialGradient(W/2, H/2, H*0.2, W/2, H/2, H*0.8);
-            vignette.addColorStop(0, "rgba(0,0,0,0)");
-            vignette.addColorStop(1, "rgba(0,0,0,0.55)");
-            ctx.fillStyle = vignette;
-            ctx.fillRect(0,0,W,H);
-
-            // Decorative particles
-            drawParticles(ctx, W, H, endingId);
-
-            // Card frame
-            ctx.strokeStyle = "rgba(255,255,255,0.65)";
-            ctx.lineWidth = 8;
-            roundRect(ctx, 60, 120, W-120, H-240, 45);
-            ctx.stroke();
-
-            // Header
-            ctx.fillStyle = "rgba(255,255,255,0.12)";
-            roundRect(ctx, 90, 170, W-180, 260, 35);
-            ctx.fill();
-
-            // Title text
-            ctx.fillStyle = T.text;
-            ctx.font = "bold 90px Fredoka";
-            ctx.textAlign = "center";
-            ctx.fillText("WILL YOU", W/2, 280);
-            ctx.fillText("BE MY", W/2, 370);
-
-            ctx.font = "bold 110px Fredoka";
-            ctx.fillStyle = T.accent;
-            ctx.fillText("VALENTINE?", W/2, 480);
-
-            // Ending label
-            ctx.font = "bold 60px Nunito";
-            ctx.fillStyle = "rgba(255,255,255,0.95)";
-            ctx.fillText(`ENDING ${String(endingId).padStart(2,'0')}/04`, W/2, 600);
-
-            // Stats
-            const yes = STATE.yes || 0; // Fixed: STATE.yes not STATE.yesCount
-            const no = STATE.no || 0;
-
-            ctx.font = "bold 62px Nunito";
-            ctx.fillStyle = "rgba(255,255,255,0.95)";
-            ctx.fillText(`YES: ${yes}   NO: ${no}`, W/2, 720);
-
-            // Quote box
-            ctx.fillStyle = "rgba(0,0,0,0.28)";
-            roundRect(ctx, 120, 820, W-240, 420, 35);
-            ctx.fill();
-
-            // Quote
-            const quote = getEndingQuote(endingId);
-            ctx.font = "bold 60px Nunito";
-            ctx.fillStyle = "rgba(255,255,255,0.95)";
-            wrapText(ctx, `"${quote}"`, W/2, 920, W-320, 78);
-
-            // Special icon / symbol by ending
-            drawEndingSymbol(ctx, W, H, endingId);
-
-            // Footer watermark
-            ctx.font = "40px Nunito";
-            ctx.fillStyle = "rgba(255,255,255,0.6)";
-            ctx.fillText("Made with 💘", W/2, H-180);
-
-            ctx.font = "36px Nunito";
-            ctx.fillStyle = "rgba(255,255,255,0.45)";
-            ctx.fillText("Will You Be My Valentine? (Web Game)", W/2, H-120);
-
-            // Cache as image
-            SHARE_CARD.cachedDataURL = canvas.toDataURL("image/png");
-        }
-
-        function roundRect(ctx, x, y, w, h, r) {
-            ctx.beginPath();
-            ctx.moveTo(x+r, y);
-            ctx.arcTo(x+w, y, x+w, y+h, r);
-            ctx.arcTo(x+w, y+h, x, y+h, r);
-            ctx.arcTo(x, y+h, x, y, r);
-            ctx.arcTo(x, y, x+w, y, r);
-            ctx.closePath();
-        }
-
-        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
-            const words = text.split(" ");
-            let line = "";
-            let yy = y;
-
-            for(let i=0;i<words.length;i++){
-                const testLine = line + words[i] + " ";
-                const metrics = ctx.measureText(testLine);
-                if(metrics.width > maxWidth && i > 0){
-                    ctx.fillText(line.trim(), x, yy);
-                    line = words[i] + " ";
-                    yy += lineHeight;
-                } else {
-                    line = testLine;
-                }
-            }
-            ctx.fillText(line.trim(), x, yy);
-        }
-
-        function drawParticles(ctx, W, H, endingId) {
-            const count = 70;
-            for(let i=0;i<count;i++){
-                const px = Math.random()*W;
-                const py = Math.random()*H;
-                const size = Math.random()*10 + 3;
-                let alpha = 0.2 + Math.random()*0.35;
-                if(endingId === 3) alpha *= 0.5;
-
-                ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-                ctx.beginPath();
-                ctx.arc(px, py, size, 0, Math.PI*2);
-                ctx.fill();
-            }
-        }
-
-        function drawEndingSymbol(ctx, W, H, endingId) {
-            ctx.save();
-            ctx.textAlign = "center";
-            let symbol = "💘";
-            let size = 240;
-            let alpha = 0.18;
-
-            if(endingId === 1) symbol = "💖";
-            if(endingId === 2) symbol = "💔";
-            if(endingId === 3) { symbol = "🌙"; alpha = 0.10; }
-            if(endingId === 4) { symbol = "✨"; alpha = 0.22; }
-
-            ctx.globalAlpha = alpha;
-            ctx.font = `${size}px Fredoka`;
-            ctx.fillStyle = "white";
-            ctx.fillText(symbol, W/2, H*0.78);
-            ctx.restore();
-        }
-
-        function downloadShareCard() {
-            const canvas = document.getElementById("share-canvas");
-            if(!canvas) return;
-            const link = document.createElement("a");
-            const id = SHARE_CARD.lastEndingId || 1;
-            link.download = `valentine_ending_${String(id).padStart(2,'0')}.png`;
-            link.href = canvas.toDataURL("image/png");
-            link.click();
-        }
-
-        async function copyShareCardToClipboard() {
-            const canvas = document.getElementById("share-canvas");
-            if(!canvas) return;
-            try {
-                const blob = await new Promise(res => canvas.toBlob(res));
-                if(!blob) throw new Error("Blob failed");
-                if(navigator.clipboard && window.ClipboardItem) {
-                    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-                    const btn = document.getElementById('btn-share-copy');
-                    const original = btn.innerText;
-                    btn.innerText = "Copied! ✅";
-                    setTimeout(() => btn.innerText = original, 2000);
-                } else {
-                    showTooltip("Clipboard not supported 😭");
-                }
-            } catch(e) {
-                console.warn("Copy failed:", e);
-                showTooltip("Copy failed 😭");
-            }
-        }
-
-        function saveSettings() { localStorage.setItem(CONFIG.SETTINGS_KEY, JSON.stringify(SETTINGS)); }
-        function loadSettings() { 
-            try { 
-                const s = JSON.parse(localStorage.getItem(CONFIG.SETTINGS_KEY));
-                if(s) SETTINGS = s;
-                document.getElementById('toggle-lobby-music').checked = SETTINGS.lobbyMusic;
-                document.getElementById('toggle-game-music').checked = SETTINGS.gameMusic;
-                document.getElementById('lang-select').value = SETTINGS.lang;
-            } catch(e){} 
-        }
-
-        // Start
-        document.addEventListener('DOMContentLoaded', initGame);
-
-    </script>
-</body>
-</html>
+            c.width = window.innerWidth; c.height = window
