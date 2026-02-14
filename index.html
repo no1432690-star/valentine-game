@@ -1833,6 +1833,14 @@
 
         /* --- 6. INITIALIZATION & EVENTS --- */
         
+        function preloadEnding3Asset() {
+            const path = 'assets/ending3/ending3_room_ps1.png';
+            const img = new Image();
+            img.onload = () => console.log("[ENDING3] room background loaded:", path);
+            img.onerror = (e) => console.warn("[ENDING3] failed to load room background:", path, e);
+            img.src = path;
+        }
+
         function initGame() {
             cacheDOM();
             loadSettings();
@@ -1840,6 +1848,7 @@
             AudioCtrl.init();
             updateTexts();
             PhaseManager.init(); 
+            preloadEnding3Asset();
 
             // BIND EVENTS ONCE
             if(DOM.startBtn) DOM.startBtn.onclick = () => { 
@@ -2000,10 +2009,36 @@
             updateRoomHUD();
             setMode('room');
             
-            const bgImg = document.getElementById("room-ps1-bg");
-            if(bgImg) {
-                bgImg.style.backgroundImage = "url('assets/ending3/ending3_room_ps1.png')";
+            // --- ENDING 3 BACKGROUND PATCH ---
+            const path = 'assets/ending3/ending3_room_ps1.png';
+            let bgImg = document.getElementById("room-ps1-bg");
+            
+            // Fallback creation if missing
+            if (!bgImg) {
+                const container = document.getElementById('room-scene');
+                if (container) {
+                    bgImg = document.createElement('div');
+                    bgImg.id = 'room-ps1-bg';
+                    // Inline styles for safety
+                    bgImg.style.position = 'absolute';
+                    bgImg.style.top = '0'; 
+                    bgImg.style.left = '0';
+                    bgImg.style.width = '100%'; 
+                    bgImg.style.height = '100%';
+                    bgImg.style.zIndex = '0'; 
+                    bgImg.style.pointerEvents = 'none';
+                    bgImg.style.filter = 'contrast(1.1) brightness(0.5) saturate(0.7) sepia(0.3)';
+                    container.insertBefore(bgImg, container.firstChild);
+                }
             }
+
+            if(bgImg) {
+                bgImg.style.backgroundImage = `url('${path}')`;
+                bgImg.style.backgroundSize = "cover";
+                bgImg.style.backgroundPosition = "center";
+                bgImg.style.backgroundRepeat = "no-repeat";
+            }
+            // -------------------------------
 
             DOM.roomBgLayer.style.opacity = '1';
             
