@@ -2466,24 +2466,24 @@
         
         const MUSIC = {
             lobby: [
-                "music/lobby1.mp3",
-                "music/lobby2.mp3"
+                "assets/audio/lobby1.mp3",
+                "assets/audio/lobby2.mp3"
             ],
             gameplay: [
-                "music/gameplay1.mp3", "music/gameplay2.mp3", "music/gameplay3.mp3",
-                "music/gameplay4.mp3", "music/gameplay5.mp3", "music/gameplay6.mp3"
+                "assets/audio/gameplay1.mp3", "assets/audio/gameplay2.mp3", "assets/audio/gameplay3.mp3",
+                "assets/audio/gameplay4.mp3", "assets/audio/gameplay5.mp3", "assets/audio/gameplay6.mp3"
             ],
             ending1: [
-                "music/ending1_true_love1.mp3", "music/ending1_true_love2.mp3"
+                "assets/audio/ending1_true_love1.mp3", "assets/audio/ending1_true_love2.mp3"
             ],
             ending2: [
-                "music/ending2_hesitant_heart1.mp3", "music/ending2_hesitant_heart2.mp3"
+                "assets/audio/ending2_hesitant_heart1.mp3", "assets/audio/ending2_hesitant_heart2.mp3"
             ],
             ending3: [
-                "music/ending3_empty_room1.mp3", "music/ending3_empty_room2.mp3"
+                "assets/audio/ending3_empty_room1.mp3", "assets/audio/ending3_empty_room2.mp3"
             ],
             ending4: [
-                "music/ending4_secret_yes1.mp3", "music/ending4_secret_yes2.mp3"
+                "assets/audio/ending4_secret_yes1.mp3", "assets/audio/ending4_secret_yes2.mp3"
             ]
         };
 
@@ -2513,12 +2513,15 @@
                 const list = MUSIC[poolKey];
                 if (!list || list.length === 0) return null;
                 
-                let candidate = list[0];
-                if (list.length > 1) {
-                    const last = this.lastTracks[poolKey];
-                    const candidates = list.filter(t => t !== last);
-                    const pool = candidates.length > 0 ? candidates : list;
-                    candidate = pool[Math.floor(Math.random() * pool.length)];
+                // Pick any random track, ensuring variety if possible
+                let candidate = list[Math.floor(Math.random() * list.length)];
+                
+                // Simple attempt to avoid repeating the exact same track back-to-back if > 1 option
+                if (list.length > 1 && this.lastTracks[poolKey] === candidate) {
+                    const others = list.filter(t => t !== candidate);
+                    if(others.length > 0) {
+                        candidate = others[Math.floor(Math.random() * others.length)];
+                    }
                 }
                 
                 this.lastTracks[poolKey] = candidate;
@@ -2529,11 +2532,14 @@
                 const all = [DOM.audioLobby, DOM.audioGame, DOM.audioEnd];
                 const others = all.filter(el => el !== targetEl);
 
-                // Stop others
-                others.forEach(el => this.fadeOutAndStop(el));
+                // STRICT RULE: Stop others first
+                others.forEach(el => this.stopImmediate(el));
 
                 // Check Settings
                 const settingsAllow = (poolKey === 'lobby') ? SETTINGS.lobbyMusic : SETTINGS.gameMusic;
+                
+                // Log State Requirement
+                console.log(`[BGM] state: ${poolKey}`);
                 
                 if (!settingsAllow) {
                     this.fadeOutAndStop(targetEl);
@@ -2544,9 +2550,21 @@
                 const track = this.pickRandomTrack(poolKey);
                 if (!track) return;
 
-                console.log(`BGM: ${poolKey} -> ${track}`);
+                // Log Playing Requirement
+                console.log(`[BGM] playing: ${track}`);
                 
+                // Play new track
                 this.playSafe(targetEl, track);
+            },
+
+            stopImmediate(el) {
+                if(this.fadeIntervals.has(el)) {
+                    clearInterval(this.fadeIntervals.get(el));
+                    this.fadeIntervals.delete(el);
+                }
+                el.pause();
+                el.currentTime = 0;
+                el.volume = 0;
             },
 
             fadeOutAndStop(el) {
@@ -2577,26 +2595,30 @@
                     this.fadeIntervals.delete(el);
                 }
 
-                if (!STATE.userInteracted) return; // Autoplay safety check
+                if (!STATE.userInteracted) return; // Strict autoplay block
 
                 try {
-                    // Only change src if different to prevent reload flicker
+                    // Reset before playing new source
+                    el.pause();
+                    el.currentTime = 0;
+                    
                     if(el.getAttribute('src') !== src) {
                         el.src = src;
                         el.load();
                     }
                     el.loop = true;
                     el.volume = 0; 
+                    
                     const p = el.play();
                     if (p !== undefined) {
                         p.then(() => {
                             this.fadeIn(el);
                         }).catch(e => {
-                            console.warn("Autoplay blocked:", e);
+                            console.warn(`[BGM] Autoplay blocked or error for ${src}:`, e);
                         });
                     }
                 } catch(e) {
-                    console.warn("Audio error:", e);
+                    console.warn(`[BGM] Error playing ${src}:`, e);
                 }
             },
 
@@ -2617,7 +2639,7 @@
             },
 
             stopAll() {
-                [DOM.audioLobby, DOM.audioGame, DOM.audioEnd].forEach(el => this.fadeOutAndStop(el));
+                [DOM.audioLobby, DOM.audioGame, DOM.audioEnd].forEach(el => this.stopImmediate(el));
                 this.currentPool = null;
             },
 
@@ -2639,6 +2661,7 @@
                     targetEl = DOM.audioGame;
                 } else if (UI_MODE === 'ending') {
                     const eid = STATE.endingId;
+                    // Map ending ID to pool key
                     if (eid === 1) targetPool = 'ending1';
                     else if (eid === 2) targetPool = 'ending2';
                     else if (eid === 3 || eid === '3_final') targetPool = 'ending3';
@@ -2658,8 +2681,10 @@
                         if (!settingsAllow && !targetEl.paused) {
                             this.fadeOutAndStop(targetEl);
                         } else if (settingsAllow && targetEl.paused) {
-                            // Resume logic (pick new or same)
-                            const track = this.lastTracks[targetPool] || this.pickRandomTrack(targetPool);
+                            // Resume logic (pick new to be fresh)
+                            console.log(`[BGM] Resuming state: ${targetPool}`);
+                            const track = this.pickRandomTrack(targetPool);
+                            console.log(`[BGM] playing: ${track}`);
                             this.playSafe(targetEl, track);
                         }
                         return;
