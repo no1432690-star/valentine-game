@@ -112,9 +112,24 @@
         .btn-no { background: #e0e0e0; color: #666; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .btn-no:active { transform: scale(0.95); background: #d6d6d6; }
 
-        /* Phase Effects Classes */
-        .btn-blur { filter: blur(0.8px) saturate(0.8) opacity(0.9); }
+        /* --- PHASE EFFECTS --- */
+        /* Phase 2: Wiggle */
+        @keyframes wiggle { 
+            0%, 100% { transform: translateX(0); } 
+            25% { transform: translateX(-4px) rotate(-1deg); } 
+            75% { transform: translateX(4px) rotate(1deg); } 
+        }
+        .phase-wiggle { animation: wiggle 0.4s ease-in-out infinite; }
+
+        /* Phase 4: Blur */
+        .phase-blur { filter: blur(1.5px) grayscale(0.4); opacity: 0.85; }
         
+        /* Phase 6: Hold Hint */
+        .hold-hint-container { position: absolute; top: -30px; left: 50%; transform: translateX(-50%); width: 100px; text-align: center; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+        .hold-text { font-size: 0.8rem; font-weight: bold; color: var(--primary-pink); text-transform: uppercase; background: rgba(255,255,255,0.9); padding: 2px 8px; border-radius: 10px; }
+        .hold-active .hold-hint-container { opacity: 1; }
+        .btn-yes.holding { transform: scale(0.92) !important; filter: brightness(0.9); transition: transform 0.6s ease; }
+
         /* Fake/Effects */
         #fake-container { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 50; overflow: hidden; border-radius: 20px; }
         .fake-btn { position: absolute; opacity: 0.8; pointer-events: auto; z-index: 101; }
@@ -436,7 +451,10 @@
                 <p id="phase-hint"></p>
             </div>
             <div class="button-area" id="button-area">
-                <button id="btn-yes" class="game-btn btn-yes">YES 💖</button>
+                <button id="btn-yes" class="game-btn btn-yes">
+                    YES 💖
+                    <div class="hold-hint-container"><div class="hold-text">Hold...</div></div>
+                </button>
                 <button id="btn-no" class="game-btn btn-no">NO 💔</button>
                 <div id="fake-container"></div>
             </div>
@@ -542,7 +560,7 @@
         };
 
         /* --- 1. GLOBAL STATE & CONFIG --- */
-        let UI_MODE = "start"; // start, lobby, gameplay, ending, room, secret
+        let UI_MODE = "start"; // allowed: start, lobby, game, ending, room, secret
         let roomInteractionLocked = false;
         
         const STATE = {
@@ -551,6 +569,7 @@
             scoreClicked: false,
             roomProgress: { tulip: false, letter: false, diary: false },
             endingId: null,
+            userInteracted: false,
             effects: []
         };
         
@@ -995,7 +1014,7 @@
                 shareModal: document.getElementById('share-modal'),
                 flashOverlay: document.getElementById('flash-overlay'),
 
-                // Titles & Text (FIXED CRASH)
+                // Titles & Text
                 mainTitle: document.getElementById('main-title'),
                 lobbyTitle: document.getElementById('lobby-title'),
                 lobbySubtitle: document.getElementById('lobby-subtitle'),
@@ -1006,6 +1025,7 @@
                 startBtn: document.getElementById('btn-start-game'),
                 yesBtn: document.getElementById('btn-yes'),
                 noBtn: document.getElementById('btn-no'),
+                buttonArea: document.getElementById('button-area'),
                 
                 // Ending UI
                 endTitle: document.getElementById('end-title'),
@@ -1031,277 +1051,199 @@
             };
         }
 
-        /* --- 4. PHASE MANAGER --- */
+        /* --- 4. PHASE MANAGER (GAMEPLAY TRICKS) --- */
         const PhaseManager = {
             currentPhase: 0,
-            rafId: null,
             holdTimer: null,
-            isHolding: false,
-            // Track if swapped order is active
-            isSwapped: false,
+            holdStarted: false,
 
             init() {
                 this.update();
             },
 
-            getTotalClicks() {
-                return STATE.yes + STATE.no;
-            },
-
-            getPhase() {
-                const total = this.getTotalClicks();
-                if (total >= 71) return 4;
-                if (total >= 45) return 3;
-                if (total >= 25) return 2;
-                if (total >= 10) return 1;
-                return 0;
+            reset() {
+                this.cleanup(this.currentPhase);
+                this.currentPhase = 0;
+                this.holdStarted = false;
+                clearTimeout(this.holdTimer);
+                
+                // Clear inline styles
+                if(DOM.yesBtn) {
+                    DOM.yesBtn.style.transform = '';
+                    DOM.yesBtn.style.order = '';
+                    DOM.yesBtn.style.position = '';
+                    DOM.yesBtn.style.left = '';
+                    DOM.yesBtn.style.top = '';
+                    DOM.yesBtn.style.transition = '';
+                    DOM.yesBtn.classList.remove('phase-wiggle', 'phase-blur', 'holding', 'hold-active');
+                    
+                    // Reset Event Listeners for YES button
+                    this.removeHoldListeners();
+                    DOM.yesBtn.onclick = handleYes; 
+                }
+                if(DOM.noBtn) {
+                    DOM.noBtn.style.order = '';
+                    DOM.noBtn.classList.remove('phase-blur');
+                }
             },
 
             update() {
-                if (UI_MODE !== 'gameplay') return;
+                if (UI_MODE !== 'game') return;
                 
-                const newPhase = this.getPhase();
+                const yes = STATE.yes;
+                let newPhase = 1;
+
+                if (yes > 90) newPhase = 6;
+                else if (yes > 70) newPhase = 5;
+                else if (yes > 50) newPhase = 4;
+                else if (yes > 30) newPhase = 3;
+                else if (yes > 15) newPhase = 2;
+
                 if (newPhase !== this.currentPhase) {
                     this.cleanup(this.currentPhase);
                     this.currentPhase = newPhase;
                     this.apply(newPhase);
-                    this.showPhaseMessage(newPhase);
-                } else {
-                    // Re-apply periodic effects (like swap)
-                    if (this.currentPhase === 2) this.handlePhase2Logic();
                 }
-                
-                console.log("[PHASE]", this.currentPhase);
-            },
 
-            showPhaseMessage(phase) {
-                const L = getLang();
-                let msg = "";
-                if (phase === 1) msg = L.phase1_msg;
-                else if (phase === 2) msg = L.phase2_msg;
-                else if (phase === 3) msg = L.phase3_msg;
-                else if (phase === 4) msg = L.phase4_msg;
-
-                if (msg) showTooltip(msg);
+                // Per-click effects
+                if (this.currentPhase === 3) this.moveRandomly();
+                if (this.currentPhase === 5) this.swapButtons();
             },
 
             apply(phase) {
-                if (phase === 1) {
-                    this.startDrift();
-                } else if (phase === 2) {
-                    this.handlePhase2Logic();
+                if (phase === 2) {
+                    DOM.yesBtn.classList.add('phase-wiggle');
                 } else if (phase === 3) {
-                    this.applyBlur();
+                    DOM.yesBtn.style.transition = 'transform 0.4s ease-out';
                 } else if (phase === 4) {
+                    DOM.yesBtn.classList.add('phase-blur');
+                    DOM.noBtn.classList.add('phase-blur');
+                } else if (phase === 6) {
                     this.startHoldMode();
                 }
             },
 
             cleanup(prevPhase) {
-                if (prevPhase === 1) {
-                    if (this.rafId) cancelAnimationFrame(this.rafId);
-                    DOM.yesBtn.style.transform = 'none';
-                } else if (prevPhase === 2) {
-                    DOM.yesBtn.style.order = '0';
-                    DOM.noBtn.style.order = '0';
-                    this.isSwapped = false;
-                } else if (prevPhase === 3) {
-                    DOM.yesBtn.classList.remove('btn-blur');
-                    DOM.noBtn.classList.remove('btn-blur');
-                    if(DOM.phaseHint) DOM.phaseHint.style.opacity = '0';
-                } else if (prevPhase === 4) {
+                if (prevPhase === 2) DOM.yesBtn.classList.remove('phase-wiggle');
+                if (prevPhase === 3) {
+                    DOM.yesBtn.style.transform = '';
+                    DOM.yesBtn.style.transition = '';
+                }
+                if (prevPhase === 4) {
+                    DOM.yesBtn.classList.remove('phase-blur');
+                    DOM.noBtn.classList.remove('phase-blur');
+                }
+                if (prevPhase === 5) {
+                    DOM.yesBtn.style.order = '';
+                    DOM.noBtn.style.order = '';
+                }
+                if (prevPhase === 6) {
                     this.stopHoldMode();
                 }
             },
 
-            stopAll() {
-                this.cleanup(this.currentPhase);
-                this.currentPhase = 0;
-                // Double check reset
-                if (DOM.yesBtn) {
-                    DOM.yesBtn.style.transform = 'none';
-                    DOM.yesBtn.style.order = '0';
-                    DOM.noBtn.style.order = '0';
-                    DOM.yesBtn.classList.remove('btn-blur');
-                    DOM.noBtn.classList.remove('btn-blur');
-                    // Reset onclick
-                    DOM.yesBtn.onclick = handleYes;
-                    this.removeHoldListeners();
-                }
-                if(DOM.phaseHint) DOM.phaseHint.style.opacity = '0';
+            moveRandomly() {
+                // Safe movement using transform translate
+                const x = (Math.random() - 0.5) * 150; // +/- 75px
+                const y = (Math.random() - 0.5) * 100; // +/- 50px
+                DOM.yesBtn.style.transform = `translate(${x}px, ${y}px)`;
             },
 
-            // Phase 1: Gentle Drift
-            startDrift() {
-                let angle = 0;
-                const radius = 18; 
-                const loop = () => {
-                    if (this.currentPhase !== 1) return;
-                    angle += 0.02;
-                    const x = Math.cos(angle) * radius;
-                    const y = Math.sin(angle * 1.5) * radius;
-                    DOM.yesBtn.style.transform = `translate(${x}px, ${y}px)`;
-                    this.rafId = requestAnimationFrame(loop);
-                };
-                loop();
-            },
-
-            // Phase 2: Soft Confusion (Swap every 5 clicks)
-            handlePhase2Logic() {
-                const total = this.getTotalClicks();
-                // Simple logic: if total is divisible by 5, swap. Else normal.
-                // Actually prompt says: "Swap only every 5 total clicks"
-                // Let's toggle swap state based on mod 5.
-                // To keep it confusing: swap if (total / 5) is odd? 
-                // Or just swap if total % 10 >= 5? 
-                // Let's do: Swap whenever total % 5 === 0. But wait, update() runs AFTER click.
-                // So if user just clicked to reach 25 (multiple of 5), we swap.
-                // Then at 26, we revert? That would be very rapid.
-                // "Swap POSITIONS occasionally" -> "Swap ONLY every 5 clicks".
-                // Interpretation: The state CHANGES every 5 clicks.
-                // Let's check a "block" of 5.
-                const block = Math.floor(total / 5);
-                if (block % 2 !== 0) {
-                    // Odd blocks (5-9, 15-19, 25-29, etc) -> Swapped
-                    // Since phase 2 starts at 25, it starts SWAPPED.
-                    // 25-29: Swap
-                    // 30-34: Normal
-                    // 35-39: Swap
-                    // 40-44: Normal
-                    DOM.yesBtn.style.order = '2';
-                    DOM.noBtn.style.order = '1';
-                } else {
-                    DOM.yesBtn.style.order = '0';
-                    DOM.noBtn.style.order = '0';
+            swapButtons() {
+                // Occasional swap (approx once every 5 clicks)
+                if (STATE.yes % 5 === 0 && Math.random() > 0.3) {
+                    const isSwapped = DOM.yesBtn.style.order === '2';
+                    if (!isSwapped) {
+                        DOM.yesBtn.style.order = '2';
+                        DOM.noBtn.style.order = '1';
+                    } else {
+                        DOM.yesBtn.style.order = '0';
+                        DOM.noBtn.style.order = '0';
+                    }
                 }
             },
 
-            // Phase 3: Blurred Truth
-            applyBlur() {
-                DOM.yesBtn.classList.add('btn-blur');
-                DOM.noBtn.classList.add('btn-blur');
-                
-                const L = getLang();
-                if(DOM.phaseHint) {
-                    DOM.phaseHint.innerText = L.phase3_hint;
-                    DOM.phaseHint.style.opacity = '1';
-                }
-            },
-
-            // Phase 4: Hold to Mean It
+            /* Phase 6: Hold Logic */
             startHoldMode() {
-                // Disable normal click logic
-                DOM.yesBtn.onclick = (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
+                DOM.yesBtn.classList.add('hold-active');
+                DOM.yesBtn.onclick = null; // Disable simple click
+                
+                this.boundStart = (e) => {
+                    if(e.cancelable) e.preventDefault();
+                    this.holdStarted = true;
+                    DOM.yesBtn.classList.add('holding');
+                    
+                    this.holdTimer = setTimeout(() => {
+                        if (this.holdStarted) {
+                            this.holdStarted = false;
+                            DOM.yesBtn.classList.remove('holding');
+                            handleYes();
+                        }
+                    }, 600); // 0.6s hold
                 };
 
-                this.addHoldListeners();
-            },
+                this.boundEnd = (e) => {
+                    if(this.holdStarted) {
+                        this.holdStarted = false;
+                        clearTimeout(this.holdTimer);
+                        DOM.yesBtn.classList.remove('holding');
+                    }
+                };
 
-            stopHoldMode() {
-                this.removeHoldListeners();
-                // Restore click
-                DOM.yesBtn.onclick = handleYes;
-            },
-
-            addHoldListeners() {
-                const btn = DOM.yesBtn;
-                this.boundStart = this.onHoldStart.bind(this);
-                this.boundEnd = this.onHoldEnd.bind(this);
-                
-                btn.addEventListener('pointerdown', this.boundStart);
-                btn.addEventListener('touchstart', this.boundStart, {passive: false}); // Mobile backup
-                
+                DOM.yesBtn.addEventListener('pointerdown', this.boundStart);
+                DOM.yesBtn.addEventListener('touchstart', this.boundStart, {passive:false});
                 window.addEventListener('pointerup', this.boundEnd);
                 window.addEventListener('touchend', this.boundEnd);
             },
 
+            stopHoldMode() {
+                DOM.yesBtn.classList.remove('hold-active', 'holding');
+                this.removeHoldListeners();
+                DOM.yesBtn.onclick = handleYes;
+            },
+
             removeHoldListeners() {
-                const btn = DOM.yesBtn;
                 if(this.boundStart) {
-                    btn.removeEventListener('pointerdown', this.boundStart);
-                    btn.removeEventListener('touchstart', this.boundStart);
+                    DOM.yesBtn.removeEventListener('pointerdown', this.boundStart);
+                    DOM.yesBtn.removeEventListener('touchstart', this.boundStart);
                     window.removeEventListener('pointerup', this.boundEnd);
                     window.removeEventListener('touchend', this.boundEnd);
                 }
-            },
-
-            onHoldStart(e) {
-                if (this.currentPhase !== 4) return;
-                // Prevent default touch actions (scrolling) on button
-                if(e.type === 'touchstart') e.preventDefault();
-                
-                this.isHolding = true;
-                
-                // Visual feedback (scale down slightly)
-                DOM.yesBtn.style.transform = 'scale(0.92)';
-                DOM.yesBtn.style.transition = 'transform 0.5s ease';
-
-                this.holdTimer = setTimeout(() => {
-                    if (this.isHolding) {
-                        this.isHolding = false;
-                        DOM.yesBtn.style.transform = 'scale(1)';
-                        handleYes(); // Trigger SUCCESS
-                    }
-                }, 550);
-            },
-
-            onHoldEnd() {
-                if (!this.isHolding) return;
-                this.isHolding = false;
-                clearTimeout(this.holdTimer);
-                
-                // Released too early
-                DOM.yesBtn.style.transform = 'scale(1)';
-                
-                // Show hesitate message
-                const L = getLang();
-                showTooltip(L.hesitate_msg);
             }
         };
 
         /* --- 5. STATE MACHINE (UI ENGINE) --- */
         
-        function setMode(mode) {
-            console.log(`Switching UI: ${UI_MODE} -> ${mode}`);
-            UI_MODE = mode;
-            
-            // Clear Typewriter Timer if leaving ending
-            if (mode !== 'ending' && ENDING_STATE.timer) {
-                clearTimeout(ENDING_STATE.timer);
+        function setMode(newMode) {
+            console.log(`[UI] ${UI_MODE} -> ${newMode}`);
+            UI_MODE = newMode;
+
+            // 1. Hide All Logic
+            const screens = {
+                'start': DOM.startOverlay,
+                'lobby': DOM.lobbyScreen,
+                'game': DOM.gameView,
+                'ending': DOM.endingOverlay,
+                'room': DOM.roomScene,
+                'secret': DOM.secretModal
+            };
+
+            for (const key in screens) {
+                const el = screens[key];
+                if (!el) continue;
+                
+                el.classList.remove('visible');
+                // Special handling for game view
+                if (key === 'game') {
+                    el.style.opacity = '0';
+                    el.style.pointerEvents = 'none';
+                }
             }
 
-            // 1. Helper to hide all
-            const allScreens = [
-                DOM.startOverlay, DOM.lobbyScreen, DOM.gameView, 
-                DOM.endingOverlay, DOM.roomScene, DOM.secretModal
-            ];
-            
-            allScreens.forEach(el => {
-                if(el) {
-                    el.classList.remove('visible');
-                    // We rely on CSS .overlay-screen (opacity:0, pointer-events:none) + .visible
-                    // But gameView is not .overlay-screen, so handle it manually
-                    if (el === DOM.gameView) {
-                        el.style.opacity = '0';
-                        el.style.pointerEvents = 'none';
-                    }
-                }
-            });
-
             // 2. Show Target
-            let target = null;
-            if (mode === 'start') target = DOM.startOverlay;
-            else if (mode === 'lobby') target = DOM.lobbyScreen;
-            else if (mode === 'ending') target = DOM.endingOverlay;
-            else if (mode === 'room') target = DOM.roomScene;
-            else if (mode === 'secret') target = DOM.secretModal;
-            else if (mode === 'gameplay') target = DOM.gameView;
-
+            const target = screens[newMode];
             if (target) {
-                if (target === DOM.gameView) {
+                if (newMode === 'game') {
                     target.style.opacity = '1';
                     target.style.pointerEvents = 'auto';
                 } else {
@@ -1309,8 +1251,18 @@
                 }
             }
 
-            // 3. Audio State Sync
-            AudioCtrl.sync();
+            // 3. Logic Hooks
+            if (newMode !== 'ending') {
+                if (ENDING_STATE.timer) clearTimeout(ENDING_STATE.timer);
+                ENDING_STATE.isTyping = false;
+            }
+
+            if (newMode !== 'game') {
+                PhaseManager.reset();
+            }
+
+            // 4. Audio Sync
+            AudioCtrl.sync(); 
         }
 
         /* --- 6. INITIALIZATION & EVENTS --- */
@@ -1321,13 +1273,13 @@
             generateStages();
             AudioCtrl.init();
             updateTexts();
-            PhaseManager.init(); // Init Phases
+            PhaseManager.init(); 
 
             // BIND EVENTS ONCE
-            // IMPORTANT: User Gesture Logic for Autoplay Policy
             if(DOM.startBtn) DOM.startBtn.onclick = () => { 
-                AudioCtrl.initUserGesture(); // Initialize Audio Context and Audio Elements
-                SFX.init(); // Resume SFX context
+                STATE.userInteracted = true;
+                AudioCtrl.initUserGesture(); 
+                SFX.init(); 
                 goToLobby(); 
             };
             
@@ -1349,41 +1301,32 @@
                 }
             };
 
-            // Ending Interaction (Visual Novel Style)
+            // Ending Interaction
             DOM.endText.onclick = handleEndingClick;
 
             // Ending Buttons
-            document.getElementById('btn-end-replay').onclick = handleReplay; // REPLAY FIXED
+            document.getElementById('btn-end-replay').onclick = handleReplay; 
             document.getElementById('btn-end-lobby').onclick = goToLobby;
             document.getElementById('btn-end-share').onclick = openShareModal;
 
             // Room Buttons
             document.getElementById('btn-room-exit').onclick = goToLobby;
-            // Room close handled inside openRoomModal
 
             // Secret Buttons
             DOM.secretYesBtn.onclick = async () => {
                 SFX.playYes();
-                
-                // Flash Sequence
                 DOM.flashOverlay.style.opacity = '1';
-                
                 await wait(800);
-                
                 enterEnding(4);
-                
-                // Reveal Ending
                 await wait(100);
                 DOM.flashOverlay.style.transition = 'opacity 2s ease-out';
                 DOM.flashOverlay.style.opacity = '0';
-                
-                // Reset Transition
                 setTimeout(() => {
                     DOM.flashOverlay.style.transition = 'opacity 0.8s ease-in';
                 }, 2000);
             };
 
-            // Settings & Share (Modal toggles do not change UI_MODE main state, just overlap)
+            // Settings & Share
             document.getElementById('settings-btn').onclick = () => DOM.settingsModal.classList.add('visible');
             document.getElementById('close-settings').onclick = () => DOM.settingsModal.classList.remove('visible');
             document.getElementById('reset-btn').onclick = () => { if(confirm("Reset Game?")) goToLobby(); };
@@ -1414,25 +1357,18 @@
         /* --- 7. GAME FLOW CONTROLLERS --- */
 
         function goToLobby() {
-            // Full Reset Logic
             STATE.yes = 0; 
             STATE.no = 0;
             STATE.scoreClicked = false;
             STATE.endingId = null;
             STATE.roomProgress = { tulip: false, letter: false, diary: false };
             
-            // Reset UI Visuals
             document.getElementById('lbl-yes-trigger').style.color = "#666";
             
-            // Phase Reset
-            PhaseManager.stopAll();
-
             setMode('lobby');
         }
 
-        // --- NEW REPLAY LOGIC ---
         function handleReplay() {
-            // 1. Cleanup Ending State (Typewriter)
             if (ENDING_STATE.timer) {
                 clearTimeout(ENDING_STATE.timer);
                 ENDING_STATE.timer = null;
@@ -1440,62 +1376,46 @@
             ENDING_STATE.isTyping = false;
             ENDING_STATE.finished = false;
             
-            // 2. Stop Ending Music safely
-            AudioCtrl.stopAll(true);
-
-            // 3. Restart Game logic (resets stats and sets mode to gameplay)
+            AudioCtrl.stopAll();
             startGameplay();
         }
 
         function startGameplay() {
-            // Reset Gameplay Stats only
             STATE.yes = 0;
             STATE.no = 0;
             STATE.endingId = null;
             STATE.roomProgress = { tulip: false, letter: false, diary: false };
             
             updateStatsUI();
-            applyCurrentStage();
-            
-            // Phase Reset
-            PhaseManager.stopAll();
-            PhaseManager.update(); // Initialize phase 0
+            PhaseManager.reset(); // Reset effects to Phase 1
+            PhaseManager.update(); 
 
             document.getElementById('fake-container').innerHTML = "";
-            document.getElementById('dialogue-text').innerText = getLang().phase1[0]; // Start with Phase 1
+            document.getElementById('dialogue-text').innerText = getLang().phase1[0];
             
-            setMode('gameplay');
+            setMode('game');
         }
 
         function enterEnding(id) {
-            PhaseManager.stopAll(); // STOP ALL PHASES
-            
             STATE.endingId = id;
             SHARE_CARD.lastEndingId = (id === '3_final') ? 3 : id;
             SHARE_CARD.cachedDataURL = null;
-            setMode('ending'); // FIXED: Set mode BEFORE render to allow typewriter interactions
+            setMode('ending');
             renderEndingOverlay(id);
             AudioCtrl.playEnding(id);
         }
 
         async function enterRoom() {
-            PhaseManager.stopAll(); // STOP PHASES
             updateRoomHUD();
             setMode('room');
             
-            // Try to set PS1 Background
             const bgImg = document.getElementById("room-ps1-bg");
             if(bgImg) {
                 bgImg.style.backgroundImage = "url('assets/ending3/ending3_room_ps1.png')";
             }
 
-            // Reset Scene Opacity (in case it was faded)
             DOM.roomBgLayer.style.opacity = '1';
             
-            // Check if audio needs strict play
-            // AudioCtrl.stopAll(false); // Let sync handle it now
-            
-            // Play Intro Text
             const L = getLang();
             roomInteractionLocked = true;
             await showCinematicText(L.room_intro, 2500);
@@ -1503,12 +1423,10 @@
         }
 
         function enterSecret() {
-            PhaseManager.stopAll();
             setMode('secret');
             runSecretSequence();
         }
         
-        // --- ASYNC UTILS ---
         const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
         
         function showCinematicText(text, duration) {
@@ -1517,7 +1435,7 @@
                 DOM.roomCinematicText.style.opacity = 1;
                 setTimeout(() => {
                     DOM.roomCinematicText.style.opacity = 0;
-                    setTimeout(resolve, 1000); // Wait for fade out
+                    setTimeout(resolve, 1000); 
                 }, duration);
             });
         }
@@ -1525,32 +1443,31 @@
         /* --- 8. LOGIC HANDLERS --- */
 
         function handleYes() {
-            if (UI_MODE !== 'gameplay') return;
+            if (UI_MODE !== 'game') return;
+            if(!STATE.userInteracted) { STATE.userInteracted = true; AudioCtrl.initUserGesture(); }
             STATE.yes++;
             SFX.playYes();
             updateStatsUI();
             spawnFloatingHeart(DOM.yesBtn);
-            applyCurrentStage();
-            PhaseManager.update(); // Update Phase Logic
+            PhaseManager.update(); // Update effects
             checkEndingTriggers();
         }
 
         function handleNo() {
-            if (UI_MODE !== 'gameplay') return;
+            if (UI_MODE !== 'game') return;
+            if(!STATE.userInteracted) { STATE.userInteracted = true; AudioCtrl.initUserGesture(); }
             STATE.no++;
             SFX.playNo();
             updateStatsUI();
-            PhaseManager.update(); // Update Phase Logic
+            PhaseManager.update(); // Update effects
             
             const card = document.getElementById('main-card');
             card.classList.remove('shake');
             void card.offsetWidth;
             card.classList.add('shake');
             
-            // --- NEW PHASE LOGIC ---
             const L = getLang();
             let msgs = [];
-            
             if (STATE.yes <= 20) msgs = L.phase1;
             else if (STATE.yes <= 50) msgs = L.phase2;
             else if (STATE.yes <= 80) msgs = L.phase3;
@@ -1563,27 +1480,20 @@
         }
 
         function checkEndingTriggers() {
-            if (UI_MODE !== 'gameplay') return;
+            if (UI_MODE !== 'game') return;
 
-            // 1. Secret Trigger
             if (STATE.yes === 100 && STATE.scoreClicked) {
                 enterSecret();
                 return;
             }
-
-            // 2. Ending 1: True Love
             if (STATE.yes >= CONFIG.YES_GOAL) {
                 enterEnding(1);
                 return;
             }
-
-            // 3. Ending 2: Hesitant
             if (STATE.yes === 51 && STATE.no === 50) {
                 enterEnding(2);
                 return;
             }
-
-            // 4. Ending 3: Room
             if (STATE.no >= CONFIG.NO_GOAL) {
                 enterRoom();
                 return;
@@ -1594,19 +1504,15 @@
 
         function renderEndingOverlay(id) {
             const L = getLang();
-            const conf = ENDINGS_CONFIG[id] || { theme: 'theme-3' }; // Default to dark for special ids
+            const conf = ENDINGS_CONFIG[id] || { theme: 'theme-3' };
             
-            // Clean previous theme classes
-            DOM.endingOverlay.className = "overlay-screen";
+            DOM.endingOverlay.className = "overlay-screen visible"; // Ensure base class + visible
             DOM.endingOverlay.classList.add(conf.theme);
 
-            // Clean previous special effects
             DOM.endExtra.innerText = "";
             DOM.endExtra.classList.remove('visible');
-            DOM.endingOverlay.classList.remove('pulsing');
             DOM.endTitle.classList.remove('text-heartbeat');
 
-            // Setup static texts
             if (id===1) {
                 DOM.endTitle.innerText = L.end1_title;
                 DOM.endSub.innerText = L.end1_sub;
@@ -1616,13 +1522,10 @@
             else if (id===2) {
                 DOM.endTitle.innerText = L.end2_title;
                 DOM.endSub.innerText = L.end2_sub;
-                
-                // Specific Ending 2 Effects
                 DOM.endingOverlay.classList.add('pulsing');
                 DOM.endTitle.classList.add('text-heartbeat');
                 DOM.endExtra.innerText = L.end2_extra;
                 DOM.endExtra.classList.add('visible');
-                
                 safeStartEndingTypewriter(L.end2_lines);
                 startHesitantParticles();
             }
@@ -1638,10 +1541,12 @@
                 startConfetti();
             }
             else if (id === "3_final") {
-                 // Special State from Room Completion
                  DOM.endTitle.innerText = L.end3_title;
                  DOM.endSub.innerText = "TRUE ENDING";
-                 safeStartEndingTypewriter([L.room_finish, ...L.end3_lines]);
+                 // FIX: Correct spread and fallback
+                 const finalLines = L.end3_lines || ["..."];
+                 const roomFinish = L.room_finish || "...";
+                 safeStartEndingTypewriter([roomFinish, ...finalLines]);
                  DOM.endingOverlay.classList.add('theme-3');
             }
         }
@@ -1661,7 +1566,7 @@
             ENDING_STATE.finished = false;
             
             if(ENDING_STATE.timer) clearTimeout(ENDING_STATE.timer);
-            DOM.endText.className = "cinematic-text"; // Reset animation classes
+            DOM.endText.className = "cinematic-text"; 
             DOM.endText.innerText = "";
             
             typeLine();
@@ -1671,7 +1576,6 @@
             if (UI_MODE !== 'ending') return;
             const currentLine = ENDING_STATE.lines[ENDING_STATE.lineIndex];
 
-            // Safety check
             if(!currentLine) {
                 ENDING_STATE.finished = true;
                 DOM.endText.classList.add('replay-mode');
@@ -1683,27 +1587,22 @@
                 ENDING_STATE.charIndex++;
                 DOM.endText.innerText = ENDING_STATE.currentText;
                 
-                // Cinematic: Very subtle type sound (optional, keeps rhythm)
                 if(ENDING_STATE.charIndex % 3 === 0) SFX.playType();
-                
-                // Typing speed
                 ENDING_STATE.timer = setTimeout(typeLine, 45); 
             } else {
                 ENDING_STATE.isTyping = false;
-                DOM.endText.classList.add('waiting-next'); // Show arrow
+                DOM.endText.classList.add('waiting-next');
             }
         }
 
         function handleEndingClick() {
             if (UI_MODE !== 'ending') return;
 
-            // Scenario 1: Finished all dialogue -> Replay
             if (ENDING_STATE.finished) {
                 startEndingSequence(ENDING_STATE.lines);
                 return;
             }
 
-            // Scenario 2: Currently Typing -> Skip to end of line
             if (ENDING_STATE.isTyping) {
                 clearTimeout(ENDING_STATE.timer);
                 ENDING_STATE.currentText = ENDING_STATE.lines[ENDING_STATE.lineIndex];
@@ -1714,20 +1613,17 @@
                 return;
             }
 
-            // Scenario 3: Line Finished -> Go to next line
             if (!ENDING_STATE.isTyping) {
                 ENDING_STATE.lineIndex++;
                 
-                // Check if more lines exist
                 if (ENDING_STATE.lineIndex < ENDING_STATE.lines.length) {
                     ENDING_STATE.charIndex = 0;
                     ENDING_STATE.currentText = "";
                     ENDING_STATE.isTyping = true;
-                    DOM.endText.innerText = ""; // Clear text for visual fade-in feel by being empty
+                    DOM.endText.innerText = "";
                     DOM.endText.classList.remove('waiting-next');
                     typeLine();
                 } else {
-                    // End of Dialogue
                     ENDING_STATE.finished = true;
                     DOM.endText.classList.remove('waiting-next');
                     DOM.endText.classList.add('replay-mode');
@@ -1741,7 +1637,6 @@
                 const el = document.getElementById(id);
                 if(!el) return;
                 
-                // Remove old event listeners by replacing the element (simplest clean way without named functions)
                 const newEl = el.cloneNode(true);
                 el.parentNode.replaceChild(newEl, el);
                 
@@ -1749,25 +1644,21 @@
                     if (roomInteractionLocked) return;
                     
                     if (isKeyItem) {
-                        // Key Item Interaction
                         roomInteractionLocked = true;
                         STATE.roomProgress[key] = true;
                         updateRoomHUD();
                         
                         openRoomModal(L[`room_${key}`], () => {
-                             // On Modal Close
                              roomInteractionLocked = false;
                              checkRoomCompletion(); 
                         });
                     } else {
-                        // Fluff Interaction (Tooltip)
                         roomInteractionLocked = true;
                         let text = L[`room_${key}`] || " ... ";
-                        // Check alternate key for musicbox/shelf if original missing
                         if(key === 'musicbox' && !L.room_musicbox) text = L.room_musicbox_alt || "...";
                         
                         showTooltip(text);
-                        setTimeout(() => { roomInteractionLocked = false; }, 2000); // 2s read time
+                        setTimeout(() => { roomInteractionLocked = false; }, 2000); 
                     }
                 };
             };
@@ -1775,8 +1666,6 @@
             attach('obj-tulip', 'tulip', true);
             attach('obj-letter', 'letter', true);
             attach('obj-diary', 'diary', true);
-            
-            // All other interactable objects (Tooltip Only)
             ['window','lamp','clock','mirror','photo','chair','bed','box','dust','shelf','musicbox'].forEach(k => attach('obj-'+k, k, false));
         }
 
@@ -1800,12 +1689,10 @@
             }
             next();
             
-            // Clean click handler
             DOM.roomModal.onclick = (e) => {
                 if(e.target !== DOM.roomCloseBtn) next();
             };
             
-            // Close logic
             DOM.roomCloseBtn.onclick = () => {
                 DOM.roomModal.style.display = 'none';
                 if (onClose) onClose();
@@ -1814,58 +1701,45 @@
 
         async function checkRoomCompletion() {
             if (STATE.roomProgress.tulip && STATE.roomProgress.letter && STATE.roomProgress.diary) {
-                roomInteractionLocked = true; // Lock everything
+                roomInteractionLocked = true; 
                 const L = getLang();
-                
-                // Dramatic pause
                 await wait(600);
-                
-                // Fade out room scene
                 DOM.roomBgLayer.style.opacity = '0';
                 await wait(1500);
                 
-                // Go to final state without lobby return
-                setMode("ending");
-                renderEndingOverlay("3_final");
-                AudioCtrl.playEnding(3);
+                enterEnding("3_final"); 
             }
         }
 
         async function runSecretSequence() {
             const L = getLang();
             DOM.secretYesBtn.style.display = 'none';
-            DOM.secretYesBtn.className = 'secret-btn'; // reset class
+            DOM.secretYesBtn.className = 'secret-btn'; 
             
-            // Show texts with glitch
             for(let i = 0; i < L.secret_q.length; i++) {
-                if(UI_MODE !== 'secret') return;
+                if (UI_MODE !== 'secret') return;
                 
                 DOM.secretText.innerText = L.secret_q[i];
                 DOM.secretText.className = 'secret-text-glitch';
                 DOM.secretText.style.opacity = 0;
                 
-                // Little sound for glitch
                 SFX.playTone(100 + (Math.random()*50), 'sawtooth', 0.1, 0.1);
                 
                 setTimeout(() => DOM.secretText.style.opacity=1, 50);
-                
                 await wait(2500);
             }
             
-            if(UI_MODE !== 'secret') return;
+            if (UI_MODE !== 'secret') return;
             
-            // Show Button
             DOM.secretYesBtn.innerText = L.yesBtn;
             DOM.secretYesBtn.style.display = 'block';
             DOM.secretYesBtn.classList.add('secret-btn-glow');
-            
-            // Dramatic sound
             SFX.playTone(50, 'square', 0.3, 1.0);
         }
 
         /* --- 10. AUDIO & SFX --- */
         
-        const MUSIC_POOLS = {
+        const MUSIC = {
             lobby: [
                 "music/lobby1.mp3",
                 "music/lobby2.mp3"
@@ -1889,7 +1763,6 @@
         };
 
         const AudioCtrl = {
-            audioUnlocked: false,
             currentPool: null,
             fadeIntervals: new Map(),
             lastTracks: {
@@ -1899,25 +1772,20 @@
             },
             
             init() {
-                // Initial volume setup
                 if(DOM.audioLobby) DOM.audioLobby.volume = 0;
                 if(DOM.audioGame) DOM.audioGame.volume = 0;
                 if(DOM.audioEnd) DOM.audioEnd.volume = 0;
             },
 
             initUserGesture() {
-                if (this.audioUnlocked) return;
-                this.audioUnlocked = true;
-                if (SFX.ctx && SFX.ctx.state === 'suspended') {
+                if(STATE.userInteracted && SFX.ctx && SFX.ctx.state === 'suspended') {
                     SFX.ctx.resume().catch(e => console.log("SFX Context resume failed:", e));
                 }
-                // Trigger sync to start pending music
                 this.sync(); 
             },
 
-            // 2) Random Track Selection Rule
             pickRandomTrack(poolKey) {
-                const list = MUSIC_POOLS[poolKey];
+                const list = MUSIC[poolKey];
                 if (!list || list.length === 0) return null;
                 
                 let candidate = list[0];
@@ -1932,16 +1800,14 @@
                 return candidate;
             },
 
-            // 3) Centralized BGM Switching
             switchBGM(targetEl, poolKey) {
-                // Identify elements to stop
                 const all = [DOM.audioLobby, DOM.audioGame, DOM.audioEnd];
                 const others = all.filter(el => el !== targetEl);
 
                 // Stop others
                 others.forEach(el => this.fadeOutAndStop(el));
 
-                // If we shouldn't play music (settings), stop target too
+                // Check Settings
                 const settingsAllow = (poolKey === 'lobby') ? SETTINGS.lobbyMusic : SETTINGS.gameMusic;
                 
                 if (!settingsAllow) {
@@ -1949,6 +1815,7 @@
                     return;
                 }
 
+                // Pick Track
                 const track = this.pickRandomTrack(poolKey);
                 if (!track) return;
 
@@ -1985,13 +1852,16 @@
                     this.fadeIntervals.delete(el);
                 }
 
-                // 6) Avoid Autoplay Crash
-                if (!this.audioUnlocked) return;
+                if (!STATE.userInteracted) return; // Autoplay safety check
 
                 try {
-                    el.src = src;
+                    // Only change src if different to prevent reload flicker
+                    if(el.getAttribute('src') !== src) {
+                        el.src = src;
+                        el.load();
+                    }
                     el.loop = true;
-                    el.volume = 0; // Start at 0 for fade in
+                    el.volume = 0; 
                     const p = el.play();
                     if (p !== undefined) {
                         p.then(() => {
@@ -2006,7 +1876,7 @@
             },
 
             fadeIn(el) {
-                let targetVol = 0.4; // Default max volume
+                let targetVol = 0.4; 
                 if (el === DOM.audioEnd) targetVol = 0.5;
 
                 const step = 0.02;
@@ -2027,14 +1897,11 @@
             },
 
             playEnding(id) {
-                // Kept for compatibility if called directly, but sync() handles this now
-                // Just trigger sync
                 this.sync();
             },
 
-            // 5) When to Switch Music (Logic)
             sync() {
-                if (!this.audioUnlocked) return;
+                if (!STATE.userInteracted) return;
 
                 let targetPool = null;
                 let targetEl = null;
@@ -2042,7 +1909,7 @@
                 if (UI_MODE === 'lobby') {
                     targetPool = 'lobby';
                     targetEl = DOM.audioLobby;
-                } else if (UI_MODE === 'gameplay') {
+                } else if (UI_MODE === 'game') {
                     targetPool = 'gameplay';
                     targetEl = DOM.audioGame;
                 } else if (UI_MODE === 'ending') {
@@ -2053,23 +1920,23 @@
                     else if (eid === 4) targetPool = 'ending4';
                     
                     targetEl = DOM.audioEnd;
-                } else if (UI_MODE === 'room') {
-                    // Room usually implies no music or ambience, or keeping previous if desired.
-                    // Assuming silence based on "Switching UI to endingX starts endingX BGM".
-                    // Room is not an ending UI strictly but leads to one.
-                    this.stopAll();
-                    return;
-                } else if (UI_MODE === 'secret') {
+                } else if (UI_MODE === 'room' || UI_MODE === 'secret') {
                     this.stopAll();
                     return;
                 }
 
                 if (targetPool && targetEl) {
+                    // Logic to resume or switch
                     if (this.currentPool === targetPool) {
-                        // Dynamic setting check
                         const settingsAllow = (targetPool === 'lobby') ? SETTINGS.lobbyMusic : SETTINGS.gameMusic;
-                        if (!settingsAllow && !targetEl.paused) this.fadeOutAndStop(targetEl);
-                        if (settingsAllow && targetEl.paused) this.playSafe(targetEl, this.lastTracks[targetPool] || this.pickRandomTrack(targetPool));
+                        
+                        if (!settingsAllow && !targetEl.paused) {
+                            this.fadeOutAndStop(targetEl);
+                        } else if (settingsAllow && targetEl.paused) {
+                            // Resume logic (pick new or same)
+                            const track = this.lastTracks[targetPool] || this.pickRandomTrack(targetPool);
+                            this.playSafe(targetEl, track);
+                        }
                         return;
                     }
 
@@ -2089,14 +1956,13 @@
                         console.warn("Web Audio API not supported", e);
                     }
                 }
-                // Attempt to resume if suspended (common in some browsers)
                 if(this.ctx && this.ctx.state === 'suspended') {
                     this.ctx.resume().catch(e => console.log("Resume failed", e));
                 }
             },
             playTone(f, t, vol=0.1, dur=0.1) {
                 if(!this.ctx) this.init();
-                if(!this.ctx) return; // Fallback if init failed
+                if(!this.ctx) return; 
                 
                 try {
                     if(this.ctx.state === 'suspended') this.ctx.resume();
@@ -2110,7 +1976,7 @@
             },
             playYes() { this.playTone(880, 'sine'); },
             playNo() { this.playTone(150, 'sawtooth'); },
-            playType() { this.playTone(1200, 'triangle', 0.03, 0.05); } // Cinematic click sound
+            playType() { this.playTone(1200, 'triangle', 0.03, 0.05); } 
         };
 
         /* --- 11. UTILS & UI UPDATES --- */
@@ -2124,7 +1990,8 @@
             setText(DOM.mainTitle, L.title);
             setText(DOM.lobbyTitle, L.title);
             setText(DOM.lobbySubtitle, L.subtitle);
-            setText(DOM.yesBtn, L.yesBtn);
+            // Don't overwrite YES button text directly as it has child element for Hold Hint
+            if(DOM.yesBtn.childNodes[0]) DOM.yesBtn.childNodes[0].textContent = L.yesBtn + " "; 
             setText(DOM.noBtn, L.noBtn);
         }
 
@@ -2146,13 +2013,7 @@
         }
 
         function applyCurrentStage() {
-            // Simple visual effect (keeping subtle rotation for variety outside of PhaseManager specific)
-            if(STATE.yes > 10 && STATE.yes < 20) DOM.yesBtn.style.transform = `rotate(${Math.random()*10-5}deg)`;
-            // NOTE: PhaseManager controls drift now, so this might conflict in Phase 1. 
-            // PhaseManager uses transform translate. 
-            // Let's rely on PhaseManager entirely for transform.
-            // Disabled this simple effect to avoid conflict with Phase 1.
-            // else DOM.yesBtn.style.transform = 'none'; 
+            // Handled by PhaseManager now
         }
 
         function generateStages() { STATE.effects = []; }
@@ -2162,7 +2023,6 @@
             t.innerText = msg;
             t.style.opacity = 1;
             
-            // Clear previous timer to prevent flickering
             if(t.hideTimer) clearTimeout(t.hideTimer);
             
             t.hideTimer = setTimeout(() => {
@@ -2181,4 +2041,298 @@
         function startConfetti() {
             const c = DOM.confettiCanvas;
             const ctx = c.getContext('2d');
-            c.width = window.innerWidth; c.height = window
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const p = [];
+            for(let i=0;i<50;i++) p.push({x:Math.random()*c.width, y:-10, s:Math.random()*5+2, c:['gold','pink','white'][Math.floor(Math.random()*3)]});
+            function draw() {
+                if (UI_MODE !== 'ending') return;
+                ctx.clearRect(0,0,c.width,c.height);
+                p.forEach(o=>{ ctx.fillStyle=o.c; ctx.fillRect(o.x,o.y,o.s,o.s); o.y+=o.s; if(o.y>c.height)o.y=-10; });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        function startHesitantParticles() {
+            const c = DOM.confettiCanvas;
+            const ctx = c.getContext('2d');
+            c.width = window.innerWidth; c.height = window.innerHeight;
+            const p = [];
+            for(let i=0;i<40;i++) p.push({
+                x:Math.random()*c.width, y:c.height + Math.random()*100, 
+                s:Math.random()*4+2, 
+                c:['#667eea', '#764ba2', '#a18cd1'][Math.floor(Math.random()*3)],
+                v: Math.random()*1 + 0.5
+            });
+            function draw() {
+                if (UI_MODE !== 'ending' || STATE.endingId !== 2) return;
+                ctx.clearRect(0,0,c.width,c.height);
+                p.forEach(o=>{ 
+                    ctx.beginPath();
+                    ctx.fillStyle=o.c; 
+                    ctx.arc(o.x, o.y, o.s, 0, Math.PI*2);
+                    ctx.fill();
+                    o.y -= o.v; 
+                    o.x += Math.sin(o.y*0.01)*0.5; 
+                    if(o.y < -10) o.y = c.height+10; 
+                });
+                requestAnimationFrame(draw);
+            }
+            draw();
+        }
+
+        /* --- SHARE CARD UPGRADE --- */
+
+        function getEndingQuote(endingId) {
+            const lang = SETTINGS.lang || 'en';
+            const Q = {
+                1: {
+                    en: "Love is a decision. You chose me 101 times.",
+                    vi: "Tình yêu là lựa chọn. Và cậu đã chọn tớ 101 lần.",
+                    es: "El amor es una decisión. Me elegiste 101 veces."
+                },
+                2: {
+                    en: "Even if you hesitated... you came back.",
+                    vi: "Dù do dự... cậu vẫn quay về.",
+                    es: "Aunque dudaste... regresaste."
+                },
+                3: {
+                    en: "The lamp is still burning. Nobody came home.",
+                    vi: "Đèn vẫn cháy. Nhưng chẳng ai quay về.",
+                    es: "La lámpara sigue encendida. Nadie volvió."
+                },
+                4: {
+                    en: "You found the secret. Now promise me you’ll stay.",
+                    vi: "Cậu tìm thấy bí mật. Giờ hãy hứa là sẽ ở lại.",
+                    es: "Encontraste el secreto. Prométeme que te quedarás."
+                }
+            };
+            const safeId = (endingId === '3_final') ? 3 : endingId;
+            return (Q[safeId] && Q[safeId][lang]) ? Q[safeId][lang] : Q[1].en;
+        }
+
+        function openShareModal() {
+            const modal = document.getElementById("share-modal");
+            if(!modal) return;
+
+            modal.classList.add("visible"); 
+
+            const id = SHARE_CARD.lastEndingId || 1;
+            
+            const titleEl = document.getElementById("share-title");
+            const subEl = document.getElementById("share-sub");
+            if(titleEl) titleEl.innerText = "Share Card 💌";
+            if(subEl) subEl.innerText = `ENDING ${String(id).padStart(2,'0')}/04`;
+
+            renderShareCardCanvas(id);
+        }
+
+        function closeShareModal() {
+            const modal = document.getElementById("share-modal");
+            if(modal) modal.classList.remove("visible");
+        }
+
+        function renderShareCardCanvas(endingId) {
+            const canvas = document.getElementById("share-canvas");
+            if(!canvas) return;
+            const ctx = canvas.getContext("2d");
+
+            if(SHARE_CARD.cachedDataURL && SHARE_CARD.lastEndingId === endingId) {
+                const img = new Image();
+                img.onload = ()=> ctx.drawImage(img, 0, 0);
+                img.src = SHARE_CARD.cachedDataURL;
+                return;
+            }
+
+            const W = canvas.width;
+            const H = canvas.height;
+
+            ctx.clearRect(0,0,W,H);
+
+            const themes = {
+                1: { bg1:"#ff9a9e", bg2:"#fecfef", accent:"#ff4d6d", text:"#ffffff" },
+                2: { bg1:"#667eea", bg2:"#764ba2", accent:"#ffeaa7", text:"#ffffff" },
+                3: { bg1:"#050505", bg2:"#1a1a1a", accent:"#ffd27d", text:"#eaeaea" },
+                4: { bg1:"#f6d365", bg2:"#fda085", accent:"#2d3436", text:"#ffffff" }
+            };
+
+            const T = themes[endingId] || themes[1];
+
+            const grad = ctx.createLinearGradient(0,0,W,H);
+            grad.addColorStop(0, T.bg1);
+            grad.addColorStop(1, T.bg2);
+            ctx.fillStyle = grad;
+            ctx.fillRect(0,0,W,H);
+
+            const vignette = ctx.createRadialGradient(W/2, H/2, H*0.2, W/2, H/2, H*0.8);
+            vignette.addColorStop(0, "rgba(0,0,0,0)");
+            vignette.addColorStop(1, "rgba(0,0,0,0.55)");
+            ctx.fillStyle = vignette;
+            ctx.fillRect(0,0,W,H);
+
+            drawParticles(ctx, W, H, endingId);
+
+            ctx.strokeStyle = "rgba(255,255,255,0.65)";
+            ctx.lineWidth = 8;
+            roundRect(ctx, 60, 120, W-120, H-240, 45);
+            ctx.stroke();
+
+            ctx.fillStyle = "rgba(255,255,255,0.12)";
+            roundRect(ctx, 90, 170, W-180, 260, 35);
+            ctx.fill();
+
+            ctx.fillStyle = T.text;
+            ctx.font = "bold 90px Fredoka";
+            ctx.textAlign = "center";
+            ctx.fillText("WILL YOU", W/2, 280);
+            ctx.fillText("BE MY", W/2, 370);
+
+            ctx.font = "bold 110px Fredoka";
+            ctx.fillStyle = T.accent;
+            ctx.fillText("VALENTINE?", W/2, 480);
+
+            ctx.font = "bold 60px Nunito";
+            ctx.fillStyle = "rgba(255,255,255,0.95)";
+            ctx.fillText(`ENDING ${String(endingId).padStart(2,'0')}/04`, W/2, 600);
+
+            const yes = STATE.yes || 0; 
+            const no = STATE.no || 0;
+
+            ctx.font = "bold 62px Nunito";
+            ctx.fillStyle = "rgba(255,255,255,0.95)";
+            ctx.fillText(`YES: ${yes}   NO: ${no}`, W/2, 720);
+
+            ctx.fillStyle = "rgba(0,0,0,0.28)";
+            roundRect(ctx, 120, 820, W-240, 420, 35);
+            ctx.fill();
+
+            const quote = getEndingQuote(endingId);
+            ctx.font = "bold 60px Nunito";
+            ctx.fillStyle = "rgba(255,255,255,0.95)";
+            wrapText(ctx, `"${quote}"`, W/2, 920, W-320, 78);
+
+            drawEndingSymbol(ctx, W, H, endingId);
+
+            ctx.font = "40px Nunito";
+            ctx.fillStyle = "rgba(255,255,255,0.6)";
+            ctx.fillText("Made with 💘", W/2, H-180);
+
+            ctx.font = "36px Nunito";
+            ctx.fillStyle = "rgba(255,255,255,0.45)";
+            ctx.fillText("Will You Be My Valentine? (Web Game)", W/2, H-120);
+
+            SHARE_CARD.cachedDataURL = canvas.toDataURL("image/png");
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x+r, y);
+            ctx.arcTo(x+w, y, x+w, y+h, r);
+            ctx.arcTo(x+w, y+h, x, y+h, r);
+            ctx.arcTo(x, y+h, x, y, r);
+            ctx.arcTo(x, y, x+w, y, r);
+            ctx.closePath();
+        }
+
+        function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+            const words = text.split(" ");
+            let line = "";
+            let yy = y;
+
+            for(let i=0;i<words.length;i++){
+                const testLine = line + words[i] + " ";
+                const metrics = ctx.measureText(testLine);
+                if(metrics.width > maxWidth && i > 0){
+                    ctx.fillText(line.trim(), x, yy);
+                    line = words[i] + " ";
+                    yy += lineHeight;
+                } else {
+                    line = testLine;
+                }
+            }
+            ctx.fillText(line.trim(), x, yy);
+        }
+
+        function drawParticles(ctx, W, H, endingId) {
+            const count = 70;
+            for(let i=0;i<count;i++){
+                const px = Math.random()*W;
+                const py = Math.random()*H;
+                const size = Math.random()*10 + 3;
+                let alpha = 0.2 + Math.random()*0.35;
+                if(endingId === 3) alpha *= 0.5;
+
+                ctx.fillStyle = `rgba(255,255,255,${alpha})`;
+                ctx.beginPath();
+                ctx.arc(px, py, size, 0, Math.PI*2);
+                ctx.fill();
+            }
+        }
+
+        function drawEndingSymbol(ctx, W, H, endingId) {
+            ctx.save();
+            ctx.textAlign = "center";
+            let symbol = "💘";
+            let size = 240;
+            let alpha = 0.18;
+
+            if(endingId === 1) symbol = "💖";
+            if(endingId === 2) symbol = "💔";
+            if(endingId === 3) { symbol = "🌙"; alpha = 0.10; }
+            if(endingId === 4) { symbol = "✨"; alpha = 0.22; }
+
+            ctx.globalAlpha = alpha;
+            ctx.font = `${size}px Fredoka`;
+            ctx.fillStyle = "white";
+            ctx.fillText(symbol, W/2, H*0.78);
+            ctx.restore();
+        }
+
+        function downloadShareCard() {
+            const canvas = document.getElementById("share-canvas");
+            if(!canvas) return;
+            const link = document.createElement("a");
+            const id = SHARE_CARD.lastEndingId || 1;
+            link.download = `valentine_ending_${String(id).padStart(2,'0')}.png`;
+            link.href = canvas.toDataURL("image/png");
+            link.click();
+        }
+
+        async function copyShareCardToClipboard() {
+            const canvas = document.getElementById("share-canvas");
+            if(!canvas) return;
+            try {
+                const blob = await new Promise(res => canvas.toBlob(res));
+                if(!blob) throw new Error("Blob failed");
+                if(navigator.clipboard && window.ClipboardItem) {
+                    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+                    const btn = document.getElementById('btn-share-copy');
+                    const original = btn.innerText;
+                    btn.innerText = "Copied! ✅";
+                    setTimeout(() => btn.innerText = original, 2000);
+                } else {
+                    showTooltip("Clipboard not supported 😭");
+                }
+            } catch(e) {
+                console.warn("Copy failed:", e);
+                showTooltip("Copy failed 😭");
+            }
+        }
+
+        function saveSettings() { localStorage.setItem(CONFIG.SETTINGS_KEY, JSON.stringify(SETTINGS)); }
+        function loadSettings() { 
+            try { 
+                const s = JSON.parse(localStorage.getItem(CONFIG.SETTINGS_KEY));
+                if(s) SETTINGS = s;
+                document.getElementById('toggle-lobby-music').checked = SETTINGS.lobbyMusic;
+                document.getElementById('toggle-game-music').checked = SETTINGS.gameMusic;
+                document.getElementById('lang-select').value = SETTINGS.lang;
+            } catch(e){} 
+        }
+
+        // Start
+        document.addEventListener('DOMContentLoaded', initGame);
+
+    </script>
+</body>
+</html>
