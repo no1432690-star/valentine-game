@@ -272,6 +272,7 @@
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
             user-select: none;
             transition: background 0.3s;
+            white-space: pre-wrap; /* Fix spacing */
         }
         .cinematic-text:hover { background: rgba(0,0,0,0.5); }
         
@@ -394,9 +395,9 @@
         #obj-musicbox { bottom: 25%; right: 20%; font-size: 2rem; opacity: 0.8; }
 
         /* Room UI */
-        #room-tooltip { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #ccc; padding: 10px 20px; border-radius: 5px; font-size: 1.4rem; pointer-events: none; opacity: 0; transition: opacity 0.3s; width: max-content; }
-        #room-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; background: #1a1a1a; border: 1px solid #444; padding: 25px; color: #eee; text-align: center; display: none; box-shadow: 0 0 50px rgba(0,0,0,1); z-index: 1600; pointer-events: auto; cursor: pointer; }
-        #room-modal-text { font-size: 1.3rem; min-height: 80px; margin-bottom: 20px; line-height: 1.4; text-align: left; }
+        #room-tooltip { position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.8); color: #ccc; padding: 10px 20px; border-radius: 5px; font-size: 1.4rem; pointer-events: none; opacity: 0; transition: opacity 0.3s; width: max-content; z-index: 1800; }
+        #room-modal { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 85%; max-width: 400px; background: #1a1a1a; border: 1px solid #444; padding: 25px; color: #eee; text-align: center; display: none; box-shadow: 0 0 50px rgba(0,0,0,1); z-index: 1800; pointer-events: auto; cursor: pointer; }
+        #room-modal-text { font-size: 1.3rem; min-height: 80px; margin-bottom: 20px; line-height: 1.4; text-align: left; white-space: pre-wrap; /* Fix spacing */ }
         .room-close-btn { background: #333; color: white; border: 1px solid #666; padding: 8px 20px; cursor: pointer; font-family: inherit; font-size: 1.2rem; pointer-events: auto; }
         
         #room-cinematic-text {
@@ -1834,7 +1835,7 @@
         /* --- 6. INITIALIZATION & EVENTS --- */
         
         function preloadEnding3Asset() {
-            const path = 'assets/ending3/ending3_room_ps1.png';
+            const path = 'assets/ending3_room.png';
             const img = new Image();
             img.onload = () => console.log("[ENDING3] room background loaded:", path);
             img.onerror = (e) => console.warn("[ENDING3] failed to load room background:", path, e);
@@ -2010,8 +2011,9 @@
             setMode('room');
             
             // --- ENDING 3 BACKGROUND PATCH ---
-            const path = 'assets/ending3/ending3_room_ps1.png';
+            const path = 'assets/ending3_room.png';
             let bgImg = document.getElementById("room-ps1-bg");
+            let bgLayer = document.getElementById("room-bg-layer");
             
             // Fallback creation if missing
             if (!bgImg) {
@@ -2032,11 +2034,23 @@
                 }
             }
 
+            // Apply to ps1 layer
             if(bgImg) {
                 bgImg.style.backgroundImage = `url('${path}')`;
                 bgImg.style.backgroundSize = "cover";
                 bgImg.style.backgroundPosition = "center";
                 bgImg.style.backgroundRepeat = "no-repeat";
+                console.log("[ROOM BG] Applied to #room-ps1-bg:", path);
+            }
+            
+            // Apply to bg layer (ensure visibility)
+            if(bgLayer) {
+                bgLayer.style.backgroundImage = `url('${path}')`;
+                bgLayer.style.backgroundSize = "cover";
+                bgLayer.style.backgroundPosition = "center";
+                bgLayer.style.backgroundRepeat = "no-repeat";
+                bgLayer.style.opacity = '1';
+                console.log("[ROOM BG] Applied to #room-bg-layer:", path);
             }
             // -------------------------------
 
@@ -2239,7 +2253,7 @@
             if (ENDING_STATE.charIndex < currentLine.length) {
                 ENDING_STATE.currentText += currentLine.charAt(ENDING_STATE.charIndex);
                 ENDING_STATE.charIndex++;
-                DOM.endText.innerText = ENDING_STATE.currentText;
+                DOM.endText.textContent = ENDING_STATE.currentText; // Fix spacing
                 
                 if(ENDING_STATE.charIndex % 3 === 0) SFX.playType();
                 ENDING_STATE.timer = setTimeout(typeLine, 45); 
@@ -2260,7 +2274,7 @@
             if (ENDING_STATE.isTyping) {
                 clearTimeout(ENDING_STATE.timer);
                 ENDING_STATE.currentText = ENDING_STATE.lines[ENDING_STATE.lineIndex];
-                DOM.endText.innerText = ENDING_STATE.currentText;
+                DOM.endText.textContent = ENDING_STATE.currentText; // Fix spacing
                 ENDING_STATE.isTyping = false;
                 ENDING_STATE.charIndex = ENDING_STATE.currentText.length;
                 DOM.endText.classList.add('waiting-next');
@@ -2313,8 +2327,22 @@
                 const newEl = el.cloneNode(true);
                 el.parentNode.replaceChild(newEl, el);
                 
+                // Get content for hover
+                let tooltipText = "";
+                if (item.type === 'modal') {
+                    // For modal items, show a hint or the name on hover
+                    // Use legacy tooltip key if available, otherwise just "..."
+                    // Actually, let's use the object key as a fallback name 
+                    tooltipText = L[`room_${item.key}_tooltip`] || "Interact";
+                } else {
+                    tooltipText = L[`room_${item.key}`] || "...";
+                    if(item.key === 'bed') tooltipText = L.room_bed || "..."; // fallback
+                }
+
+                // Interaction Logic
                 newEl.onclick = () => {
                     if (roomInteractionLocked) return;
+                    console.log(`[ROOM] Click object: ${item.id}`);
                     
                     // --- TRACKING LOGIC ---
                     if (!STATE.roomSeen.has(item.key)) {
@@ -2339,13 +2367,36 @@
                              if (item.progress) checkRoomCompletion(); 
                         });
                     } else {
+                        // For basic items, show tooltip on click as well (for mobile)
                         roomInteractionLocked = true;
-                        let text = L[`room_${item.key}`] || "...";
-                        if(item.key === 'bed') text = L.room_bed || "..."; // fallback
-                        
-                        showTooltip(text);
+                        showTooltip(tooltipText);
                         setTimeout(() => { roomInteractionLocked = false; }, 2000); 
                     }
+                };
+
+                // Hover Logic
+                newEl.onmouseenter = () => {
+                    if(!roomInteractionLocked && UI_MODE === 'room') {
+                        // Show tooltip on hover
+                        // If it's a modal item, we might not want to show the full text yet, 
+                        // just a hint. But let's show whatever text is available.
+                        // For modal items, let's show "Inspect" or similar if no tooltip text
+                        let hoverText = (item.type === 'modal') ? "Inspect" : tooltipText;
+                        showTooltip(hoverText);
+                        console.log(`[ROOM] Hover object: ${item.id}`);
+                    }
+                };
+                newEl.onmouseleave = () => {
+                    // Hide tooltip (if it was triggered by hover, not click lock)
+                    if(!roomInteractionLocked) {
+                        const t = document.getElementById('room-tooltip');
+                        if(t) t.style.opacity = 0;
+                    }
+                };
+                
+                // Touch start for better mobile response
+                newEl.ontouchstart = (e) => {
+                     // Allow click to handle it, just ensure no weird ghost clicks
                 };
             });
         }
@@ -2379,9 +2430,10 @@
             // UI Setup
             DOM.roomModal.style.display = 'block';
             DOM.roomCloseBtn.style.display = 'none'; // Hidden until finished
-            DOM.roomModalText.innerText = "";
+            DOM.roomModalText.textContent = ""; // Use textContent
 
             // Start Typing
+            console.log(`[TYPEWRITER] Started with ${ROOM_MODAL_STATE.lines.length} lines`);
             typeRoomLine();
 
             // Bind Events
@@ -2404,7 +2456,8 @@
             ROOM_MODAL_STATE.isTyping = true;
 
             if (ROOM_MODAL_STATE.charIdx < currentLine.length) {
-                DOM.roomModalText.innerText += currentLine.charAt(ROOM_MODAL_STATE.charIdx);
+                // Append character safely
+                DOM.roomModalText.textContent += currentLine.charAt(ROOM_MODAL_STATE.charIdx);
                 ROOM_MODAL_STATE.charIdx++;
                 
                 if(ROOM_MODAL_STATE.charIdx % 3 === 0) SFX.playType();
@@ -2429,7 +2482,7 @@
                 if(ROOM_MODAL_STATE.timer) clearTimeout(ROOM_MODAL_STATE.timer);
                 
                 const currentLine = ROOM_MODAL_STATE.lines[ROOM_MODAL_STATE.lineIdx];
-                DOM.roomModalText.innerText = currentLine;
+                DOM.roomModalText.textContent = currentLine; // Use textContent
                 
                 ROOM_MODAL_STATE.isTyping = false;
                 ROOM_MODAL_STATE.charIdx = currentLine.length;
@@ -2444,7 +2497,7 @@
                 if (ROOM_MODAL_STATE.lineIdx < ROOM_MODAL_STATE.lines.length - 1) {
                     ROOM_MODAL_STATE.lineIdx++;
                     ROOM_MODAL_STATE.charIdx = 0;
-                    DOM.roomModalText.innerText = ""; // Clear for next line
+                    DOM.roomModalText.textContent = ""; // Clear for next line
                     DOM.roomCloseBtn.style.display = 'none'; // Ensure button is hidden
                     typeRoomLine();
                 }
@@ -2812,9 +2865,11 @@
             
             if(t.hideTimer) clearTimeout(t.hideTimer);
             
+            // Keep tooltip visible longer or until hidden by mouseleave
             t.hideTimer = setTimeout(() => {
                 t.style.opacity = 0;
-            }, 1500);
+            }, 3000); 
+            console.log(`[ROOM] Tooltip show: ${msg}`);
         }
 
         function spawnFloatingHeart(el) {
