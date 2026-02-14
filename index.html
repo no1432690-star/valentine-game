@@ -379,6 +379,10 @@
             pointer-events: none;
             z-index: 2000;
         }
+        
+        /* DEBUG OVERLAY STYLES */
+        #ending3-debug-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 9999; }
+        .debug-box { position: absolute; border: 2px solid red; background: rgba(255,0,0,0.15); color: red; font-size: 10px; font-weight: bold; display: flex; align-items: center; justify-content: center; overflow: hidden; pointer-events: none; }
 
         /* Room UI */
         #room-tooltip { 
@@ -1709,26 +1713,57 @@
 
         /* --- HOTSPOT CLICK SYSTEM (SYSTEM A: PERCENTAGE BASED) --- */
 
-        // 1. Helper to calculate percentage position relative to the image
-        function getRelativePercentPosition(event, imgElement) {
-            const rect = imgElement.getBoundingClientRect();
-            // Handle both touch and mouse events
+        // New Hotspot Data (Percentage)
+        const ending3Hotspots = [
+          { id:"oil_lamp",           x: 30.8, y: 51.0, w: 7.0,  h: 16.0 },
+          { id:"open_book",          x: 38.3, y: 50.0, w: 11.0, h: 10.0 },
+          { id:"loose_letter",       x: 33.3, y: 57.0, w: 11.5, h: 8.0  },
+          { id:"fake_tulip_bouquet", x: 3.7,  y: 55.0, w: 15.2, h: 13.5 },
+          { id:"books_on_shelf",     x: 5.0,  y: 73.0, w: 16.5, h: 14.5 },
+          { id:"wall_clock",         x: 61.0, y: 5.0,  w: 9.0,  h: 13.0 },
+          { id:"window",             x: 34.0, y: 11.0, w: 15.5, h: 30.5 },
+          { id:"broken_mirror",      x: 79.4, y: 13.0, w: 14.0, h: 32.0 },
+          { id:"small_wooden_box",   x: 69.0, y: 61.0, w: 13.5, h: 11.0 },
+          { id:"wooden_chair",       x: 54.0, y: 41.0, w: 16.0, h: 30.0 },
+          { id:"bed_pillow",         x: 88.5, y: 57.5, w: 11.5, h: 13.5 },
+          { id:"bed",                x: 81.5, y: 55.0, w: 18.5, h: 41.0 },
+          { id:"dust_on_floor",      x: 45.0, y: 74.0, w: 26.0, h: 17.0 },
+        ];
+
+        const DEBUG_ENDING3_HOTSPOTS = true;
+
+        // Bridge new ID to existing logic
+        const HOTSPOT_MAPPING = {
+          "fake_tulip_bouquet": { id: "tulip", type: "main", langKey: "room_tulip_lines" },
+          "oil_lamp": { id: "lamp", type: "side", langKey: "room_lamp_tooltip" },
+          "window": { id: "window", type: "main", langKey: "room_window_lines" },
+          "broken_mirror": { id: "mirror", type: "main", langKey: "room_mirror_lines" },
+          "loose_letter": { id: "letter", type: "main", langKey: "room_letter_lines" },
+          "open_book": { id: "diary", type: "main", langKey: "room_diary_lines" },
+          "books_on_shelf": { id: "bookshelf", type: "side", langKey: "room_bookshelf" },
+          "wooden_chair": { id: "chair", type: "side", langKey: "room_chair" },
+          "small_wooden_box": { id: "box", type: "side", langKey: "room_box" },
+          "bed": { id: "bed", type: "side", langKey: "room_bed" },
+          "bed_pillow": { id: "bed", type: "side", langKey: "room_bed" },
+          "dust_on_floor": { id: "dust", type: "side", langKey: "room_dust" },
+          "wall_clock": { id: "clock", type: "side", langKey: "room_clock" }
+        };
+
+        function getPercentPosFromEvent(event, imgEl) {
+            const rect = imgEl.getBoundingClientRect();
             const clientX = (event.touches && event.touches.length > 0) ? event.touches[0].clientX : event.clientX;
             const clientY = (event.touches && event.touches.length > 0) ? event.touches[0].clientY : event.clientY;
 
-            // Coordinates relative to the image element
             const xPx = clientX - rect.left;
             const yPx = clientY - rect.top;
 
-            // Convert to percentage
             const xPercent = (xPx / rect.width) * 100;
             const yPercent = (yPx / rect.height) * 100;
 
             return { xPercent, yPercent };
         }
 
-        // 2. Helper to find if a percentage coordinate is inside a hotspot
-        function findHotspotByPercent(xPercent, yPercent, hotspots) {
+        function findHotspotPercent(xPercent, yPercent, hotspots) {
             return hotspots.find(h =>
                 xPercent >= h.x &&
                 xPercent <= h.x + h.w &&
@@ -1737,49 +1772,96 @@
             );
         }
 
-        function initRoomInteraction() {
-            const mapContainer = DOM.roomMap;
-            if(!mapContainer) return;
-            
-            // Clean slate listeners
-            const newMap = mapContainer.cloneNode(true);
-            mapContainer.parentNode.replaceChild(newMap, mapContainer);
-            DOM.roomMap = newMap;
-            DOM.roomBg = newMap.querySelector('#room-bg');
-            DOM.roomHighlight = newMap.querySelector('#room-highlight');
-
-            // Bind click listener to map container (which wraps the image)
-            DOM.roomMap.addEventListener('click', handleRoomMapClick);
-            
-            // Debug Mode
-            if(CONFIG.DEBUG_HOTSPOTS) {
-                renderDebugHotspots(DOM.roomMap);
-            }
-        }
-
-        function handleRoomMapClick(e) {
+        function handleEnding3Click(e) {
             if(roomInteractionLocked) return;
             if(UI_MODE !== 'room') return;
 
             const bgElement = DOM.roomBg;
             if (!bgElement) return;
 
-            // 1. Get click position in percentage
-            const { xPercent, yPercent } = getRelativePercentPosition(e, bgElement);
+            const { xPercent, yPercent } = getPercentPosFromEvent(e, bgElement);
 
-            if(CONFIG.DEBUG_HOTSPOTS) {
+            if(DEBUG_ENDING3_HOTSPOTS) {
                 console.log(`[DEBUG] Click: X=${xPercent.toFixed(2)}%, Y=${yPercent.toFixed(2)}%`);
             }
 
-            // 2. Check bounds (0-100%)
             if (xPercent < 0 || xPercent > 100 || yPercent < 0 || yPercent > 100) return;
 
-            // 3. Find matching hotspot
-            const hotspot = findHotspotByPercent(xPercent, yPercent, ROOM_HOTSPOTS);
+            const hotspot = findHotspotPercent(xPercent, yPercent, ending3Hotspots);
 
             if (hotspot) {
-                triggerHotspotAction(hotspot, e.clientX, e.clientY);
+                console.log(`HIT: ${hotspot.id}`);
+                const mapped = HOTSPOT_MAPPING[hotspot.id];
+                if (mapped) {
+                    const merged = {
+                        ...mapped,
+                        x: hotspot.x,
+                        y: hotspot.y,
+                        w: hotspot.w,
+                        h: hotspot.h
+                    };
+                    triggerHotspotAction(merged, e.clientX, e.clientY);
+                }
             }
+        }
+
+        function initEnding3DebugOverlay() {
+            if(!DEBUG_ENDING3_HOTSPOTS) return;
+            
+            const container = DOM.roomMap;
+            if(!container) return;
+
+            // Clean old
+            const old = document.getElementById('ending3-debug-overlay');
+            if(old) old.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'ending3-debug-overlay';
+            
+            ending3Hotspots.forEach(h => {
+                const box = document.createElement('div');
+                box.className = 'debug-box';
+                box.style.left = h.x + '%';
+                box.style.top = h.y + '%';
+                box.style.width = h.w + '%';
+                box.style.height = h.h + '%';
+                box.innerText = h.id;
+                overlay.appendChild(box);
+            });
+            
+            container.appendChild(overlay);
+        }
+
+        // Updated init with new system
+        function initRoomInteraction() {
+            const mapContainer = DOM.roomMap;
+            if(!mapContainer) return;
+            
+            const newMap = mapContainer.cloneNode(true);
+            mapContainer.parentNode.replaceChild(newMap, mapContainer);
+            DOM.roomMap = newMap;
+            DOM.roomBg = newMap.querySelector('#room-bg');
+            DOM.roomHighlight = newMap.querySelector('#room-highlight');
+
+            // Use new handler
+            DOM.roomMap.addEventListener('click', handleEnding3Click);
+            
+            // Init Debug
+            initEnding3DebugOverlay();
+        }
+
+        // 1. Helper to calculate percentage position relative to the image (Deprecated but kept if referenced)
+        function getRelativePercentPosition(event, imgElement) {
+            return getPercentPosFromEvent(event, imgElement); // Delegate to new logic
+        }
+
+        // 2. Helper to find if a percentage coordinate is inside a hotspot (Deprecated but kept if referenced)
+        function findHotspotByPercent(xPercent, yPercent, hotspots) {
+            return findHotspotPercent(xPercent, yPercent, hotspots); // Delegate
+        }
+
+        function handleRoomMapClick(e) {
+             handleEnding3Click(e); // Delegate
         }
 
         function triggerHotspotAction(hotspot, clientX, clientY) {
@@ -1840,20 +1922,7 @@
         }
 
         function renderDebugHotspots(container) {
-            // Remove old debugs
-            const olds = container.querySelectorAll('.hotspot-debug');
-            olds.forEach(o => o.remove());
-
-            ROOM_HOTSPOTS.forEach(h => {
-                const el = document.createElement('div');
-                el.className = 'hotspot-debug';
-                el.style.left = h.x + '%';
-                el.style.top = h.y + '%';
-                el.style.width = h.w + '%';
-                el.style.height = h.h + '%';
-                el.title = `${h.id} (${h.x},${h.y})`;
-                container.appendChild(el);
-            });
+            // Replaced by initEnding3DebugOverlay
         }
 
         function updateRoomHUD() {
