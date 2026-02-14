@@ -812,6 +812,23 @@
                 subtitle: "Say YES 101 times to win 😈",
                 yesBtn: "YES 💖", noBtn: "NO 💔", reset: "Reset",
                 
+                ui: {
+                    settings: "Settings ⚙️",
+                    lobbyMusic: "Lobby Music",
+                    gameMusic: "Game Music",
+                    language: "Language",
+                    replay: "↻ Replay",
+                    lobby: "🏠 Lobby",
+                    share: "💌 Share",
+                    exitRoom: "Exit Room",
+                    close: "Close"
+                },
+
+                // Deprecated top level keys kept for safety
+                st_title: "Settings ⚙️", st_lobby: "Lobby Music", st_game: "Game Music", st_lang: "Language", st_close: "Close",
+                start_btn: "Tap to Start 💘",
+                share_title: "Share Card 💌", share_sub: "Your ending has been captured.", share_dl: "Download 📥", share_copy: "Copy Text 📋", share_close: "Close", share_hint: "Tip: Perfect for Instagram Stories ✨",
+
                 phase1: ["Please?", "Pretty please?", "I have cookies!", "Don't be shy!", "Just click YES!"], 
                 lobbyNo: ["Wrong answer 😏", "Try again...", "You can't escape!", "No is not an option 💀", "Nice try."],
                 
@@ -900,45 +917,61 @@
                     "And it knows you saw everything."
                 ],
                 
-                // OTHER ENDINGS
+                // NEW: ENDINGS NAMESPACE
+                endings: {
+                    end1_title: "TRUE LOVE", end1_sub: "YES: 101/101",
+                    end1_lines: [
+                      "101 times...",
+                      "You chose me.",
+                      "Again. And again.",
+                      "Maybe love isn’t a feeling.",
+                      "Maybe it’s what you keep doing.",
+                      "So I’ll stay too."
+                    ],
+                    
+                    end2_title: "HESITANT HEART", end2_sub: "YES: 51 - NO: 50",
+                    end2_extra: "You broke me 50 times... and still came back.",
+                    end2_lines: [
+                      "You said 'NO' fifty times.",
+                      "But you still came back.",
+                      "Again. And again.",
+                      "Maybe love isn’t perfect.",
+                      "Maybe it’s just… trying.",
+                      "And this time... you tried."
+                    ],
+                    
+                    end3_title: "THE EMPTY ROOM", end3_sub: "NO: 100/100",
+                    end3_lines: [
+                      "You said 'NO'.",
+                      "One hundred times.",
+                      "The room stopped pretending.",
+                      "The air grew colder.",
+                      "Not angry.",
+                      "Just empty."
+                    ],
+                    
+                    end4_title: "THE SECRET YES", end4_sub: "SECRET FOUND",
+                    end4_lines: [
+                      "You found what you weren’t meant to see.",
+                      "You looked closer than anyone else.",
+                      "So tell me...",
+                      "Will you choose me forever?"
+                    ]
+                },
+                
+                // Legacy keys kept for safety
                 end1_title: "TRUE LOVE", end1_sub: "YES: 101/101",
-                end1_lines: [
-                  "101 times...",
-                  "You chose me.",
-                  "Again. And again.",
-                  "Maybe love isn’t a feeling.",
-                  "Maybe it’s what you keep doing.",
-                  "So I’ll stay too."
-                ],
+                end1_lines: ["101 times...","You chose me.","Again. And again.","Maybe love isn’t a feeling.","Maybe it’s what you keep doing.","So I’ll stay too."],
                 
                 end2_title: "HESITANT HEART", end2_sub: "YES: 51 - NO: 50",
                 end2_extra: "You broke me 50 times... and still came back.",
-                end2_lines: [
-                  "You said 'NO' fifty times.",
-                  "But you still came back.",
-                  "Again. And again.",
-                  "Maybe love isn’t perfect.",
-                  "Maybe it’s just… trying.",
-                  "And this time... you tried."
-                ],
+                end2_lines: ["You said 'NO' fifty times.","But you still came back.","Again. And again.","Maybe love isn’t perfect.","Maybe it’s just… trying.","And this time... you tried."],
                 
                 end3_title: "THE EMPTY ROOM", end3_sub: "NO: 100/100",
-                end3_lines: [
-                  "You said 'NO'.",
-                  "One hundred times.",
-                  "The room stopped pretending.",
-                  "The air grew colder.",
-                  "Not angry.",
-                  "Just empty."
-                ],
+                end3_lines: ["You said 'NO'.","One hundred times.","The room stopped pretending.","The air grew colder.","Not angry.","Just empty."],
                 
                 end4_title: "THE SECRET YES", end4_sub: "SECRET FOUND",
-                end4_lines: [
-                  "You found what you weren’t meant to see.",
-                  "You looked closer than anyone else.",
-                  "So tell me...",
-                  "Will you choose me forever?"
-                ],
+                end4_lines: ["You found what you weren’t meant to see.","You looked closer than anyone else.","So tell me...","Will you choose me forever?"],
                 
                 secret_q: ["You think this is enough?", "If you truly want it...", "Say YES one last time."],
                 
@@ -956,6 +989,23 @@
                 subtitle: "Bấm YES 101 lần để thắng 😈",
                 yesBtn: "CÓ 💖", noBtn: "KHÔNG 💔", reset: "Chơi lại",
                 
+                ui: {
+                    settings: "Cài đặt ⚙️",
+                    lobbyMusic: "Nhạc Sảnh",
+                    gameMusic: "Nhạc Game",
+                    language: "Ngôn ngữ",
+                    replay: "↻ Chơi lại",
+                    lobby: "🏠 Sảnh",
+                    share: "💌 Chia sẻ",
+                    exitRoom: "Thoát phòng",
+                    close: "Đóng"
+                },
+
+                // Deprecated top level keys kept for safety
+                st_title: "Cài đặt ⚙️", st_lobby: "Nhạc Sảnh", st_game: "Nhạc Game", st_lang: "Ngôn ngữ", st_close: "Đóng",
+                start_btn: "Chạm để bắt đầu 💘",
+                share_title: "Thẻ Chia Sẻ 💌", share_sub: "Kết thúc của bạn đã được ghi lại.", share_dl: "Tải ảnh 📥", share_copy: "Sao chép 📋", share_close: "Đóng", share_hint: "Mẹo: Đăng Story Instagram là chuẩn bài ✨",
+
                 phase1: ["Đi mà?", "Năn nỉ đó!", "Tớ có bánh quy nè!", "Đừng ngại mà!", "Bấm CÓ đi!"],
                 lobbyNo: ["Sai rồi nha 😏", "Thử lại đê...", "Không thoát được đâu!", "Không được chọn cái này 💀", "Cố chấp thế?"],
 
@@ -1043,6 +1093,23 @@
                     "Và nó biết cậu đã nhìn thấy tất cả."
                 ],
 
+                // NEW: ENDINGS NAMESPACE
+                endings: {
+                    end1_title: "TÌNH YÊU ĐÍCH THỰC", end1_sub: "CÓ: 101/101",
+                    end1_lines: ["101 lần...", "Cậu không hề do dự.", "Có lẽ tình yêu là một lựa chọn.", "Và vì cậu đã ở lại...", "Tớ sẽ không bao giờ rời đi."],
+                    
+                    end2_title: "TRÁI TIM DO DỰ", end2_sub: "CÓ: 51 - KHÔNG: 50",
+                    end2_extra: "Cậu làm tớ tan nát 50 lần... nhưng vẫn quay lại.",
+                    end2_lines: ["Cậu đã nói 'KHÔNG' 50 lần.", "Nhưng cậu cũng nói 'CÓ'.", "Đó là một sự đấu tranh.", "Nhưng cậu đã chiến đấu để quay lại.", "Và thế là đủ."],
+                    
+                    end3_title: "CĂN PHÒNG TRỐNG", end3_sub: "KHÔNG: 100/100",
+                    end3_lines: ["Cậu nói 'KHÔNG'.", "Một trăm lần.", "Tớ nhận ra cậu đang rời đi.", "Căn phòng lạnh dần.", "Tớ thôi không hy vọng nữa.", "Tạm biệt."],
+                    
+                    end4_title: "LỜI ĐỒNG Ý BÍ MẬT", end4_sub: "ĐÃ TÌM THẤY BÍ MẬT",
+                    end4_lines: ["Cậu đã tìm ra bí mật.", "Vì cậu đủ quan tâm để nhìn kỹ.", "Cậu sẽ chọn tớ chứ...", "Mãi mãi?"]
+                },
+                
+                // Legacy
                 end1_title: "TÌNH YÊU ĐÍCH THỰC", end1_sub: "CÓ: 101/101",
                 end1_lines: ["101 lần...", "Cậu không hề do dự.", "Có lẽ tình yêu là một lựa chọn.", "Và vì cậu đã ở lại...", "Tớ sẽ không bao giờ rời đi."],
                 
@@ -1070,6 +1137,23 @@
                 title: "¿Quieres ser mi San Valentín? 💘",
                 subtitle: "Di SÍ 101 veces para ganar 😈",
                 yesBtn: "SÍ 💖", noBtn: "NO 💔", reset: "Reiniciar",
+
+                ui: {
+                    settings: "Ajustes ⚙️",
+                    lobbyMusic: "Música Lobby",
+                    gameMusic: "Música Juego",
+                    language: "Idioma",
+                    replay: "↻ Repetir",
+                    lobby: "🏠 Lobby",
+                    share: "💌 Compartir",
+                    exitRoom: "Salir",
+                    close: "Cerrar"
+                },
+
+                // Deprecated top level keys kept for safety
+                st_title: "Ajustes ⚙️", st_lobby: "Música Lobby", st_game: "Música Juego", st_lang: "Idioma", st_close: "Cerrar",
+                start_btn: "Toca para empezar 💘",
+                share_title: "Compartir 💌", share_sub: "Tu final ha sido capturado.", share_dl: "Descargar 📥", share_copy: "Copiar 📋", share_close: "Cerrar", share_hint: "Tip: Perfecto para Instagram Stories ✨",
                 
                 phase1: ["¿Por favor?", "¿Por favorcito?", "¡Tengo galletas!", "¡No seas tímido!", "¡Solo di SÍ!"], 
                 lobbyNo: ["Incorrecto 😏", "Intenta de nuevo...", "¡No puedes escapar!", "No es una opción 💀", "Buen intento."],
@@ -1106,39 +1190,38 @@
                     "Một lá thư.",
                     "Giấy đã ngả vàng, như thể đã từng được giữ rất lâu.",
                     "Nhưng góc dưới bị xé đi…",
-                    "vừa đủ để mất đi một cái tên.",
-                    "Mình đọc lại vài lần.",
-                    "Chữ vẫn đẹp… nhưng câu chữ lại lạnh.",
-                    "Không phải vì nó tàn nhẫn…",
-                    "mà vì nó quá bình thản."
+                    "vừa đủ de perder un nombre.",
+                    "Lo leí varias veces.",
+                    "La letra sigue siendo hermosa… pero las palabras son frías.",
+                    "No es porque sea cruel…\nsino porque es demasiado indiferente."
                 ],
 
                 room_diary_lines: [
-                    "Một cuốn sổ cũ.",
-                    "Bìa đã sờn… nhưng vẫn được lau sạch.",
-                    "Chữ viết nghiêng nghiêng, như người viết đang vội.",
-                    "Có những trang bị gấp lại.",
-                    "Có những trang… bị xé mất.",
-                    "Mình không biết ai đã đọc nó trước mình.",
-                    "Nhưng chắc chắn… không phải gió."
+                    "Un cuaderno viejo.",
+                    "La portada está desgastada... pero limpia.",
+                    "Letra inclinada, como si quien escribiera tuviera prisa.",
+                    "Hay páginas dobladas.",
+                    "Hay páginas... arrancadas.",
+                    "No sé quién lo leyó antes que yo.",
+                    "Pero seguro... que no fue el viento."
                 ],
                 
                 room_clock_lines: [
-                    "Chiếc đồng hồ đã chết.",
-                    "Kim đứng yên… nhưng căn phòng vẫn như đang đếm thời gian.",
-                    "Mình áp tai lại gần.",
-                    "…",
-                    "Không có tiếng tích tắc.",
-                    "Chỉ có một khoảng trống rất rõ.",
-                    "Trống đến mức nghe cũng thấy lạnh."
+                    "El reloj ha muerto.",
+                    "Las agujas están quietas... pero la habitación parece seguir contando el tiempo.",
+                    "Acerco la oreja.",
+                    "...",
+                    "No hay tic-tac.",
+                    "Solo un vacío muy claro.",
+                    "Tan vacío que se siente frío al escucharlo."
                 ],
 
-                room_bookshelf: "Có nhiều sách… nhưng không có quyển nào mở.\nNhư thể chúng chỉ được đặt để lấp khoảng trống.",
-                room_chair: "Một chiếc ghế.\nĐặt hơi lệch… như vừa mới có người đứng dậy.",
-                room_box: "Hộp rỗng.\nNhưng lại nặng hơn mình nghĩ.",
-                room_bed: "Giường vẫn được trải gọn.\nNhư thể ai đó sẽ quay lại ngủ bất cứ lúc nào.",
-                room_pillow: "Chiếc gối mềm.\nNhưng lạnh.",
-                room_dust: "Bụi tụ lại thành một vệt mỏng.\nKhông giống bụi… giống dấu chân.",
+                room_bookshelf: "Hay muchos libros... pero ninguno abierto.\nComo si solo estuvieran ahí para llenar un vacío.",
+                room_chair: "Una silla.\nLigeramente movida... como si alguien se acabara de levantar.",
+                room_box: "Una caja vacía.\nPero pesa más de lo que pensaba.",
+                room_bed: "La cama todavía está hecha.\nComo si alguien fuera a volver a dormir en cualquier momento.",
+                room_pillow: "Una almohada suave.\nPero fría.",
+                room_dust: "El polvo se acumula en una fina capa.\nNo parece polvo... parecen huellas.",
                 room_clock: "El tiempo sigue corriendo. Simplemente no le importa.",
                 room_frame: "Un marco sin foto. O tal vez la foto huyó.",
                 room_photo_facedown: [
@@ -1158,6 +1241,23 @@
                     "Y sabe que lo has visto todo."
                 ],
                 
+                // NEW: ENDINGS NAMESPACE
+                endings: {
+                    end1_title: "AMOR VERDADERO", end1_sub: "SÍ: 101/101",
+                    end1_lines: ["101 veces...", "Me elegiste.", "Una y otra vez.", "Quizás el amor es una decisión.", "Y porque te quedaste...", "Nunca me iré."],
+                    
+                    end2_title: "CORAZÓN DUDOSO", end2_sub: "SÍ: 51 - NO: 50",
+                    end2_extra: "Me rompiste 50 veces... y aún así volviste.",
+                    end2_lines: ["Dijiste 'NO' 50 veces.", "Pero también dijiste 'SÍ'.", "Fue una lucha.", "Pero luchaste para volver.", "Y eso es suficiente."],
+                    
+                    end3_title: "LA HABITACIÓN VACÍA", end3_sub: "NO: 100/100",
+                    end3_lines: ["Dijiste 'NO'.", "Cien veces.", "Me di cuenta de que te ibas.", "La habitación se volvió más fría.", "Dejé de esperar.", "Adiós."],
+                    
+                    end4_title: "EL SÍ SECRETO", end4_sub: "FINAL SECRETO ENCONTRADO",
+                    end4_lines: ["Encontraste el secreto.", "Miraste con atención.", "¿Me elegirías...", "¿Para siempre?"]
+                },
+                
+                // Legacy
                 end1_title: "AMOR VERDADERO", end1_sub: "SÍ: 101/101",
                 end1_lines: ["101 veces...", "Me elegiste.", "Una y otra vez.", "Quizás el amor es una decisión.", "Y porque te quedaste...", "Nunca me iré."],
                 
@@ -1484,7 +1584,10 @@
             cacheDOM();
             loadSettings();
             AudioCtrl.init();
-            updateTexts();
+            
+            // Replaced updateTexts() with applyLanguage() to ensure all UI is localized on startup
+            applyLanguage();
+            
             PhaseManager.init(); 
 
             // Preload room bg
@@ -1552,7 +1655,13 @@
             
             document.getElementById('toggle-lobby-music').onchange = (e) => { SETTINGS.lobbyMusic = e.target.checked; saveSettings(); AudioCtrl.sync(); };
             document.getElementById('toggle-game-music').onchange = (e) => { SETTINGS.gameMusic = e.target.checked; saveSettings(); AudioCtrl.sync(); };
-            document.getElementById('lang-select').onchange = (e) => { SETTINGS.lang = e.target.value; saveSettings(); updateTexts(); };
+            
+            // UPDATED: Language selection now applies immediately
+            document.getElementById('lang-select').onchange = (e) => { 
+                SETTINGS.lang = e.target.value; 
+                saveSettings(); 
+                applyLanguage(); 
+            };
 
             document.addEventListener('keydown', (e) => {
                 if (e.key.toLowerCase() === 'h') {
@@ -1750,7 +1859,6 @@
         /* --- 9. ENDING VISUAL NOVEL ENGINE --- */
 
         function renderEndingOverlay(id) {
-            const L = getLang();
             const conf = ENDINGS_CONFIG[id] || { theme: 'theme-3' };
             
             DOM.endingOverlay.className = "overlay-screen visible"; 
@@ -1763,37 +1871,42 @@
             const safeId = (id === '3_final') ? 3 : id;
             if(DOM.endNumber) DOM.endNumber.innerText = `ENDING 0${safeId} / 04`;
 
+            // Fetch texts using T() with new structure
+            const title = T(`endings.end${safeId}_title`, `Ending ${safeId}`);
+            const sub = T(`endings.end${safeId}_sub`, "");
+            const lines = T(`endings.end${safeId}_lines`, ["..."]);
+
             if (id===1) {
-                DOM.endTitle.innerText = L.end1_title;
-                DOM.endSub.innerText = L.end1_sub;
-                safeStartEndingTypewriter(L.end1_lines);
+                DOM.endTitle.innerText = title;
+                DOM.endSub.innerText = sub;
+                safeStartEndingTypewriter(lines);
                 startConfetti();
             }
             else if (id===2) {
-                DOM.endTitle.innerText = L.end2_title;
-                DOM.endSub.innerText = L.end2_sub;
+                DOM.endTitle.innerText = title;
+                DOM.endSub.innerText = sub;
                 DOM.endingOverlay.classList.add('pulsing');
                 DOM.endTitle.classList.add('text-heartbeat');
-                DOM.endExtra.innerText = L.end2_extra;
+                DOM.endExtra.innerText = T(`endings.end2_extra`, "");
                 DOM.endExtra.classList.add('visible');
-                safeStartEndingTypewriter(L.end2_lines);
+                safeStartEndingTypewriter(lines);
                 startHesitantParticles();
             }
             else if (id===3) {
-                DOM.endTitle.innerText = L.end3_title;
-                DOM.endSub.innerText = L.end3_sub;
-                safeStartEndingTypewriter(L.end3_lines);
+                DOM.endTitle.innerText = title;
+                DOM.endSub.innerText = sub;
+                safeStartEndingTypewriter(lines);
             }
             else if (id===4) {
-                DOM.endTitle.innerText = L.end4_title;
-                DOM.endSub.innerText = L.end4_sub;
-                safeStartEndingTypewriter(L.end4_lines);
+                DOM.endTitle.innerText = title;
+                DOM.endSub.innerText = sub;
+                safeStartEndingTypewriter(lines);
                 startConfetti();
             }
             else if (id === "3_final") {
-                 DOM.endTitle.innerText = L.end3_title;
+                 DOM.endTitle.innerText = T(`endings.end3_title`, "THE EMPTY ROOM"); 
                  DOM.endSub.innerText = "TRUE ENDING";
-                 const finalLines = L.room_finish || ["..."];
+                 const finalLines = T('room_finish', ["..."]);
                  safeStartEndingTypewriter(finalLines);
                  DOM.endingOverlay.classList.add('theme-3');
             }
@@ -2571,6 +2684,29 @@
 
         /* --- 11. UTILS & UI UPDATES --- */
 
+        // ADDED: Translation Helper
+        function T(key, fallback) {
+            const langCode = (SETTINGS && SETTINGS.lang) ? SETTINGS.lang : 'en';
+            
+            // Helper to traverse "a.b.c"
+            const resolve = (obj, path) => {
+                return path.split('.').reduce((prev, curr) => {
+                    return (prev ? prev[curr] : undefined);
+                }, obj);
+            };
+
+            // Try current language
+            let res = resolve(LANG[langCode], key);
+            
+            // Fallback to EN if missing
+            if (res === undefined && langCode !== 'en') {
+                res = resolve(LANG['en'], key);
+            }
+
+            // Return found result, or fallback string, or key itself if no fallback provided
+            return res !== undefined ? res : (fallback !== undefined ? fallback : key);
+        }
+
         function getLang() { return LANG[SETTINGS.lang] || LANG['en']; }
         function setText(el, txt) { if(el) el.innerText = txt; }
 
@@ -2581,6 +2717,38 @@
             setText(DOM.lobbySubtitle, L.subtitle);
             if(DOM.yesBtn.childNodes[0]) DOM.yesBtn.childNodes[0].textContent = L.yesBtn + " "; 
             setText(DOM.noBtn, L.noBtn);
+        }
+        
+        function applyLanguage() {
+            // Update Settings UI
+            setText(document.getElementById('st-title'), T('ui.settings'));
+            setText(document.getElementById('st-lobby-music'), T('ui.lobbyMusic'));
+            setText(document.getElementById('st-game-music'), T('ui.gameMusic'));
+            setText(document.getElementById('st-language'), T('ui.language'));
+            setText(document.getElementById('close-settings'), T('ui.close'));
+
+            // Update Start Button
+            setText(document.getElementById('btn-start-game'), T('start_btn'));
+
+            // Update Share UI
+            setText(document.getElementById('share-title'), T('share_title'));
+            setText(document.getElementById('share-sub'), T('share_sub'));
+            setText(document.getElementById('btn-share-download'), T('share_dl'));
+            setText(document.getElementById('btn-share-copy'), T('share_copy'));
+            setText(document.getElementById('btn-share-close'), T('ui.close'));
+            setText(document.getElementById('share-hint'), T('share_hint'));
+
+            // Ending Buttons
+            setText(document.getElementById('btn-end-replay'), T('ui.replay'));
+            setText(document.getElementById('btn-end-lobby'), T('ui.lobby'));
+            setText(document.getElementById('btn-end-share'), T('ui.share'));
+
+            // Room Buttons
+            setText(document.getElementById('btn-room-exit'), T('ui.exitRoom'));
+            setText(document.getElementById('btn-room-close'), T('ui.close'));
+
+            // Call existing updateTexts to handle Game/Lobby main texts
+            updateTexts();
         }
 
         function updateStatsUI() {
@@ -2688,7 +2856,7 @@
 
             const titleEl = document.getElementById("share-title");
             const subEl = document.getElementById("share-sub");
-            if(titleEl) titleEl.innerText = "Share Card 💌";
+            if(titleEl) titleEl.innerText = T('share_title'); // Updated
             if(subEl) subEl.innerText = `ENDING ${String(safeId).padStart(2,'0')}/04`;
 
             const quoteText = getEndingQuote(safeId);
@@ -2696,13 +2864,8 @@
             
             const quoteEl = document.getElementById('share-quote');
             if(quoteEl) {
-                const titles = { 
-                    1: (SETTINGS.lang === 'vi' ? "TÌNH YÊU ĐÍCH THỰC" : (SETTINGS.lang === 'es' ? "AMOR VERDADERO" : "TRUE LOVE")), 
-                    2: (SETTINGS.lang === 'vi' ? "TRÁI TIM DO DỰ" : (SETTINGS.lang === 'es' ? "CORAZÓN DUDOSO" : "HESITANT HEART")),
-                    3: (SETTINGS.lang === 'vi' ? "CĂN PHÒNG TRỐNG" : (SETTINGS.lang === 'es' ? "HABITACIÓN VACÍA" : "THE EMPTY ROOM")), 
-                    4: (SETTINGS.lang === 'vi' ? "BÍ MẬT" : (SETTINGS.lang === 'es' ? "SECRETO" : "SECRET YES"))
-                };
-                const endingTitle = titles[safeId] || "VALENTINE";
+                // Simplified using T with fallback to hardcoded
+                const endingTitle = T(`endings.end${safeId}_title`, "VALENTINE");
                 quoteEl.innerText = `"${quoteText}"\n\nI got ENDING ${safeId}/04: ${endingTitle} 💔\n#ValentineGame`;
             }
             renderShareCardCanvas(safeId);
