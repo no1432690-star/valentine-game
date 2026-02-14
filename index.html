@@ -718,7 +718,8 @@
         /* --- 1. GLOBAL STATE & CONFIG --- */
         let UI_MODE = "start"; // allowed: start, lobby, game, ending, room, secret
         let roomInteractionLocked = false;
-        
+        let ending3ColdMode = false;
+
         const STATE = {
             yes: 0,
             no: 0,
@@ -771,8 +772,8 @@
         const ROOM_HOTSPOTS = [
             // MAIN ITEMS (Modal Dialogues)
             { id: "tulip", type: "main", x: 15, y: 45, w: 12, h: 15, langKey: "room_tulip_lines" },
-            { id: "lamp", type: "side", x: 70, y: 52, w: 10, h: 15, langKey: "room_lamp_tooltip" },
-            { id: "window", type: "main", x: 40, y: 20, w: 20, h: 25, langKey: "room_window_lines" },
+            { id: "clock", type: "main", x: 45, y: 8, w: 10, h: 10, langKey: "room_clock_lines" },
+            { id: "window", type: "side", x: 40, y: 20, w: 20, h: 25, langKey: "room_window_tooltip" },
             { id: "mirror", type: "main", x: 85, y: 25, w: 12, h: 25, langKey: "room_mirror_lines" },
             { id: "letter", type: "main", x: 55, y: 65, w: 12, h: 10, langKey: "room_letter_lines" }, 
             { id: "diary", type: "main", x: 25, y: 70, w: 12, h: 12, langKey: "room_diary_lines" },
@@ -783,7 +784,7 @@
             { id: "box", type: "side", x: 20, y: 80, w: 12, h: 12, langKey: "room_box" },
             { id: "bed", type: "side", x: 10, y: 65, w: 20, h: 20, langKey: "room_bed" },
             { id: "dust", type: "side", x: 50, y: 80, w: 30, h: 15, langKey: "room_dust" }, 
-            { id: "clock", type: "side", x: 45, y: 8, w: 10, h: 10, langKey: "room_clock" },
+            { id: "lamp", type: "side", x: 70, y: 52, w: 10, h: 15, langKey: "room_lamp_tooltip" },
             { id: "frame", type: "side", x: 78, y: 60, w: 8, h: 10, langKey: "room_frame" }
         ];
 
@@ -798,42 +799,70 @@
                 
                 // ENDING 3 DIALOGUES
                 room_tulip_lines: [
-                    "A bouquet of tulips... but they're fake.",
-                    "Plastic petals never wilt.",
-                    "Just like promises that were never real.",
-                    "Still... someone tried."
+                    "Một bó tulip… vẫn còn nguyên vẹn.",
+                    "Không héo. Không rụng.",
+                    "Chỉ có một thứ giữ được vẻ đẹp lâu như vậy…",
+                    "là thứ chưa từng sống.",
+                    "Nhưng sao mình vẫn thấy… mùi Valentine quanh đây?",
+                    "Nhẹ đến mức, giống như ký ức."
                 ],
-                room_lamp_tooltip: "The lamp burns for no one.",
+                room_lamp_tooltip: "Đèn đã tắt.\nNhưng bấc vẫn đen… như vừa cháy gần đây.",
                 
                 room_window_lines: [
                     "Rain stains the glass.",
                     "The world outside keeps moving.",
                     "This room doesn't."
                 ],
+                room_window_tooltip: "Gió thổi qua khe cửa… nhưng rèm không lay.\nLạ thật.",
                 
                 room_mirror_lines: [
-                    "The mirror reflects nothing familiar.",
-                    "Not even you.",
-                    "Maybe it never did."
+                    "Một chiếc gương vỡ.",
+                    "Những mảnh gương phản chiếu ánh đèn… theo nhiều hướng khác nhau.",
+                    "Có một mảnh phản chiếu trần nhà.",
+                    "Có một mảnh phản chiếu cửa sổ.",
+                    "Nhưng không có mảnh nào phản chiếu toàn bộ căn phòng.",
+                    "Giống như ai đó đã cố tình… không để mọi thứ còn nguyên.",
+                    "Mình nhìn lâu thêm một chút.",
+                    "Và tự dưng… không muốn nhìn nữa."
                 ],
                 
                 room_letter_lines: [
-                    "The envelope is empty.",
-                    "No name. No ink.",
-                    "Only the weight of something unsent."
+                    "Một lá thư.",
+                    "Giấy đã ngả vàng, như thể đã từng được giữ rất lâu.",
+                    "Nhưng góc dưới bị xé đi…",
+                    "vừa đủ để mất đi một cái tên.",
+                    "Mình đọc lại vài lần.",
+                    "Chữ vẫn đẹp… nhưng câu chữ lại lạnh.",
+                    "Không phải vì nó tàn nhẫn…",
+                    "mà vì nó quá bình thản."
                 ],
 
                 room_diary_lines: [
-                    "The diary is open on the last page.",
-                    "The handwriting fades like a voice.",
-                    "The final line is unfinished."
+                    "Một cuốn sổ cũ.",
+                    "Bìa đã sờn… nhưng vẫn được lau sạch.",
+                    "Chữ viết nghiêng nghiêng, như người viết đang vội.",
+                    "Có những trang bị gấp lại.",
+                    "Có những trang… bị xé mất.",
+                    "Mình không biết ai đã đọc nó trước mình.",
+                    "Nhưng chắc chắn… không phải gió."
                 ],
                 
-                room_bookshelf: "Dusty shelves. Stories left unread.",
-                room_chair: "Someone sat here and waited.",
-                room_box: "A box of memories you shouldn't open.",
-                room_bed: "The sheets are cold.",
-                room_dust: "Dust settles where footsteps stop.",
+                room_clock_lines: [
+                    "Chiếc đồng hồ đã chết.",
+                    "Kim đứng yên… nhưng căn phòng vẫn như đang đếm thời gian.",
+                    "Mình áp tai lại gần.",
+                    "…",
+                    "Không có tiếng tích tắc.",
+                    "Chỉ có một khoảng trống rất rõ.",
+                    "Trống đến mức nghe cũng thấy lạnh."
+                ],
+                
+                room_bookshelf: "Có nhiều sách… nhưng không có quyển nào mở.\nNhư thể chúng chỉ được đặt để lấp khoảng trống.",
+                room_chair: "Một chiếc ghế.\nĐặt hơi lệch… như vừa mới có người đứng dậy.",
+                room_box: "Hộp rỗng.\nNhưng lại nặng hơn mình nghĩ.",
+                room_bed: "Giường vẫn được trải gọn.\nNhư thể ai đó sẽ quay lại ngủ bất cứ lúc nào.",
+                room_pillow: "Chiếc gối mềm.\nNhưng lạnh.",
+                room_dust: "Bụi tụ lại thành một vệt mỏng.\nKhông giống bụi… giống dấu chân.",
                 room_clock: "Time is still running. It just doesn't care.",
                 room_frame: "A frame with no photo. Or maybe the photo ran away.",
                 
@@ -879,42 +908,70 @@
                 lobbyNo: ["Sai rồi nha 😏", "Thử lại đê...", "Không thoát được đâu!", "Không được chọn cái này 💀", "Cố chấp thế?"],
 
                 room_tulip_lines: [
-                    "Một bó tulip... nhưng là hoa giả.",
-                    "Cánh nhựa sẽ không bao giờ héo.",
-                    "Giống như những lời hứa chưa từng thật.",
-                    "Nhưng... ít nhất ai đó đã cố."
+                    "Một bó tulip… vẫn còn nguyên vẹn.",
+                    "Không héo. Không rụng.",
+                    "Chỉ có một thứ giữ được vẻ đẹp lâu như vậy…",
+                    "là thứ chưa từng sống.",
+                    "Nhưng sao mình vẫn thấy… mùi Valentine quanh đây?",
+                    "Nhẹ đến mức, giống như ký ức."
                 ],
-                room_lamp_tooltip: "Ngọn đèn cháy không vì ai cả.",
+                room_lamp_tooltip: "Đèn đã tắt.\nNhưng bấc vẫn đen… như vừa cháy gần đây.",
                 
                 room_window_lines: [
                     "Mưa làm nhòe kính.",
                     "Thế giới bên ngoài vẫn trôi.",
                     "Chỉ có căn phòng này đứng lại."
                 ],
+                room_window_tooltip: "Gió thổi qua khe cửa… nhưng rèm không lay.\nLạ thật.",
                 
                 room_mirror_lines: [
-                    "Tấm gương không phản chiếu gì quen thuộc.",
-                    "Kể cả bạn.",
-                    "Có lẽ nó chưa bao giờ làm thế."
+                    "Một chiếc gương vỡ.",
+                    "Những mảnh gương phản chiếu ánh đèn… theo nhiều hướng khác nhau.",
+                    "Có một mảnh phản chiếu trần nhà.",
+                    "Có một mảnh phản chiếu cửa sổ.",
+                    "Nhưng không có mảnh nào phản chiếu toàn bộ căn phòng.",
+                    "Giống như ai đó đã cố tình… không để mọi thứ còn nguyên.",
+                    "Mình nhìn lâu thêm một chút.",
+                    "Và tự dưng… không muốn nhìn nữa."
                 ],
                 
                 room_letter_lines: [
-                    "Phong bì trống rỗng.",
-                    "Không tên. Không mực.",
-                    "Chỉ có sức nặng của những điều chưa gửi."
+                    "Một lá thư.",
+                    "Giấy đã ngả vàng, như thể đã từng được giữ rất lâu.",
+                    "Nhưng góc dưới bị xé đi…",
+                    "vừa đủ để mất đi một cái tên.",
+                    "Mình đọc lại vài lần.",
+                    "Chữ vẫn đẹp… nhưng câu chữ lại lạnh.",
+                    "Không phải vì nó tàn nhẫn…",
+                    "mà vì nó quá bình thản."
                 ],
 
                 room_diary_lines: [
-                    "Nhật ký mở ở trang cuối.",
-                    "Nét chữ phai dần như một giọng nói.",
-                    "Dòng cuối cùng vẫn viết dở."
+                    "Một cuốn sổ cũ.",
+                    "Bìa đã sờn… nhưng vẫn được lau sạch.",
+                    "Chữ viết nghiêng nghiêng, như người viết đang vội.",
+                    "Có những trang bị gấp lại.",
+                    "Có những trang… bị xé mất.",
+                    "Mình không biết ai đã đọc nó trước mình.",
+                    "Nhưng chắc chắn… không phải gió."
                 ],
 
-                room_bookshelf: "Kệ sách đầy bụi. Những câu chuyện chưa ai đọc.",
-                room_chair: "Ai đó đã ngồi đây và chờ đợi.",
-                room_box: "Một hộp ký ức bạn không nên mở.",
-                room_bed: "Những tấm ga lạnh lẽo.",
-                room_dust: "Bụi phủ nơi bước chân dừng lại.",
+                room_clock_lines: [
+                    "Chiếc đồng hồ đã chết.",
+                    "Kim đứng yên… nhưng căn phòng vẫn như đang đếm thời gian.",
+                    "Mình áp tai lại gần.",
+                    "…",
+                    "Không có tiếng tích tắc.",
+                    "Chỉ có một khoảng trống rất rõ.",
+                    "Trống đến mức nghe cũng thấy lạnh."
+                ],
+
+                room_bookshelf: "Có nhiều sách… nhưng không có quyển nào mở.\nNhư thể chúng chỉ được đặt để lấp khoảng trống.",
+                room_chair: "Một chiếc ghế.\nĐặt hơi lệch… như vừa mới có người đứng dậy.",
+                room_box: "Hộp rỗng.\nNhưng lại nặng hơn mình nghĩ.",
+                room_bed: "Giường vẫn được trải gọn.\nNhư thể ai đó sẽ quay lại ngủ bất cứ lúc nào.",
+                room_pillow: "Chiếc gối mềm.\nNhưng lạnh.",
+                room_dust: "Bụi tụ lại thành một vệt mỏng.\nKhông giống bụi… giống dấu chân.",
                 room_clock: "Thời gian vẫn trôi. Nó chỉ không quan tâm thôi.",
                 room_frame: "Khung ảnh trống. Hoặc có lẽ bức ảnh đã bỏ chạy.",
 
@@ -958,42 +1015,70 @@
                 lobbyNo: ["Incorrecto 😏", "Intenta de nuevo...", "¡No puedes escapar!", "No es una opción 💀", "Buen intento."],
                 
                 room_tulip_lines: [
-                    "Un ramo de tulipanes... pero son falsos.",
-                    "Los pétalos de plástico nunca se marchitan.",
-                    "Como promesas que nunca fueron reales.",
-                    "Aun así... alguien lo intentó."
+                    "Một bó tulip… vẫn còn nguyên vẹn.",
+                    "Không héo. Không rụng.",
+                    "Chỉ có một thứ giữ được vẻ đẹp lâu như vậy…",
+                    "là thứ chưa từng sống.",
+                    "Nhưng sao mình vẫn thấy… mùi Valentine quanh đây?",
+                    "Nhẹ đến mức, giống như ký ức."
                 ],
-                room_lamp_tooltip: "La lámpara arde para nadie.",
+                room_lamp_tooltip: "Đèn đã tắt.\nNhưng bấc vẫn đen… như vừa cháy gần đây.",
                 
                 room_window_lines: [
                     "La lluvia mancha el cristal.",
                     "El mundo exterior sigue moviéndose.",
                     "Esta habitación no."
                 ],
+                room_window_tooltip: "Gió thổi qua khe cửa… nhưng rèm không lay.\nLạ thật.",
                 
                 room_mirror_lines: [
-                    "El espejo no refleja nada familiar.",
-                    "Ni siquiera a ti.",
-                    "Tal vez nunca lo hizo."
+                    "Một chiếc gương vỡ.",
+                    "Những mảnh gương phản chiếu ánh đèn… theo nhiều hướng khác nhau.",
+                    "Có một mảnh phản chiếu trần nhà.",
+                    "Có một mảnh phản chiếu cửa sổ.",
+                    "Nhưng không có mảnh nào phản chiếu toàn bộ căn phòng.",
+                    "Giống như ai đó đã cố tình… không để mọi thứ còn nguyên.",
+                    "Mình nhìn lâu thêm một chút.",
+                    "Và tự dưng… không muốn nhìn nữa."
                 ],
                 
                 room_letter_lines: [
-                    "El sobre está vacío.",
-                    "Sin nombre. Sin tinta.",
-                    "Solo el peso de algo no enviado."
+                    "Một lá thư.",
+                    "Giấy đã ngả vàng, như thể đã từng được giữ rất lâu.",
+                    "Nhưng góc dưới bị xé đi…",
+                    "vừa đủ để mất đi một cái tên.",
+                    "Mình đọc lại vài lần.",
+                    "Chữ vẫn đẹp… nhưng câu chữ lại lạnh.",
+                    "Không phải vì nó tàn nhẫn…",
+                    "mà vì nó quá bình thản."
                 ],
 
                 room_diary_lines: [
-                    "El diario está abierto en la última página.",
-                    "La letra se desvanece como una voz.",
-                    "La última línea está incompleta."
+                    "Một cuốn sổ cũ.",
+                    "Bìa đã sờn… nhưng vẫn được lau sạch.",
+                    "Chữ viết nghiêng nghiêng, như người viết đang vội.",
+                    "Có những trang bị gấp lại.",
+                    "Có những trang… bị xé mất.",
+                    "Mình không biết ai đã đọc nó trước mình.",
+                    "Nhưng chắc chắn… không phải gió."
                 ],
                 
-                room_bookshelf: "Estantes polvorientos. Historias sin leer.",
-                room_chair: "Alguien se sentó aquí y esperó.",
-                room_box: "Una caja de recuerdos que no deberías abrir.",
-                room_bed: "Las sábanas están frías.",
-                room_dust: "El polvo se asienta donde los pasos se detienen.",
+                room_clock_lines: [
+                    "Chiếc đồng hồ đã chết.",
+                    "Kim đứng yên… nhưng căn phòng vẫn như đang đếm thời gian.",
+                    "Mình áp tai lại gần.",
+                    "…",
+                    "Không có tiếng tích tắc.",
+                    "Chỉ có một khoảng trống rất rõ.",
+                    "Trống đến mức nghe cũng thấy lạnh."
+                ],
+
+                room_bookshelf: "Có nhiều sách… nhưng không có quyển nào mở.\nNhư thể chúng chỉ được đặt để lấp khoảng trống.",
+                room_chair: "Một chiếc ghế.\nĐặt hơi lệch… như vừa mới có người đứng dậy.",
+                room_box: "Hộp rỗng.\nNhưng lại nặng hơn mình nghĩ.",
+                room_bed: "Giường vẫn được trải gọn.\nNhư thể ai đó sẽ quay lại ngủ bất cứ lúc nào.",
+                room_pillow: "Chiếc gối mềm.\nNhưng lạnh.",
+                room_dust: "Bụi tụ lại thành một vệt mỏng.\nKhông giống bụi… giống dấu chân.",
                 room_clock: "El tiempo sigue corriendo. Simplemente no le importa.",
                 room_frame: "Un marco sin foto. O tal vez la foto huyó.",
                 
@@ -1751,7 +1836,7 @@
         const HOTSPOT_MAPPING = {
           "fake_tulip_bouquet": { id: "tulip", type: "main", langKey: "room_tulip_lines" },
           "oil_lamp": { id: "lamp", type: "side", langKey: "room_lamp_tooltip" },
-          "window": { id: "window", type: "main", langKey: "room_window_lines" },
+          "window": { id: "window", type: "side", langKey: "room_window_tooltip" },
           "broken_mirror": { id: "mirror", type: "main", langKey: "room_mirror_lines" },
           "loose_letter": { id: "letter", type: "main", langKey: "room_letter_lines" },
           "open_book": { id: "diary", type: "main", langKey: "room_diary_lines" },
@@ -1759,9 +1844,9 @@
           "wooden_chair": { id: "chair", type: "side", langKey: "room_chair" },
           "small_wooden_box": { id: "box", type: "side", langKey: "room_box" },
           "bed": { id: "bed", type: "side", langKey: "room_bed" },
-          "bed_pillow": { id: "bed", type: "side", langKey: "room_bed" },
+          "bed_pillow": { id: "pillow", type: "side", langKey: "room_pillow" },
           "dust_on_floor": { id: "dust", type: "side", langKey: "room_dust" },
-          "wall_clock": { id: "clock", type: "side", langKey: "room_clock" }
+          "wall_clock": { id: "clock", type: "main", langKey: "room_clock_lines" }
         };
 
         function getPercentPosFromEvent(event, imgEl) {
@@ -2039,12 +2124,13 @@
         }
 
         async function checkRoomCompletion() {
-            // Logic: 5 specific MAIN items: tulip, letter, diary, window, mirror
-            const required = ['tulip', 'letter', 'diary', 'window', 'mirror'];
+            // Logic: 5 specific MAIN items: tulip, letter, diary, clock, mirror (Window is now side item)
+            const required = ['tulip', 'letter', 'diary', 'clock', 'mirror'];
             let count = 0;
             required.forEach(k => { if(STATE.roomSeen.has(k)) count++; });
 
             if (count >= 5) {
+                ending3ColdMode = true;
                 roomInteractionLocked = true; 
                 const L = getLang();
                 await wait(800);
