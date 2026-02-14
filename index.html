@@ -92,7 +92,7 @@
         #bar-choice { background: linear-gradient(90deg, #fbc2eb, #a6c1ee); }
 
         /* Content */
-        #stage-indicator { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; color: #888; margin-bottom: 5px; }
+        #stage-indicator { font-size: 0.9rem; text-transform: uppercase; letter-spacing: 2px; color: #777; margin-bottom: 8px; font-weight: bold; font-family: 'Fredoka', monospace; }
         .title { font-family: 'Fredoka', cursive; color: var(--primary-pink); font-size: 2rem; margin-bottom: 15px; text-shadow: 2px 2px 0px rgba(255,255,255,0.8); line-height: 1.2; }
         .dialogue-box { min-height: 40px; margin-bottom: 20px; color: #555; font-style: italic; font-size: 1.1rem; }
         
@@ -109,8 +109,11 @@
         }
         .btn-yes { background: linear-gradient(45deg, var(--primary-pink), var(--secondary-pink)); color: white; box-shadow: var(--btn-shadow); }
         .btn-yes:active { transform: scale(0.95); }
+        .btn-yes:disabled { filter: grayscale(1); cursor: not-allowed; transform: none !important; opacity: 0.7; }
+        
         .btn-no { background: #e0e0e0; color: #666; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
         .btn-no:active { transform: scale(0.95); background: #d6d6d6; }
+        .btn-no:disabled { filter: grayscale(1); cursor: not-allowed; transform: none !important; opacity: 0.7; }
 
         /* --- PHASE EFFECTS --- */
         /* Phase 2: Wiggle */
@@ -216,6 +219,15 @@
             text-shadow: 0 0 20px rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.3); 
         }
         .ending-sub { font-size: 1rem; opacity: 0.9; margin-bottom: 30px; letter-spacing: 2px; text-transform: uppercase; font-weight: bold; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .ending-number {
+            font-family: 'Fredoka', monospace; 
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.8);
+            letter-spacing: 3px;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
         
         /* Ending Extra Subtitle (New) */
         .ending-extra {
@@ -317,8 +329,40 @@
             opacity: 0.06; mix-blend-mode: overlay; pointer-events: none;
         }
 
-        #room-info { position: absolute; top: 30px; right: 30px; color: rgba(255,255,255,0.5); font-family: 'VT323', monospace; font-size: 1.2rem; pointer-events: none; z-index: 1700; }
-        #room-progress { position: absolute; top: 30px; left: 30px; color: rgba(255,255,255,0.7); font-family: 'VT323', monospace; font-size: 2.5rem; pointer-events: none; z-index: 1700; text-shadow: 2px 2px 0 #000; }
+        #room-info { position: absolute; top: 30px; right: 30px; color: rgba(255,255,255,0.5); font-family: 'VT323', monospace; font-size: 1.3rem; pointer-events: none; z-index: 1700; text-transform: uppercase; text-shadow: 1px 1px 0 #000; letter-spacing: 1px; }
+        
+        /* Updated Room Progress Style (PS1) */
+        #room-progress { 
+            position: absolute; top: 30px; left: 30px; 
+            color: rgba(200, 200, 200, 0.8); 
+            font-family: 'VT323', monospace; font-size: 2.2rem; 
+            pointer-events: none; z-index: 1700; 
+            text-shadow: 1px 1px 0 #000;
+            text-transform: uppercase;
+            animation: textFlickerTiny 4s infinite;
+        }
+        
+        /* New Items Counter */
+        #room-items-counter {
+            position: absolute; bottom: 30px; right: 30px; 
+            color: rgba(200, 200, 200, 0.7); 
+            font-family: 'VT323', monospace; font-size: 1.8rem; 
+            pointer-events: none; z-index: 1700; 
+            text-shadow: 1px 1px 0 #000;
+            text-transform: uppercase;
+            animation: textFlickerTiny 5s infinite alternate;
+        }
+
+        @keyframes textFlickerTiny {
+            0% { opacity: 0.8; }
+            5% { opacity: 0.65; }
+            10% { opacity: 0.8; }
+            25% { opacity: 0.8; }
+            30% { opacity: 0.5; }
+            35% { opacity: 0.8; }
+            100% { opacity: 0.8; }
+        }
+
         .room-exit-btn { position: absolute; bottom: 30px; left: 30px; background: transparent; border: 1px solid rgba(255,255,255,0.5); color: rgba(255,255,255,0.7); padding: 10px 20px; font-family: 'VT323', monospace; font-size: 1.2rem; cursor: pointer; z-index: 1700; transition: 0.3s; pointer-events: auto; }
         .room-exit-btn:hover { background: rgba(255,255,255,0.1); color: white; border-color: white; }
         .room-obj { position: absolute; cursor: pointer; transition: 0.3s; filter: brightness(0.6) grayscale(0.4); pointer-events: auto; }
@@ -332,6 +376,7 @@
             bottom: 28%; right: 12%; font-size: 3rem; color: #fdcb6e; 
             filter: brightness(0.9); 
             text-shadow: 0 0 20px rgba(255, 200, 120, 0.35), 0 0 40px rgba(255, 200, 120, 0.18);
+            animation: lampFlicker 7s infinite;
         }
         #obj-tulip { top: 40%; left: 15%; font-size: 3.5rem; }
         #obj-tulip::after { content: ''; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); width: 20px; height: 3px; background: #d63031; box-shadow: 0 0 4px #ff7675; border-radius: 2px; pointer-events: none; transform: rotate(-5deg); }
@@ -345,7 +390,7 @@
         #obj-dust { bottom: 5%; left: 40%; font-size: 3rem; opacity: 0.4; transform: rotateX(60deg); }
         #obj-box { bottom: 35%; left: 10%; font-size: 2.5rem; opacity: 0.6; }
         #obj-bed { bottom: 30%; left: 15%; font-size: 3rem; opacity: 0.6; }
-        #obj-shelf { top: 20%; left: 60%; font-size: 3rem; opacity: 0.7; }
+        #obj-bookshelf { top: 20%; left: 60%; font-size: 3rem; opacity: 0.7; }
         #obj-musicbox { bottom: 25%; right: 20%; font-size: 2rem; opacity: 0.8; }
 
         /* Room UI */
@@ -360,6 +405,57 @@
             text-shadow: 0 0 15px rgba(255,255,255,0.6);
             text-align: center; width: 90%; pointer-events: none;
             opacity: 0; transition: opacity 1s ease; z-index: 1800;
+        }
+
+        /* AMBIENT EFFECTS */
+        @keyframes lampFlicker {
+            0%, 100% { opacity: 1; filter: brightness(1) drop-shadow(0 0 20px rgba(253, 203, 110, 0.4)); }
+            50% { opacity: 0.85; filter: brightness(0.9) drop-shadow(0 0 15px rgba(253, 203, 110, 0.2)); }
+            52% { opacity: 0.4; filter: brightness(0.6); }
+            54% { opacity: 0.85; filter: brightness(0.9); }
+            70% { opacity: 1; }
+            72% { opacity: 0.7; }
+            74% { opacity: 1; }
+        }
+
+        #room-dust-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 1550; overflow: hidden;
+        }
+
+        .dust-speck {
+            position: absolute;
+            width: 2px; height: 2px;
+            background: rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            box-shadow: 0 0 2px rgba(255, 255, 255, 0.2);
+            animation: floatDust linear infinite;
+        }
+
+        @keyframes floatDust {
+            0% { transform: translateY(0) translateX(0); opacity: 0; }
+            10% { opacity: 0.6; }
+            90% { opacity: 0.6; }
+            100% { transform: translateY(-60px) translateX(15px); opacity: 0; }
+        }
+
+        .scanlines {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0.1) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            pointer-events: none; z-index: 1600;
+            opacity: 0.3;
+        }
+
+        .vignette-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle, transparent 50%, rgba(0,0,0,0.6) 100%);
+            pointer-events: none; z-index: 1600;
         }
 
         /* Secret */
@@ -401,9 +497,46 @@
 
         #confetti-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2400; pointer-events: none; }
         
-        /* Share Modal */
+        /* Share Modal Styles */
         #share-canvas { image-rendering: auto; border-radius: 12px; }
         #share-modal .glass-card { max-height: 90vh; overflow-y: auto; }
+        
+        /* Horror Card Variant for Ending 3 */
+        .horror-card {
+            background: rgba(10, 10, 10, 0.95);
+            border: 2px solid #444;
+            color: #ccc;
+            font-family: 'VT323', monospace;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            max-width: 420px; width: 92%; max-height: 90vh; overflow-y: auto;
+            pointer-events: auto;
+        }
+        .horror-card h2 { color: #b71c1c !important; text-shadow: 2px 2px 0 #000; font-family: 'VT323', monospace !important; font-size: 2rem; }
+        .horror-card p { color: #888 !important; font-family: 'VT323', monospace !important; }
+        .horror-card .action-btn { background: #333; border: 1px solid #555; color: #ddd; font-family: 'VT323', monospace; }
+        .horror-card .action-btn:hover { background: #555; }
+        
+        #share-quote {
+            font-size: 0.9rem;
+            padding: 10px;
+            background: rgba(255,255,255,0.4);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-style: italic;
+            color: #333;
+            border: 1px dashed #ccc;
+            user-select: all;
+            word-break: break-word;
+        }
+        .horror-card #share-quote {
+            background: rgba(255,255,255,0.05);
+            color: #aaa;
+            border-color: #555;
+        }
         
     </style>
 </head>
@@ -444,7 +577,7 @@
                     <div class="stat-val" id="val-choice">00/101</div>
                 </div>
             </div>
-            <div id="stage-indicator" class="stage-text">Stage: 01/101</div>
+            <div id="stage-indicator" class="stage-text">STAGE: 001 / 101</div>
             <h1 class="title" id="main-title">Will you be my valentine? 💘</h1>
             <div class="dialogue-box">
                 <p id="dialogue-text">Please say yes! 🥺</p>
@@ -475,7 +608,7 @@
                 <button id="lobby-btn-no" class="game-btn btn-no">NO 💔</button>
             </div>
             <p id="lobby-msg" class="lobby-msg"></p>
-            <p id="music-credit-text" class="music-credit">🎵 Music loaded</p>
+            <p id="music-credit-text" class="music-credit">🎵 Sound On for Best Experience</p>
         </div>
     </div>
 
@@ -491,6 +624,7 @@
 
     <div id="ending-overlay" class="overlay-screen">
         <div class="ending-content">
+            <p class="ending-number" id="end-number">ENDING 01 / 04</p>
             <h1 class="ending-title" id="end-title">TRUE LOVE</h1>
             <p class="ending-sub" id="end-sub">YES: 101/101</p>
             <p id="end-extra" class="ending-extra"></p>
@@ -508,9 +642,16 @@
         <!-- New Background Layer -->
         <div id="room-ps1-bg"></div>
         
+        <!-- Ambient Effect Layers -->
+        <div id="room-dust-layer"></div>
+        <div class="scanlines"></div>
+        <div class="vignette-overlay"></div>
+
         <div class="room-bg" id="room-bg-layer">
-            <div id="room-info">Ending 03 / 04</div>
-            <div id="room-progress">Fragments: 00/03</div>
+            <div id="room-info">ENDING 03 — THE EMPTY ROOM</div>
+            <div id="room-progress">ROOM: 00/05</div>
+            <div id="room-items-counter">ITEMS: 00/12</div>
+            
             <div class="room-obj" id="obj-window" title="Window">🪟</div>
             <div class="room-obj" id="obj-lamp" title="Lamp">🏮</div>
             <div class="room-obj" id="obj-clock" title="Clock">🕰️</div>
@@ -520,7 +661,7 @@
             <div class="room-obj" id="obj-dust" title="Dust">🌫️</div>
             <div class="room-obj" id="obj-box" title="Box">📦</div>
             <div class="room-obj" id="obj-bed" title="Bed">🛌</div>
-            <div class="room-obj" id="obj-shelf" title="Shelf">📚</div>
+            <div class="room-obj" id="obj-bookshelf" title="Shelf">📚</div>
             <div class="room-obj" id="obj-musicbox" title="Music Box">🎵</div>
             <div class="room-obj" id="obj-tulip" title="Tulip">🌷</div>
             <div class="room-obj" id="obj-letter" title="Letter">✉️</div>
@@ -539,15 +680,18 @@
     </div>
     
     <div id="share-modal" class="overlay-screen">
-        <div class="glass-card share-card-container" style="max-width: 420px; width: 92%; max-height: 90vh; overflow-y: auto;">
+        <div class="glass-card share-card-container">
             <h2 id="share-title" style="font-family:'Fredoka'; color:var(--primary-pink); margin-bottom:10px;">Share Card 💌</h2>
             <p id="share-sub" style="font-size:0.95rem; color:#666; margin-bottom:12px;">Your ending has been captured.</p>
+            
+            <p id="share-quote">I got ENDING...</p>
+
             <div style="border-radius:12px; overflow:hidden; border:2px solid rgba(255,255,255,0.8); margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
                 <canvas id="share-canvas" width="1080" height="1920" style="width:100%; height:auto; display:block;"></canvas>
             </div>
             <div class="share-actions" style="flex-direction: row; flex-wrap: wrap;">
                 <button id="btn-share-download" class="action-btn" style="flex:1; min-width: 100px;">Download 📥</button>
-                <button id="btn-share-copy" class="action-btn" style="flex:1; min-width: 100px; background:#a18cd1;">Copy 📋</button>
+                <button id="btn-share-copy" class="action-btn" style="flex:1; min-width: 100px; background:#a18cd1;">Copy Text 📋</button>
                 <button id="btn-share-close" class="action-btn" style="flex:1; min-width: 100px; background:#555;">Close</button>
             </div>
             <p id="share-hint" style="margin-top:15px; font-size:0.8rem; color:#888;">Tip: Perfect for Instagram Stories ✨</p>
@@ -568,6 +712,7 @@
             no: 0,
             scoreClicked: false,
             roomProgress: { tulip: false, letter: false, diary: false },
+            roomSeen: new Set(),
             endingId: null,
             userInteracted: false,
             effects: []
@@ -589,6 +734,16 @@
             timer: null,
             finished: false
         };
+        
+        // ROOM MODAL TYPEWRITER STATE (Separate to be safe)
+        const ROOM_MODAL_STATE = {
+            lines: [],
+            lineIdx: 0,
+            charIdx: 0,
+            isTyping: false,
+            timer: null,
+            active: false
+        };
 
         const CONFIG = {
             YES_GOAL: 101,
@@ -606,20 +761,66 @@
                 yesBtn: "YES 💖", noBtn: "NO 💔", reset: "Reset",
                 
                 // PHASES
-                phase1: ["Please?", "Pretty please?", "I have cookies! 🍪", "Don't be shy!", "Just click YES!", "I'm harmless 🥺"],
-                phase2: ["Why not?", "My heart hurts...", "Am I not enough?", "You're teasing me...", "I'm waiting...", "Don't be mean 💔"],
-                phase3: ["I can't breathe without you.", "Don't leave me here.", "It's cold alone.", "You promised...", "I'm begging you.", "Darkness is closing in..."],
-                phase4: ["We are meant to be.", "Destiny is watching.", "Just a little more.", "I see our future.", "Almost there, my love.", "Forever starts soon."],
+                phase1: [
+                    "Please?", "Pretty please?", "I have cookies! 🍪", "Don't be shy!", "Just click YES!", 
+                    "I'm harmless 🥺", "Are you sure?", "Really sure?", "Think again!", "Last chance!", 
+                    "Surely not?", "You might regret this!", "Give it another thought!", "Are you absolutely certain?", 
+                    "This could be a mistake!", "Have a heart!", "Don't be so cold!", "Change of heart?", 
+                    "Wouldn't you reconsider?", "Is that your final answer?", "You're breaking my heart ;(", 
+                    "Plsss?", "Look at me!", "I'm right here.", "Don't ignore me.", "Just one chance."
+                ],
+                phase2: [
+                    "Why not?", "My heart hurts...", "Am I not enough?", "You're teasing me...", "I'm waiting...", 
+                    "Don't be mean 💔", "I'm sad now.", "That wasn't very nice.", "I'm crying inside.", 
+                    "Do you enjoy this?", "My heart is fragile.", "Be gentle.", "I'm losing hope.", 
+                    "Why so cruel?", "Give love a chance.", "I'm not giving up.", "You can't hide.", 
+                    "I see you.", "Click the other one!", "Wrong button!", "Oops, you missed.", 
+                    "Try the pink one.", "The other button works better.", "This is getting awkward.", "Really?"
+                ],
+                phase3: [
+                    "I can't breathe without you.", "Don't leave me here.", "It's cold alone.", "You promised...", 
+                    "I'm begging you.", "Darkness is closing in...", "The void is calling.", "I'm fading...", 
+                    "Can you hear me?", "Don't let me vanish.", "I'm scared.", "Hold my hand.", "Save me.", 
+                    "Just one YES.", "Please...", "I'll do anything.", "Don't walk away.", "Stay.", 
+                    "I need you.", "You are my only hope.", "Everything is gray.", "Where is the light?", 
+                    "I'm lost.", "Find me.", "Don't give up on us."
+                ],
+                phase4: [
+                    "We are meant to be.", "Destiny is watching.", "Just a little more.", "I see our future.", 
+                    "Almost there, my love.", "Forever starts soon.", "You can't escape love.", "I am inevitable.", 
+                    "We are linked.", "Fate has spoken.", "The stars align.", "Don't fight it.", 
+                    "Surrender to love.", "It is written.", "Our story begins.", "Turn the page.", 
+                    "Say it.", "Unlock the future.", "Open your heart.", "Let me in.", "I am yours.", 
+                    "Be mine.", "Eternity awaits.", "Time is irrelevant.", "Love transcends."
+                ],
+                phase5: [
+                    "I'm getting dizzy...", "Why are they swapping?", "Just click the pink one!", "Where did it go?", 
+                    "You can't catch me!", "Confusion level: 100", "Running away?", "Chase me!", 
+                    "I'm over here!", "No, over here!", "Too slow!", "Fast fingers!", "Keep up!", 
+                    "Spinning around...", "Which is which?", "Illusion?", "Magic trick!", 
+                    "Teleportation!", "Blink and miss.", "Focus!", "Eyes on the prize.", 
+                    "Don't get distracted.", "Round and round.", "Where am I?", "Catch the love!"
+                ],
+                phase6: [
+                    "Hold me tight...", "Don't let go.", "Press and hold...", "Almost yours.", 
+                    "Prove your love.", "Stay with me.", "Feel the connection.", "Don't release.", 
+                    "Cling to me.", "Grasp it.", "Steady...", "Patience is key.", "Wait for it.", 
+                    "Endure.", "Persist.", "Don't tap out.", "Keep pressing.", "Fill the heart.", 
+                    "Charging love...", "Connecting...", "Synchronizing...", "Merging souls...", 
+                    "Becoming one.", "Just a bit more.", "Love takes time."
+                ],
 
                 // PHASE MESSAGES
                 phase1_msg: "It’s starting to move…",
                 phase2_msg: "It’s trying to confuse you.",
                 phase3_msg: "You can barely tell anymore.",
                 phase4_msg: "Say YES like you mean it.",
+                phase5_hint: "Buttons are swapping?!",
+                phase6_hint: "Hold button to confirm!",
                 phase3_hint: "The buttons look the same now…",
                 hesitate_msg: "You hesitated…",
 
-                lobbyNo: ["Wrong answer 😏", "Try again...", "You can't escape!", "No is not an option 💀"],
+                lobbyNo: ["Wrong answer 😏", "Try again...", "You can't escape!", "No is not an option 💀", "Nice try.", "Are you sure?"],
                 
                 // ENDING 1: TRUE LOVE
                 end1_title: "TRUE LOVE", end1_sub: "YES: 101/101",
@@ -630,10 +831,17 @@
                     "You chose me.",
                     "Again.",
                     "And again.",
+                    "The world said no.",
+                    "Logic said no.",
+                    "But you persisted.",
                     "Maybe love is not a miracle...",
                     "Maybe love is a decision.",
-                    "And you decided…",
-                    "to stay."
+                    "A decision made 101 times.",
+                    "Against all odds.",
+                    "Against all boredom.",
+                    "You stayed.",
+                    "And because you stayed...",
+                    "I will never leave."
                 ],
 
                 // ENDING 2: HESITANT
@@ -641,30 +849,41 @@
                 end2_extra: "You broke me 50 times... and still came back.",
                 end2_lines: [
                     "You said 'NO'...",
-                    "and I felt my world crack.",
-                    "I kept asking anyway.",
-                    "Not because I was brave...",
-                    "but because I was afraid to stop.",
-                    "Then you said 'YES'.",
-                    "Just barely.",
-                    "Just enough.",
-                    "Sometimes love isn’t perfect...",
-                    "but it still returns."
+                    "Fifty times.",
+                    "I felt every single one.",
+                    "Like a small crack in the glass.",
+                    "But you also said 'YES'.",
+                    "Fifty-one times.",
+                    "Just barely winning.",
+                    "It wasn't a landslide.",
+                    "It wasn't a fairy tale.",
+                    "It was a struggle.",
+                    "But you fought your way back.",
+                    "You chose me, eventually.",
+                    "Sometimes love isn't perfect...",
+                    "Sometimes it's just messy.",
+                    "But it's ours.",
+                    "And that is enough."
                 ],
 
                 // ENDING 3: EMPTY ROOM
                 end3_title: "THE EMPTY ROOM", end3_sub: "NO: 100/100",
                 end3_lines: [
                     "You said 'NO'.",
-                    "Once.",
-                    "Twice.",
-                    "Then it became routine.",
-                    "I stopped expecting anything else.",
+                    "One hundred times.",
+                    "At first, I thought you were joking.",
+                    "Then I thought you were testing me.",
+                    "Then...",
+                    "I realized you were leaving.",
                     "The room grew colder.",
+                    "The colors faded to gray.",
                     "The lamp kept burning...",
-                    "even when nobody came home.",
+                    "waiting for a ghost.",
+                    "I stopped asking.",
+                    "I stopped hoping.",
                     "I didn’t lose you at the 100th time...",
-                    "I lost you at the first."
+                    "I lost you long before that.",
+                    "Goodbye."
                 ],
                 room_intro: "You are back. But the room is colder.",
                 room_finish: "Now you understand.",
@@ -676,16 +895,28 @@
                     "Not by luck...",
                     "but because you looked closely.",
                     "You cared enough to notice.",
+                    "The world is full of noise.",
+                    "Big buttons.",
+                    "Loud demands.",
+                    "But you found the quiet space.",
+                    "The space between the lines.",
                     "So I will ask one last time...",
                     "not as a game...",
                     "but as a promise.",
                     "Will you choose me...",
-                    "even when nobody is watching?"
+                    "even when nobody is watching?",
+                    "Forever?"
                 ],
 
                 room_window: "Moonlight crawls in like a quiet witness. The world outside is silent.",
                 room_lamp: "The oil lamp is still burning… as if it’s waiting for a ghost.",
-                room_tulip: [
+                room_bookshelf: "Full of stories we never finished reading.",
+                room_mirror: "I see my reflection, but not the person I used to be with you.",
+                room_clock: "The clock stopped. It never reached your return.",
+                room_chair: "One chair. Pulled out as if someone left in a hurry.",
+                room_box: "A small box. It feels heavy with unspoken words.",
+                room_tulip: "A bouquet of fake tulips.",
+                room_tulip_lines: [
                     "A bouquet of fake tulips.",
                     "Tied together with a thin red thread…",
                     "or maybe a bracelet.",
@@ -693,7 +924,8 @@
                     "Because they were never alive.",
                     "Like promises that were never spoken."
                 ],
-                room_letter: [
+                room_letter: "A letter lies on the desk.",
+                room_letter_lines: [
                     "A letter lies on the desk.",
                     "Next to the notebook.",
                     "The ink is smudged from hesitation.",
@@ -703,7 +935,8 @@
                     "I was terrified of one 'NO'.",
                     "You gave me a hundred."
                 ],
-                room_diary: [
+                room_diary: "A diary opened by itself.",
+                room_diary_lines: [
                     "A diary opened by itself.",
                     "Page after page…",
                     "all written like prayers.",
@@ -714,19 +947,71 @@
                     "The answer existed…",
                     "before the question."
                 ],
+                room_musicbox: "A silent music box.",
+                room_musicbox_lines: [
+                    "I wound it up once.",
+                    "It played our favorite song.",
+                    "Now the gear is rusted.",
+                    "The melody is stuck inside.",
+                    "Silence is the only music left in this room."
+                ],
+                room_photo: "An old photo frame.",
+                room_photo_lines: [
+                    "A photo of us.",
+                    "The edges are worn.",
+                    "The face inside is scratched out.",
+                    "I couldn't bear to look at it.",
+                    "But I couldn't throw it away."
+                ],
                 secret_q: ["You think this is enough?", "If you truly want it...", "Say YES one last time."],
                 
-                // Tooltips (All 12 Objects)
-                room_clock: "The clock stopped. It never reached your return.",
-                room_mirror: "The mirror reflects me… but I can't see you anywhere.",
-                room_shelf: "A bookshelf. The tulips rest there like a sacred relic.",
-                room_chair: "One chair. Pulled out as if someone left in a hurry.",
-                room_bed: "The bed is untouched. Cold, like it forgot warmth.",
-                room_photo: "A photo frame… the face inside is scratched out.",
-                room_box: "A small box. It feels heavy with unspoken words.",
+                // Legacy tooltips (mapped to new keys above)
                 room_dust: "Dust floating in moonlight. Time made visible.",
-                room_musicbox: "A silent music box. The melody is stuck inside.",
-                room_musicbox_alt: "A silent music box. The melody is stuck inside."
+                room_musicbox_alt: "A silent music box. The melody is stuck inside.",
+
+                // SHARE QUOTES
+                share_quotes: {
+                    1: [
+                        "Love is a decision made 101 times.",
+                        "You stayed when others would have left.",
+                        "Forever starts with a simple Yes.",
+                        "Against all odds, you chose me.",
+                        "My heart is yours, today and always.",
+                        "A hundred rejections couldn't stop us.",
+                        "Destiny written in 101 clicks.",
+                        "The happiest ending of them all."
+                    ],
+                    2: [
+                        "You hesitated, but you came back.",
+                        "A love filled with doubts is still love.",
+                        "We almost missed each other.",
+                        "Perfectly imperfect.",
+                        "50 cracks in the glass, but it holds.",
+                        "You broke my heart 50 times, then healed it.",
+                        "Not a fairytale, but it's real.",
+                        "We fought for this ending."
+                    ],
+                    3: [
+                        "The lamp burns for no one.",
+                        "I waited until the colors faded.",
+                        "Silence is the loudest scream.",
+                        "You left, and the room forgot you.",
+                        "Just a ghost in a digital frame.",
+                        "Echoes of a 'No' that never ends.",
+                        "I am still here. Are you?",
+                        "The door is locked from the inside."
+                    ],
+                    4: [
+                        "You saw what others missed.",
+                        "A promise made in the dark.",
+                        "Our secret forever.",
+                        "You looked closer, and found me.",
+                        "Not a game anymore.",
+                        "Bound by a hidden thread.",
+                        "Only you understand.",
+                        "The world is noise; you are the signal."
+                    ]
+                }
             },
             vi: {
                 title: "Làm Valentine của tớ nhé? 💘",
@@ -734,20 +1019,66 @@
                 yesBtn: "CÓ 💖", noBtn: "KHÔNG 💔", reset: "Chơi lại",
                 
                 // PHASES
-                phase1: ["Đi mà?", "Năn nỉ đó!", "Tớ có bánh quy nè! 🍪", "Đừng ngại mà!", "Bấm CÓ đi!", "Tớ hiền lắm 🥺"],
-                phase2: ["Sao lại không?", "Tim tớ đau quá...", "Tớ chưa đủ tốt sao?", "Cậu trêu tớ hả...", "Tớ vẫn đợi...", "Đừng phũ thế 💔"],
-                phase3: ["Tớ không thể sống thiếu cậu.", "Đừng bỏ tớ lại.", "Ở đây lạnh lắm.", "Đừng tàn nhẫn thế.", "Tớ xin cậu đấy.", "Bóng tối đang nuốt chửng tớ..."],
-                phase4: ["Định mệnh sắp đặt rồi.", "Chỉ một chút nữa thôi.", "Tớ thấy tương lai mình.", "Sắp đến đích rồi.", "Mãi mãi bên nhau.", "Đừng buông tay..."],
+                phase1: [
+                    "Đi mà?", "Năn nỉ đó!", "Tớ có bánh quy nè! 🍪", "Đừng ngại mà!", "Bấm CÓ đi!", 
+                    "Tớ hiền lắm 🥺", "Cậu chắc chưa?", "Thật sự luôn?", "Nghĩ lại đi mà!", "Cơ hội cuối nha!", 
+                    "Đừng phũ thế!", "Cậu sẽ hối hận đó!", "Thương tớ đi!", "Chắc chắn 100% không?", 
+                    "Sai lầm đó nha!", "Có trái tim không vậy?", "Đừng lạnh lùng thế!", "Đổi ý chưa?", 
+                    "Suy nghĩ lại đi!", "Chốt đơn câu này hả?", "Tim tớ tan nát rồi ;(", 
+                    "Đi mừ...", "Nhìn tớ này!", "Tớ ở ngay đây.", "Đừng lờ tớ đi.", "Một cơ hội thôi."
+                ],
+                phase2: [
+                    "Sao lại không?", "Tim tớ đau quá...", "Tớ chưa đủ tốt sao?", "Cậu trêu tớ hả...", "Tớ vẫn đợi...", 
+                    "Đừng phũ thế 💔", "Buồn thật sự.", "Hơi bị ác đấy nha.", "Khóc trong lòng.", 
+                    "Cậu vui lắm hả?", "Tim tớ mong manh lắm.", "Nhẹ nhàng thôi.", "Tớ mất hy vọng rồi.", 
+                    "Sao tàn nhẫn thế?", "Cho tình yêu một cơ hội đi.", "Tớ không bỏ cuộc đâu.", "Cậu không trốn được đâu.", 
+                    "Tớ thấy cậu rồi.", "Bấm nút kia kìa!", "Sai nút rồi!", "Lêu lêu, trượt rồi.", 
+                    "Thử nút hồng đi.", "Nút kia xịn hơn.", "Ngại quá đi mất.", "Thật á?"
+                ],
+                phase3: [
+                    "Tớ không thể sống thiếu cậu.", "Đừng bỏ tớ lại.", "Ở đây lạnh lắm.", "Đừng tàn nhẫn thế.", 
+                    "Tớ xin cậu đấy.", "Bóng tối đang nuốt chửng tớ...", "Hư vô đang gọi tên.", "Tớ đang tan biến...", 
+                    "Cậu nghe tớ không?", "Đừng để tớ biến mất.", "Tớ sợ lắm.", "Nắm tay tớ đi.", "Cứu tớ với.", 
+                    "Chỉ một chữ CÓ thôi.", "Làm ơn...", "Tớ sẽ làm tất cả.", "Đừng quay lưng đi.", "Ở lại đi.", 
+                    "Tớ cần cậu.", "Cậu là hy vọng duy nhất.", "Mọi thứ xám xịt rồi.", "Ánh sáng đâu rồi?", 
+                    "Tớ lạc lối rồi.", "Tìm tớ đi.", "Đừng buông tay chúng ta."
+                ],
+                phase4: [
+                    "Định mệnh sắp đặt rồi.", "Chỉ một chút nữa thôi.", "Tớ thấy tương lai mình.", "Sắp đến đích rồi.", 
+                    "Mãi mãi bên nhau.", "Đừng buông tay...", "Cậu không thoát được đâu.", "Tớ là điều tất yếu.", 
+                    "Chúng ta là một.", "Số phận đã an bài.", "Sao trời đã định.", "Đừng chống cự nữa.", 
+                    "Đầu hàng đi.", "Đã viết trong sách trời.", "Câu chuyện bắt đầu.", "Lật sang trang mới.", 
+                    "Nói đi mà.", "Mở khóa tương lai.", "Mở cửa trái tim đi.", "Cho tớ vào.", "Tớ là của cậu.", 
+                    "Là của tớ đi.", "Vĩnh cửu đang chờ.", "Thời gian là vô nghĩa.", "Tình yêu là bất diệt."
+                ],
+                phase5: [
+                    "Tớ chóng mặt quá...", "Sao nút lại đổi chỗ?", "Bấm nút màu hồng đi!", "Nó chạy đi đâu thế?", 
+                    "Đố cậu bắt được tớ!", "Hack não level max", "Định chạy trốn hả?", "Đuổi theo tớ đi!", 
+                    "Tớ ở đây nè!", "Không, bên này cơ!", "Chậm quá!", "Tay nhanh hơn não!", "Cố lên nào!", 
+                    "Xoay vòng vòng...", "Cái nào là cái nào?", "Ảo giác hả?", "Ảo thuật đấy!", 
+                    "Dịch chuyển tức thời!", "Chớp mắt là mất.", "Tập trung nào!", "Nhìn cho kỹ.", 
+                    "Đừng phân tâm.", "Vòng tròn tình yêu.", "Tớ đâu rồi?", "Bắt lấy tình yêu!"
+                ],
+                phase6: [
+                    "Giữ chặt tớ nhé...", "Đừng buông tay.", "Nhấn và giữ...", "Sắp là của nhau rồi.", 
+                    "Chứng minh đi.", "Ở lại bên tớ.", "Cảm nhận nhịp đập.", "Đừng thả ra.", 
+                    "Bám lấy tớ.", "Nắm lấy nó.", "Vững tay nào...", "Kiên nhẫn lên.", "Chờ một chút.", 
+                    "Cố chịu đựng.", "Kiên trì nhé.", "Đừng bỏ cuộc.", "Tiếp tục nhấn.", "Lấp đầy trái tim.", 
+                    "Đang nạp tình yêu...", "Đang kết nối...", "Đang đồng bộ...", "Hòa quyện linh hồn...", 
+                    "Trở thành một.", "Chút xíu nữa thôi.", "Tình yêu cần thời gian."
+                ],
 
                 // PHASE MESSAGES
                 phase1_msg: "Nó bắt đầu di chuyển rồi…",
                 phase2_msg: "Nó đang cố đánh lừa cậu.",
                 phase3_msg: "Giờ gần như không thể phân biệt…",
                 phase4_msg: "Hãy nói CÓ như thể cậu thật lòng.",
+                phase5_hint: "Các nút đang đổi chỗ?!",
+                phase6_hint: "Giữ nút để xác nhận!",
                 phase3_hint: "Hai lựa chọn trông giống nhau quá…",
                 hesitate_msg: "Cậu đã do dự…",
 
-                lobbyNo: ["Sai rồi nha 😏", "Thử lại đê...", "Không thoát được đâu!", "Không được chọn cái này 💀"],
+                lobbyNo: ["Sai rồi nha 😏", "Thử lại đê...", "Không thoát được đâu!", "Không được chọn cái này 💀", "Cố chấp thế?", "Chắc chưa?"],
                 
                 // ENDING 1: TRUE LOVE
                 end1_title: "TÌNH YÊU ĐÍCH THỰC", end1_sub: "CÓ: 101/101",
@@ -758,10 +1089,17 @@
                     "Cậu chọn tớ.",
                     "Hết lần này...",
                     "đến lần khác.",
+                    "Thế giới bảo không.",
+                    "Lý trí bảo không.",
+                    "Nhưng cậu vẫn kiên trì.",
                     "Có lẽ tình yêu không phải phép màu...",
                     "mà là một lựa chọn.",
-                    "Và cậu đã chọn...",
-                    "ở lại."
+                    "Một quyết định được đưa ra 101 lần.",
+                    "Bất chấp mọi thứ.",
+                    "Bất chấp sự nhàm chán.",
+                    "Cậu đã ở lại.",
+                    "Và vì cậu đã ở lại...",
+                    "Tớ sẽ không bao giờ rời đi."
                 ],
 
                 // ENDING 2: HESITANT
@@ -769,30 +1107,41 @@
                 end2_extra: "Cậu làm tớ tan nát 50 lần... nhưng vẫn quay lại.",
                 end2_lines: [
                     "Cậu đã nói 'KHÔNG'...",
-                    "và tớ thấy tim mình nứt ra.",
-                    "Nhưng tớ vẫn hỏi tiếp.",
-                    "Không phải vì tớ mạnh mẽ...",
-                    "mà vì tớ sợ phải dừng lại.",
-                    "Rồi cậu nói 'CÓ'.",
-                    "Chỉ nhỉnh hơn một chút.",
-                    "Nhưng cũng đủ rồi.",
+                    "50 lần.",
+                    "Tớ cảm nhận từng vết xước.",
+                    "Như vết nứt nhỏ trên mặt kính.",
+                    "Nhưng cậu cũng nói 'CÓ'.",
+                    "51 lần.",
+                    "Chỉ vừa đủ thắng.",
+                    "Không phải một chiến thắng áp đảo.",
+                    "Không phải cổ tích.",
+                    "Đó là một sự đấu tranh.",
+                    "Nhưng cậu đã chiến đấu để quay lại.",
+                    "Cậu chọn tớ, cuối cùng thì.",
                     "Đôi khi tình yêu không hoàn hảo...",
-                    "nhưng nó vẫn quay về."
+                    "Đôi khi nó thật lộn xộn.",
+                    "Nhưng nó là của chúng ta.",
+                    "Và thế là đủ."
                 ],
 
                 // ENDING 3: EMPTY ROOM
                 end3_title: "CĂN PHÒNG TRỐNG", end3_sub: "KHÔNG: 100/100",
                 end3_lines: [
                     "Cậu nói 'KHÔNG'.",
-                    "Một lần.",
-                    "Hai lần.",
-                    "Rồi nó thành thói quen.",
-                    "Tớ không còn mong đợi gì nữa.",
+                    "Một trăm lần.",
+                    "Lúc đầu, tớ tưởng cậu đùa.",
+                    "Sau đó tớ nghĩ cậu đang thử thách.",
+                    "Rồi...",
+                    "Tớ nhận ra cậu đang rời đi.",
                     "Căn phòng lạnh dần.",
+                    "Màu sắc phai nhạt thành xám.",
                     "Ngọn đèn vẫn cháy...",
-                    "dù chẳng ai quay về.",
+                    "chờ đợi một bóng ma.",
+                    "Tớ thôi không hỏi nữa.",
+                    "Tớ thôi không hy vọng nữa.",
                     "Tớ không mất cậu ở lần thứ 100...",
-                    "mà mất cậu ngay từ lần đầu tiên."
+                    "Tớ mất cậu từ rất lâu trước đó.",
+                    "Tạm biệt."
                 ],
                 room_intro: "Cậu đã quay lại. Nhưng căn phòng lạnh lẽo hơn xưa.",
                 room_finish: "Giờ thì cậu hiểu rồi chứ.",
@@ -804,16 +1153,28 @@
                     "Không phải do may mắn...",
                     "mà vì cậu để ý.",
                     "Vì cậu đủ quan tâm để nhìn kỹ.",
+                    "Thế giới đầy những ồn ào.",
+                    "Những cái nút to lớn.",
+                    "Những đòi hỏi ầm ĩ.",
+                    "Nhưng cậu tìm thấy khoảng lặng.",
+                    "Khoảng trống giữa những dòng chữ.",
                     "Nên tớ sẽ hỏi lần cuối...",
                     "không phải như một trò chơi...",
                     "mà như một lời hứa.",
                     "Cậu sẽ chọn tớ chứ...",
-                    "kể cả khi không ai nhìn thấy?"
+                    "kể cả khi không ai nhìn thấy?",
+                    "Mãi mãi?"
                 ],
 
                 room_window: "Ánh trăng trườn vào như một nhân chứng im lặng. Thế giới bên ngoài thật tĩnh mịch.",
                 room_lamp: "Đèn dầu vẫn cháy… như thể đang chờ một bóng ma.",
-                room_tulip: [
+                room_bookshelf: "Đầy những câu chuyện chúng ta chưa bao giờ đọc hết.",
+                room_mirror: "Tớ thấy bóng mình, nhưng không thấy người mà tớ từng ở bên.",
+                room_clock: "Chiếc đồng hồ đã dừng. Nó chưa từng chờ được cậu quay lại.",
+                room_chair: "Một chiếc ghế. Bị kéo ra như thể ai đó vừa vội vã rời đi.",
+                room_box: "Một chiếc hộp nhỏ. Cảm giác nặng trĩu những điều chưa nói.",
+                room_tulip: "Một bó tulip giả.",
+                room_tulip_lines: [
                     "Một bó tulip giả.",
                     "Được cột lại bằng sợi chỉ đỏ…",
                     "hoặc một chiếc vòng tay.",
@@ -821,7 +1182,8 @@
                     "Vì chúng chưa từng sống.",
                     "Giống như những lời hứa chưa từng được nói ra."
                 ],
-                room_letter: [
+                room_letter: "Một bức thư nằm trên bàn.",
+                room_letter_lines: [
                     "Một bức thư nằm trên bàn.",
                     "Ngay cạnh cuốn sổ tay.",
                     "Mực bị nhòe vì do dự.",
@@ -831,7 +1193,8 @@
                     "Tớ sợ chỉ một chữ 'KHÔNG'.",
                     "Cậu cho tớ cả trăm chữ."
                 ],
-                room_diary: [
+                room_diary: "Cuốn nhật ký tự mở ra.",
+                room_diary_lines: [
                     "Cuốn nhật ký tự mở ra.",
                     "Trang này đến trang khác…",
                     "như những lời cầu nguyện.",
@@ -842,19 +1205,71 @@
                     "Câu trả lời đã tồn tại…",
                     "trước cả câu hỏi."
                 ],
+                room_musicbox: "Hộp nhạc im lặng.",
+                room_musicbox_lines: [
+                    "Tớ đã lên dây cót một lần.",
+                    "Nó từng chơi bài hát của chúng ta.",
+                    "Giờ bánh răng đã rỉ sét.",
+                    "Giai điệu bị kẹt lại bên trong.",
+                    "Sự im lặng là bản nhạc duy nhất còn lại."
+                ],
+                room_photo: "Một khung ảnh cũ.",
+                room_photo_lines: [
+                    "Một bức ảnh của chúng ta.",
+                    "Góc ảnh đã sờn.",
+                    "Khuôn mặt bên trong đã bị cào nát.",
+                    "Tớ không dám nhìn vào nó.",
+                    "Nhưng cũng không nỡ vứt đi."
+                ],
                 secret_q: ["Bạn nghĩ thế là đủ?", "Nếu bạn thực sự muốn...", "Hãy nói CÓ một lần cuối."],
 
                 // Tooltips
-                room_clock: "Chiếc đồng hồ đã dừng. Nó chưa từng chờ được cậu quay lại.",
-                room_mirror: "Gương phản chiếu tớ… nhưng tớ không tìm thấy cậu đâu cả.",
-                room_shelf: "Giá sách. Bó tulip nằm đó như một kỷ vật thiêng liêng.",
-                room_chair: "Một chiếc ghế. Bị kéo ra như thể ai đó vừa vội vã rời đi.",
-                room_bed: "Chiếc giường chưa từng được chạm vào. Lạnh đến lạ.",
-                room_photo: "Khung ảnh… khuôn mặt bên trong đã bị cào nát.",
-                room_box: "Một chiếc hộp nhỏ. Cảm giác nặng trĩu những điều chưa nói.",
                 room_dust: "Bụi lơ lửng dưới ánh trăng. Thời gian hiện hình.",
-                room_musicbox: "Hộp nhạc im lặng. Giai điệu bị kẹt lại bên trong.",
-                room_musicbox_alt: "Hộp nhạc im lặng. Giai điệu bị kẹt lại bên trong."
+                room_musicbox_alt: "Hộp nhạc im lặng. Giai điệu bị kẹt lại bên trong.",
+
+                // SHARE QUOTES
+                share_quotes: {
+                    1: [
+                        "Tình yêu là sự lựa chọn 101 lần.",
+                        "Cậu ở lại khi người khác rời đi.",
+                        "Mãi mãi bắt đầu từ một chữ Có.",
+                        "Bất chấp tất cả, cậu đã chọn tớ.",
+                        "Trái tim tớ thuộc về cậu.",
+                        "Trăm lần từ chối không ngăn được ta.",
+                        "Định mệnh viết bằng 101 cú click.",
+                        "Cái kết hạnh phúc nhất."
+                    ],
+                    2: [
+                        "Cậu do dự, nhưng đã quay lại.",
+                        "Tình yêu đầy nghi hoặc vẫn là tình yêu.",
+                        "Chúng ta suýt lạc mất nhau.",
+                        "Hoàn hảo trong sự không hoàn hảo.",
+                        "50 vết nứt, nhưng vẫn vẹn nguyên.",
+                        "Cậu làm tớ đau 50 lần, rồi chữa lành.",
+                        "Không phải cổ tích, nhưng là thật.",
+                        "Chúng ta đã chiến đấu vì điều này."
+                    ],
+                    3: [
+                        "Ngọn đèn cháy không vì ai cả.",
+                        "Tớ đợi đến khi màu sắc phai nhạt.",
+                        "Sự im lặng là tiếng hét lớn nhất.",
+                        "Cậu đi rồi, căn phòng đã quên cậu.",
+                        "Chỉ là bóng ma trong khung hình số.",
+                        "Vang vọng tiếng 'Không' vô tận.",
+                        "Tớ vẫn ở đây. Còn cậu?",
+                        "Cửa đã khóa từ bên trong."
+                    ],
+                    4: [
+                        "Cậu thấy điều người khác bỏ lỡ.",
+                        "Lời hứa trong bóng tối.",
+                        "Bí mật của riêng chúng ta.",
+                        "Cậu nhìn kỹ hơn, và tìm thấy tớ.",
+                        "Không còn là trò chơi nữa.",
+                        "Trói buộc bởi sợi chỉ ẩn.",
+                        "Chỉ cậu mới hiểu.",
+                        "Thế giới là ồn ào; cậu là tín hiệu."
+                    ]
+                }
             },
             es: {
                 title: "¿Quieres ser mi San Valentín? 💘",
@@ -862,20 +1277,66 @@
                 yesBtn: "SÍ 💖", noBtn: "NO 💔", reset: "Reiniciar",
                 
                 // PHASES
-                phase1: ["¿Por favor?", "¿Por favorcito?", "¡Tengo galletas! 🍪", "¡No seas tímido!", "¡Solo di SÍ!", "Soy inofensivo 🥺"],
-                phase2: ["¿Por qué no?", "Me duele el corazón...", "¿No soy suficiente?", "Me estás tomando el pelo...", "Estoy esperando...", "No seas cruel 💔"],
-                phase3: ["No puedo respirar sin ti.", "No me dejes solo.", "Hace frío aquí.", "Lo prometiste.", "Te lo ruego.", "La oscuridad se acerca..."],
-                phase4: ["Estamos destinados.", "El destino nos mira.", "Solo un poco más.", "Veo nuestro futuro.", "Casi estamos, mi amor.", "Para siempre comienza pronto."],
+                phase1: [
+                    "¿Por favor?", "¿Por favorcito?", "¡Tengo galletas! 🍪", "¡No seas tímido!", "¡Solo di SÍ!", 
+                    "Soy inofensivo 🥺", "¿Estás seguro?", "¿De verdad?", "¡Piénsalo bien!", "¡Última oportunidad!", 
+                    "¿Seguro que no?", "¡Te arrepentirás!", "¡Dale otra vuelta!", "¿Estás absolutamente seguro?", 
+                    "¡Esto podría ser un error!", "¡Ten corazón!", "¡No seas tan frío!", "¿Cambiaste de opinión?", 
+                    "¿No lo reconsiderarías?", "¿Es tu respuesta final?", "Me rompes el corazón ;(", 
+                    "¿Poorfis?", "¡Mírame!", "Estoy aquí.", "No me ignores.", "Solo una oportunidad."
+                ],
+                phase2: [
+                    "¿Por qué no?", "Me duele el corazón...", "¿No soy suficiente?", "Me estás tomando el pelo...", "Estoy esperando...", 
+                    "No seas cruel 💔", "Estoy triste.", "Eso no fue muy lindo.", "Lloro por dentro.", 
+                    "¿Disfrutas esto?", "Mi corazón es frágil.", "Sé gentil.", "Pierdo la esperanza.", 
+                    "¿Por qué tan cruel?", "Dale una oportunidad al amor.", "No me rindo.", "No puedes esconderte.", 
+                    "Te veo.", "¡Dale al otro!", "¡Botón equivocado!", "Ups, fallaste.", 
+                    "Prueba el rosa.", "El otro funciona mejor.", "Esto es incómodo.", "¿En serio?"
+                ],
+                phase3: [
+                    "No puedo respirar sin ti.", "No me dejes solo.", "Hace frío aquí.", "Lo prometiste.", 
+                    "Te lo ruego.", "La oscuridad se acerca...", "El vacío llama.", "Me desvanezco...", 
+                    "¿Puedes oírme?", "No dejes que desaparezca.", "Tengo miedo.", "Toma mi mano.", "Sálvame.", 
+                    "Solo un SÍ.", "Por favor...", "Haré lo que sea.", "No te alejes.", "Quédate.", 
+                    "Te necesito.", "Eres mi única esperanza.", "Todo es gris.", "¿Dónde está la luz?", 
+                    "Estoy perdido.", "Encuéntrame.", "No te rindas con nosotros."
+                ],
+                phase4: [
+                    "Estamos destinados.", "El destino nos mira.", "Solo un poco más.", "Veo nuestro futuro.", 
+                    "Casi estamos, mi amor.", "Para siempre comienza pronto.", "No puedes escapar del amor.", "Soy inevitable.", 
+                    "Estamos conectados.", "El destino ha hablado.", "Las estrellas se alinean.", "No luches.", 
+                    "Ríndete al amor.", "Está escrito.", "Nuestra historia comienza.", "Pasa la página.", 
+                    "Dilo.", "Desbloquea el futuro.", "Abre tu corazón.", "Déjame entrar.", "Soy tuyo.", 
+                    "Sé mío.", "La eternidad espera.", "El tiempo es irrelevante.", "El amor trasciende."
+                ],
+                phase5: [
+                    "Me estoy mareando...", "¿Por qué cambian?", "¡Solo dale al rosa!", "¿A dónde fue?", 
+                    "¡No puedes atraparme!", "Nivel de confusión: 100", "¿Te escapas?", "¡Atrápame!", 
+                    "¡Estoy aquí!", "¡No, acá!", "¡Muy lento!", "¡Dedos rápidos!", "¡Sigue el ritmo!", 
+                    "Girando y girando...", "¿Cuál es cuál?", "¿Ilusión?", "¡Truco de magia!", 
+                    "¡Teletransportación!", "Parpadea y pierdes.", "¡Concentra!", "Ojos en el premio.", 
+                    "No te distraigas.", "Vueltas y vueltas.", "¿Dónde estoy?", "¡Atrapa el amor!"
+                ],
+                phase6: [
+                    "Abrázame fuerte...", "No me sueltes.", "Presiona y mantén...", "Casi tuyo.", 
+                    "Demuéstralo.", "Quédate conmigo.", "Siente la conexión.", "No sueltes.", 
+                    "Aférrate a mí.", "Agárralo.", "Firme...", "Paciencia es clave.", "Espéralo.", 
+                    "Aguanta.", "Persiste.", "No te rindas.", "Sigue presionando.", "Llena el corazón.", 
+                    "Cargando amor...", "Conectando...", "Sincronizando...", "Fusionando almas...", 
+                    "Siendo uno.", "Solo un poco más.", "El amor toma tiempo."
+                ],
 
                 // PHASE MESSAGES
                 phase1_msg: "Está empezando a moverse…",
                 phase2_msg: "Está intentando confundirte.",
                 phase3_msg: "Ya casi no puedes distinguirlo…",
                 phase4_msg: "Di SÍ como si lo sintieras.",
+                phase5_hint: "¡¿Los botones cambian?!",
+                phase6_hint: "¡Mantén presionado!",
                 phase3_hint: "Los botones se ven iguales…",
                 hesitate_msg: "Dudaste…",
 
-                lobbyNo: ["Incorrecto 😏", "Intenta de nuevo...", "¡No puedes escapar!", "No es una opción 💀"],
+                lobbyNo: ["Incorrecto 😏", "Intenta de nuevo...", "¡No puedes escapar!", "No es una opción 💀", "Buen intento.", "¿Seguro?"],
                 
                 // ENDING 1: TRUE LOVE
                 end1_title: "AMOR VERDADERO", end1_sub: "SÍ: 101/101",
@@ -886,10 +1347,17 @@
                     "Me elegiste.",
                     "Una vez más.",
                     "Y otra vez.",
+                    "El mundo dijo que no.",
+                    "La lógica dijo que no.",
+                    "Pero tú persististe.",
                     "Quizás el amor no es un milagro...",
                     "quizás es una decisión.",
-                    "Y tú decidiste...",
-                    "quedarte."
+                    "Una decisión tomada 101 veces.",
+                    "Contra todo pronóstico.",
+                    "Contra todo aburrimiento.",
+                    "Te quedaste.",
+                    "Y porque te quedaste...",
+                    "Nunca me iré."
                 ],
 
                 // ENDING 2: HESITANT
@@ -897,30 +1365,41 @@
                 end2_extra: "Me rompiste 50 veces... y aún así volviste.",
                 end2_lines: [
                     "Dijiste 'NO'...",
-                    "y sentí mi mundo romperse.",
-                    "Aun así seguí preguntando.",
-                    "No porque fuera valiente...",
-                    "sino porque tenía miedo de parar.",
-                    "Entonces dijiste 'SÍ'.",
-                    "Por muy poco.",
-                    "Pero fue suficiente.",
+                    "Cincuenta veces.",
+                    "Sentí cada uno de ellos.",
+                    "Como una pequeña grieta en el cristal.",
+                    "Pero también dijiste 'SÍ'.",
+                    "Cincuenta y una veces.",
+                    "Apenas ganando.",
+                    "No fue una victoria aplastante.",
+                    "No fue un cuento de hadas.",
+                    "Fue una lucha.",
+                    "Pero luchaste para volver.",
+                    "Me elegiste, eventualmente.",
                     "A veces el amor no es perfecto...",
-                    "pero vuelve."
+                    "A veces es un desastre.",
+                    "Pero es nuestro.",
+                    "Y eso es suficiente."
                 ],
 
                 // ENDING 3: EMPTY ROOM
                 end3_title: "LA HABITACIÓN VACÍA", end3_sub: "NO: 100/100",
                 end3_lines: [
                     "Dijiste 'NO'.",
-                    "Una vez.",
-                    "Dos veces.",
-                    "Luego se volvió rutina.",
-                    "Dejé de esperar algo diferente.",
+                    "Cien veces.",
+                    "Al principio pensé que bromeabas.",
+                    "Luego pensé que me estabas probando.",
+                    "Luego...",
+                    "Me di cuenta de que te ibas.",
                     "La habitación se volvió más fría.",
+                    "Los colores se desvanecieron a gris.",
                     "La lámpara seguía encendida...",
-                    "aunque nadie volviera.",
+                    "esperando a un fantasma.",
+                    "Dejé de preguntar.",
+                    "Dejé de esperar.",
                     "No te perdí en la vez número 100...",
-                    "te perdí desde la primera."
+                    "Te perdí mucho antes de eso.",
+                    "Adiós."
                 ],
                 room_intro: "Has vuelto. Pero la habitación está más fría.",
                 room_finish: "Ahora lo entiendes.",
@@ -932,16 +1411,28 @@
                     "No por suerte...",
                     "sino porque miraste con atención.",
                     "Te importó lo suficiente para notar.",
+                    "El mundo está lleno de ruido.",
+                    "Botones grandes.",
+                    "Demandas ruidosas.",
+                    "Pero encontraste el espacio tranquilo.",
+                    "El espacio entre líneas.",
                     "Así que preguntaré una última vez...",
                     "no como un juego...",
                     "sino como una promesa.",
                     "¿Me elegirías...",
-                    "aunque nadie esté mirando?"
+                    "aunque nadie esté mirando?",
+                    "¿Para siempre?"
                 ],
 
                 room_window: "La luz de la luna entra como un testigo silencioso. El mundo exterior está callado.",
                 room_lamp: "La lámpara sigue encendida… como si esperara a un fantasma.",
-                room_tulip: [
+                room_bookshelf: "Lleno de historias que nunca terminamos de leer.",
+                room_mirror: "Veo mi reflejo, pero no a la persona que solía ser contigo.",
+                room_clock: "El reloj se detuvo. Nunca alcanzó tu regreso.",
+                room_chair: "Una silla. Arrastrada como si alguien se hubiera ido con prisa.",
+                room_box: "Una caja pequeña. Se siente pesada con palabras no dichas.",
+                room_tulip: "Un ramo de tulipanes falsos.",
+                room_tulip_lines: [
                     "Un ramo de tulipanes falsos.",
                     "Atado con un hilo rojo…",
                     "o quizás una pulsera.",
@@ -949,7 +1440,8 @@
                     "Porque nunca estuvieron vivos.",
                     "Como promesas que nunca se dijeron."
                 ],
-                room_letter: [
+                room_letter: "Una carta está sobre el escritorio.",
+                room_letter_lines: [
                     "Una carta está sobre el escritorio.",
                     "Junto al cuaderno.",
                     "La tinta está manchada por la duda.",
@@ -959,7 +1451,8 @@
                     "Tenía miedo de un solo 'NO'.",
                     "Me diste cien."
                 ],
-                room_diary: [
+                room_diary: "Un diario se abrió solo.",
+                room_diary_lines: [
                     "Un diario se abrió solo.",
                     "Página tras página…",
                     "escrito como una oración.",
@@ -970,19 +1463,71 @@
                     "La respuesta existía…",
                     "antes de la pregunta."
                 ],
+                room_musicbox: "Una caja de música silenciosa.",
+                room_musicbox_lines: [
+                    "Le di cuerda una vez.",
+                    "Tocaba nuestra canción favorita.",
+                    "Ahora el engranaje está oxidado.",
+                    "La melodía está atrapada dentro.",
+                    "El silencio es la única música que queda en esta habitación."
+                ],
+                room_photo: "Un marco viejo.",
+                room_photo_lines: [
+                    "Una foto de nosotros.",
+                    "Los bordes están gastados.",
+                    "La cara de adentro está tachada.",
+                    "No podía soportar mirarla.",
+                    "Pero no podía tirarla."
+                ],
                 secret_q: ["¿Crees que es suficiente?", "Si realmente lo quieres...", "Di SÍ una última vez."],
 
                 // Tooltips
-                room_clock: "El reloj se detuvo. Nunca alcanzó tu regreso.",
-                room_mirror: "El espejo me refleja… pero no puedo verte por ningún lado.",
-                room_shelf: "Una estantería. Los tulipanes descansan allí como una reliquia.",
-                room_chair: "Una silla. Arrastrada como si alguien se hubiera ido con prisa.",
-                room_bed: "La cama está intacta. Fría, como si olvidara el calor.",
-                room_photo: "Un marco… la cara de adentro está tachada.",
-                room_box: "Una caja pequeña. Se siente pesada con palabras no dichas.",
                 room_dust: "Polvo flotando bajo la luna. El tiempo hecho visible.",
-                room_musicbox: "Una caja de música silenciosa. La melodía está atrapada dentro.",
-                room_musicbox_alt: "Una caja de música silenciosa. La melodía está atrapada dentro."
+                room_musicbox_alt: "Una caja de música silenciosa. La melodía está atrapada dentro.",
+
+                // SHARE QUOTES
+                share_quotes: {
+                    1: [
+                        "El amor es una elección hecha 101 veces.",
+                        "Te quedaste cuando otros se habrían ido.",
+                        "Para siempre comienza con un Sí.",
+                        "Contra todo, me elegiste.",
+                        "Mi corazón es tuyo, hoy y siempre.",
+                        "Cien rechazos no pudieron detenernos.",
+                        "Destino escrito en 101 clics.",
+                        "El final más feliz de todos."
+                    ],
+                    2: [
+                        "Dudaste, pero volviste.",
+                        "Un amor con dudas sigue siendo amor.",
+                        "Casi nos perdemos.",
+                        "Perfectamente imperfecto.",
+                        "50 grietas en el cristal, pero aguanta.",
+                        "Rompiste mi corazón 50 veces, luego lo sanaste.",
+                        "No es un cuento de hadas, es real.",
+                        "Luchamos por este final."
+                    ],
+                    3: [
+                        "La lámpara arde para nadie.",
+                        "Esperé hasta que los colores se desvanecieron.",
+                        "El silencio es el grito más fuerte.",
+                        "Te fuiste y la habitación te olvidó.",
+                        "Solo un fantasma en un marco digital.",
+                        "Ecos de un 'No' que nunca termina.",
+                        "Sigo aquí. ¿Y tú?",
+                        "La puerta está cerrada por dentro."
+                    ],
+                    4: [
+                        "Viste lo que otros perdieron.",
+                        "Una promesa hecha en la oscuridad.",
+                        "Nuestro secreto para siempre.",
+                        "Miraste más cerca y me encontraste.",
+                        "Ya no es un juego.",
+                        "Unidos por un hilo oculto.",
+                        "Solo tú entiendes.",
+                        "El mundo es ruido; tú eres la señal."
+                    ]
+                }
             }
         };
 
@@ -1028,13 +1573,16 @@
                 buttonArea: document.getElementById('button-area'),
                 
                 // Ending UI
+                endNumber: document.getElementById('end-number'), // New
                 endTitle: document.getElementById('end-title'),
                 endSub: document.getElementById('end-sub'),
                 endText: document.getElementById('end-text'),
                 endExtra: document.getElementById('end-extra'),
                 
                 // Room UI
+                roomInfo: document.getElementById('room-info'),
                 roomProgress: document.getElementById('room-progress'),
+                roomItemsCounter: document.getElementById('room-items-counter'), // Added
                 roomTooltip: document.getElementById('room-tooltip'),
                 roomCinematicText: document.getElementById('room-cinematic-text'),
                 roomModal: document.getElementById('room-modal'),
@@ -1085,6 +1633,11 @@
                     DOM.noBtn.style.order = '';
                     DOM.noBtn.classList.remove('phase-blur');
                 }
+                // Reset Hint
+                if(DOM.phaseHint) {
+                    DOM.phaseHint.style.opacity = '0';
+                    DOM.phaseHint.innerText = '';
+                }
             },
 
             update() {
@@ -1111,14 +1664,24 @@
             },
 
             apply(phase) {
+                const L = getLang();
+                
                 if (phase === 2) {
                     DOM.yesBtn.classList.add('phase-wiggle');
                 } else if (phase === 3) {
                     DOM.yesBtn.style.transition = 'transform 0.4s ease-out';
+                    DOM.phaseHint.innerText = L.phase3_hint;
+                    DOM.phaseHint.style.opacity = '1';
                 } else if (phase === 4) {
                     DOM.yesBtn.classList.add('phase-blur');
                     DOM.noBtn.classList.add('phase-blur');
+                    DOM.phaseHint.style.opacity = '0'; // Hide previous hint
+                } else if (phase === 5) {
+                    DOM.phaseHint.innerText = L.phase5_hint;
+                    DOM.phaseHint.style.opacity = '1';
                 } else if (phase === 6) {
+                    DOM.phaseHint.innerText = L.phase6_hint;
+                    DOM.phaseHint.style.opacity = '1';
                     this.startHoldMode();
                 }
             },
@@ -1128,6 +1691,7 @@
                 if (prevPhase === 3) {
                     DOM.yesBtn.style.transform = '';
                     DOM.yesBtn.style.transition = '';
+                    DOM.phaseHint.style.opacity = '0';
                 }
                 if (prevPhase === 4) {
                     DOM.yesBtn.classList.remove('phase-blur');
@@ -1136,9 +1700,11 @@
                 if (prevPhase === 5) {
                     DOM.yesBtn.style.order = '';
                     DOM.noBtn.style.order = '';
+                    DOM.phaseHint.style.opacity = '0';
                 }
                 if (prevPhase === 6) {
                     this.stopHoldMode();
+                    DOM.phaseHint.style.opacity = '0';
                 }
             },
 
@@ -1287,7 +1853,7 @@
             document.getElementById('lobby-btn-yes').onclick = () => { SFX.playYes(); startGameplay(); };
             document.getElementById('lobby-btn-no').onclick = () => { 
                 SFX.playNo(); 
-                document.getElementById('lobby-msg').innerText = getLang().lobbyNo[Math.floor(Math.random()*3)]; 
+                document.getElementById('lobby-msg').innerText = getLang().lobbyNo[Math.floor(Math.random()*getLang().lobbyNo.length)]; 
             };
 
             // Gameplay
@@ -1333,7 +1899,7 @@
             
             document.getElementById('btn-share-close').onclick = closeShareModal;
             document.getElementById('btn-share-download').onclick = downloadShareCard;
-            document.getElementById('btn-share-copy').onclick = copyShareCardToClipboard;
+            document.getElementById('btn-share-copy').onclick = copyShareText;
             
             const shareModal = document.getElementById("share-modal");
             if(shareModal) {
@@ -1357,14 +1923,28 @@
         /* --- 7. GAME FLOW CONTROLLERS --- */
 
         function goToLobby() {
+            // Stop timers
+            if (ENDING_STATE.timer) clearTimeout(ENDING_STATE.timer);
+            if (ROOM_MODAL_STATE.timer) clearTimeout(ROOM_MODAL_STATE.timer);
+            
+            // Reset State
             STATE.yes = 0; 
             STATE.no = 0;
             STATE.scoreClicked = false;
             STATE.endingId = null;
             STATE.roomProgress = { tulip: false, letter: false, diary: false };
+            STATE.roomSeen = new Set();
             
+            // UI Reset
             document.getElementById('lbl-yes-trigger').style.color = "#666";
+            if(DOM.yesBtn) DOM.yesBtn.disabled = false;
+            if(DOM.noBtn) DOM.noBtn.disabled = false;
             
+            // Close Modals explicitly
+            closeShareModal();
+            if(DOM.settingsModal) DOM.settingsModal.classList.remove('visible');
+            if(DOM.roomModal) DOM.roomModal.style.display = 'none';
+
             setMode('lobby');
         }
 
@@ -1385,6 +1965,11 @@
             STATE.no = 0;
             STATE.endingId = null;
             STATE.roomProgress = { tulip: false, letter: false, diary: false };
+            STATE.roomSeen = new Set();
+            
+            // Enable buttons
+            DOM.yesBtn.disabled = false;
+            DOM.noBtn.disabled = false;
             
             updateStatsUI();
             PhaseManager.reset(); // Reset effects to Phase 1
@@ -1397,7 +1982,13 @@
         }
 
         function enterEnding(id) {
+            if (STATE.endingId !== null) return; // Guard
             STATE.endingId = id;
+            
+            // Disable buttons
+            DOM.yesBtn.disabled = true;
+            DOM.noBtn.disabled = true;
+
             SHARE_CARD.lastEndingId = (id === '3_final') ? 3 : id;
             SHARE_CARD.cachedDataURL = null;
             setMode('ending');
@@ -1416,10 +2007,30 @@
 
             DOM.roomBgLayer.style.opacity = '1';
             
+            // Force title update for Room
+            if(DOM.roomInfo) DOM.roomInfo.innerText = "ENDING 03 — THE EMPTY ROOM";
+            
             const L = getLang();
             roomInteractionLocked = true;
+            initRoomDust(); // Trigger dust effect
+            
             await showCinematicText(L.room_intro, 2500);
             roomInteractionLocked = false;
+        }
+
+        function initRoomDust() {
+            const container = document.getElementById('room-dust-layer');
+            if(!container) return;
+            container.innerHTML = '';
+            for(let i=0; i<15; i++) {
+                const d = document.createElement('div');
+                d.className = 'dust-speck';
+                d.style.left = Math.random() * 100 + '%';
+                d.style.top = Math.random() * 100 + '%';
+                d.style.animationDuration = (5 + Math.random() * 10) + 's';
+                d.style.animationDelay = (Math.random() * 5) + 's';
+                container.appendChild(d);
+            }
         }
 
         function enterSecret() {
@@ -1444,6 +2055,7 @@
 
         function handleYes() {
             if (UI_MODE !== 'game') return;
+            if (STATE.endingId !== null) return; // Guard
             if(!STATE.userInteracted) { STATE.userInteracted = true; AudioCtrl.initUserGesture(); }
             STATE.yes++;
             SFX.playYes();
@@ -1455,6 +2067,7 @@
 
         function handleNo() {
             if (UI_MODE !== 'game') return;
+            if (STATE.endingId !== null) return; // Guard
             if(!STATE.userInteracted) { STATE.userInteracted = true; AudioCtrl.initUserGesture(); }
             STATE.no++;
             SFX.playNo();
@@ -1470,8 +2083,9 @@
             let msgs = [];
             if (STATE.yes <= 20) msgs = L.phase1;
             else if (STATE.yes <= 50) msgs = L.phase2;
-            else if (STATE.yes <= 80) msgs = L.phase3;
-            else msgs = L.phase4;
+            else if (STATE.yes <= 70) msgs = L.phase3;
+            else if (STATE.yes <= 90) msgs = L.phase5 || L.phase4; // New Phase 5 logic
+            else msgs = L.phase6 || L.phase4; // New Phase 6 logic
             
             const txt = msgs[Math.floor(Math.random() * msgs.length)];
             document.getElementById('dialogue-text').innerText = txt;
@@ -1481,6 +2095,7 @@
 
         function checkEndingTriggers() {
             if (UI_MODE !== 'game') return;
+            if (STATE.endingId !== null) return; // Guard
 
             if (STATE.yes === 100 && STATE.scoreClicked) {
                 enterSecret();
@@ -1512,6 +2127,10 @@
             DOM.endExtra.innerText = "";
             DOM.endExtra.classList.remove('visible');
             DOM.endTitle.classList.remove('text-heartbeat');
+            
+            // Set Ending Number Subtitle
+            const safeId = (id === '3_final') ? 3 : id;
+            if(DOM.endNumber) DOM.endNumber.innerText = `ENDING 0${safeId} / 04`;
 
             if (id===1) {
                 DOM.endTitle.innerText = L.end1_title;
@@ -1633,8 +2252,27 @@
 
         function bindRoomObjects() {
             const L = getLang();
-            const attach = (id, key, isKeyItem) => {
-                const el = document.getElementById(id);
+            
+            const config = [
+                { key: 'tulip', id: 'obj-tulip', type: 'modal', progress: true },
+                { key: 'diary', id: 'obj-diary', type: 'modal', progress: true },
+                { key: 'letter', id: 'obj-letter', type: 'modal', progress: true },
+                { key: 'musicbox', id: 'obj-musicbox', type: 'modal', progress: false },
+                { key: 'photo', id: 'obj-photo', type: 'modal', progress: false },
+                { key: 'window', id: 'obj-window', type: 'tooltip' },
+                { key: 'lamp', id: 'obj-lamp', type: 'tooltip' },
+                { key: 'bookshelf', id: 'obj-bookshelf', type: 'tooltip' },
+                { key: 'mirror', id: 'obj-mirror', type: 'tooltip' },
+                { key: 'clock', id: 'obj-clock', type: 'tooltip' },
+                { key: 'chair', id: 'obj-chair', type: 'tooltip' },
+                { key: 'box', id: 'obj-box', type: 'tooltip' },
+                // Extras kept for safety
+                { key: 'dust', id: 'obj-dust', type: 'tooltip' },
+                { key: 'bed', id: 'obj-bed', type: 'tooltip' }
+            ];
+
+            config.forEach(item => {
+                const el = document.getElementById(item.id);
                 if(!el) return;
                 
                 const newEl = el.cloneNode(true);
@@ -1643,60 +2281,147 @@
                 newEl.onclick = () => {
                     if (roomInteractionLocked) return;
                     
-                    if (isKeyItem) {
-                        roomInteractionLocked = true;
-                        STATE.roomProgress[key] = true;
+                    // --- TRACKING LOGIC ---
+                    if (!STATE.roomSeen.has(item.key)) {
+                        STATE.roomSeen.add(item.key);
                         updateRoomHUD();
+                    }
+                    // ----------------------
+
+                    if (item.type === 'modal') {
+                        roomInteractionLocked = true;
+                        if (item.progress) {
+                            STATE.roomProgress[item.key] = true;
+                            // updateRoomHUD called above already
+                        }
                         
-                        openRoomModal(L[`room_${key}`], () => {
+                        // Try new array format, fallback to string if array missing (for musicbox/photo)
+                        // Note: musicbox/photo added as arrays in LANG updates above
+                        let content = L[`room_${item.key}_lines`] || L[`room_${item.key}`];
+                        
+                        openRoomModal(content, () => {
                              roomInteractionLocked = false;
-                             checkRoomCompletion(); 
+                             if (item.progress) checkRoomCompletion(); 
                         });
                     } else {
                         roomInteractionLocked = true;
-                        let text = L[`room_${key}`] || " ... ";
-                        if(key === 'musicbox' && !L.room_musicbox) text = L.room_musicbox_alt || "...";
+                        let text = L[`room_${item.key}`] || "...";
+                        if(item.key === 'bed') text = L.room_bed || "..."; // fallback
                         
                         showTooltip(text);
                         setTimeout(() => { roomInteractionLocked = false; }, 2000); 
                     }
                 };
-            };
-            
-            attach('obj-tulip', 'tulip', true);
-            attach('obj-letter', 'letter', true);
-            attach('obj-diary', 'diary', true);
-            ['window','lamp','clock','mirror','photo','chair','bed','box','dust','shelf','musicbox'].forEach(k => attach('obj-'+k, k, false));
+            });
         }
 
         function updateRoomHUD() {
-            const c = (STATE.roomProgress.tulip?1:0) + (STATE.roomProgress.letter?1:0) + (STATE.roomProgress.diary?1:0);
-            DOM.roomProgress.innerText = `Fragments: 0${c}/03`;
+            // Count Main Items (tulip, diary, letter, musicbox, photo)
+            const mainItems = ['tulip', 'diary', 'letter', 'musicbox', 'photo'];
+            let mainCount = 0;
+            mainItems.forEach(k => { if(STATE.roomSeen.has(k)) mainCount++; });
+            
+            // Count All Items (Intersection with config keys or simply size if only valid keys added)
+            // Since we only add valid keys in bindRoomObjects loop, size is safe roughly.
+            // But to be precise let's count known objects.
+            const allItems = ['tulip', 'diary', 'letter', 'musicbox', 'photo', 'window', 'lamp', 'bookshelf', 'mirror', 'clock', 'chair', 'box'];
+            let totalCount = 0;
+            allItems.forEach(k => { if(STATE.roomSeen.has(k)) totalCount++; });
+
+            if(DOM.roomProgress) DOM.roomProgress.innerText = `ROOM: 0${mainCount}/05`;
+            if(DOM.roomItemsCounter) DOM.roomItemsCounter.innerText = `ITEMS: ${String(totalCount).padStart(2,'0')}/12`;
         }
 
         function openRoomModal(content, onClose) {
-            let lines = Array.isArray(content) ? content : [content];
-            let idx = 0;
+            // Reset State
+            ROOM_MODAL_STATE.lines = Array.isArray(content) ? content : [content];
+            ROOM_MODAL_STATE.lineIdx = 0;
+            ROOM_MODAL_STATE.charIdx = 0;
+            ROOM_MODAL_STATE.isTyping = false;
+            ROOM_MODAL_STATE.active = true;
+            if(ROOM_MODAL_STATE.timer) clearTimeout(ROOM_MODAL_STATE.timer);
+
+            // UI Setup
             DOM.roomModal.style.display = 'block';
-            DOM.roomCloseBtn.style.display = 'none';
-            
-            function next() {
-                if (idx >= lines.length) {
-                    DOM.roomCloseBtn.style.display = 'inline-block';
-                    return;
-                }
-                DOM.roomModalText.innerText = lines[idx++];
-            }
-            next();
-            
+            DOM.roomCloseBtn.style.display = 'none'; // Hidden until finished
+            DOM.roomModalText.innerText = "";
+
+            // Start Typing
+            typeRoomLine();
+
+            // Bind Events
             DOM.roomModal.onclick = (e) => {
-                if(e.target !== DOM.roomCloseBtn) next();
+                // Prevent interaction if clicking specific children like button (handled separately)
+                if(e.target === DOM.roomCloseBtn) return; 
+                handleRoomModalInteraction();
             };
             
-            DOM.roomCloseBtn.onclick = () => {
-                DOM.roomModal.style.display = 'none';
-                if (onClose) onClose();
+            DOM.roomCloseBtn.onclick = (e) => {
+                e.stopPropagation();
+                closeRoomModal(onClose);
             };
+        }
+
+        function typeRoomLine() {
+            if (!ROOM_MODAL_STATE.active) return;
+            
+            const currentLine = ROOM_MODAL_STATE.lines[ROOM_MODAL_STATE.lineIdx];
+            ROOM_MODAL_STATE.isTyping = true;
+
+            if (ROOM_MODAL_STATE.charIdx < currentLine.length) {
+                DOM.roomModalText.innerText += currentLine.charAt(ROOM_MODAL_STATE.charIdx);
+                ROOM_MODAL_STATE.charIdx++;
+                
+                if(ROOM_MODAL_STATE.charIdx % 3 === 0) SFX.playType();
+                
+                // Randomize speed slightly for analog feel
+                const speed = 30 + Math.random() * 15;
+                ROOM_MODAL_STATE.timer = setTimeout(typeRoomLine, speed);
+            } else {
+                ROOM_MODAL_STATE.isTyping = false;
+                // If this was the last line, show close button
+                if (ROOM_MODAL_STATE.lineIdx >= ROOM_MODAL_STATE.lines.length - 1) {
+                    DOM.roomCloseBtn.style.display = 'inline-block';
+                }
+            }
+        }
+
+        function handleRoomModalInteraction() {
+            if (!ROOM_MODAL_STATE.active) return;
+
+            if (ROOM_MODAL_STATE.isTyping) {
+                // SKIP: Show full line immediately
+                if(ROOM_MODAL_STATE.timer) clearTimeout(ROOM_MODAL_STATE.timer);
+                
+                const currentLine = ROOM_MODAL_STATE.lines[ROOM_MODAL_STATE.lineIdx];
+                DOM.roomModalText.innerText = currentLine;
+                
+                ROOM_MODAL_STATE.isTyping = false;
+                ROOM_MODAL_STATE.charIdx = currentLine.length;
+                
+                // If last line, show close button
+                if (ROOM_MODAL_STATE.lineIdx >= ROOM_MODAL_STATE.lines.length - 1) {
+                    DOM.roomCloseBtn.style.display = 'inline-block';
+                }
+            } else {
+                // NEXT LINE
+                // If we are not at the last line, advance
+                if (ROOM_MODAL_STATE.lineIdx < ROOM_MODAL_STATE.lines.length - 1) {
+                    ROOM_MODAL_STATE.lineIdx++;
+                    ROOM_MODAL_STATE.charIdx = 0;
+                    DOM.roomModalText.innerText = ""; // Clear for next line
+                    DOM.roomCloseBtn.style.display = 'none'; // Ensure button is hidden
+                    typeRoomLine();
+                }
+                // If at last line, do nothing (wait for close button click)
+            }
+        }
+
+        function closeRoomModal(onCloseCallback) {
+            ROOM_MODAL_STATE.active = false;
+            if(ROOM_MODAL_STATE.timer) clearTimeout(ROOM_MODAL_STATE.timer);
+            DOM.roomModal.style.display = 'none';
+            if (onCloseCallback) onCloseCallback();
         }
 
         async function checkRoomCompletion() {
@@ -2009,7 +2734,9 @@
             document.getElementById('val-choice').innerText = `${Math.min(total, yg)}/${yg}`;
             document.getElementById('bar-choice').style.width = ((Math.min(total, yg)/yg)*100)+'%';
             
-            document.getElementById('stage-indicator').innerText = `Stage: ${Math.min(yes+1, yg)}/101`;
+            // UI Polish: Update Stage formatting
+            const stageNum = Math.min(yes + 1, yg);
+            document.getElementById('stage-indicator').innerText = `STAGE: ${String(stageNum).padStart(3, '0')} / ${yg}`;
         }
 
         function applyCurrentStage() {
@@ -2085,30 +2812,28 @@
 
         function getEndingQuote(endingId) {
             const lang = SETTINGS.lang || 'en';
-            const Q = {
-                1: {
-                    en: "Love is a decision. You chose me 101 times.",
-                    vi: "Tình yêu là lựa chọn. Và cậu đã chọn tớ 101 lần.",
-                    es: "El amor es una decisión. Me elegiste 101 veces."
-                },
-                2: {
-                    en: "Even if you hesitated... you came back.",
-                    vi: "Dù do dự... cậu vẫn quay về.",
-                    es: "Aunque dudaste... regresaste."
-                },
-                3: {
-                    en: "The lamp is still burning. Nobody came home.",
-                    vi: "Đèn vẫn cháy. Nhưng chẳng ai quay về.",
-                    es: "La lámpara sigue encendida. Nadie volvió."
-                },
-                4: {
-                    en: "You found the secret. Now promise me you’ll stay.",
-                    vi: "Cậu tìm thấy bí mật. Giờ hãy hứa là sẽ ở lại.",
-                    es: "Encontraste el secreto. Prométeme que te quedarás."
-                }
-            };
             const safeId = (endingId === '3_final') ? 3 : endingId;
-            return (Q[safeId] && Q[safeId][lang]) ? Q[safeId][lang] : Q[1].en;
+            
+            // Default fallback
+            const defaults = {
+                1: "Love is a decision made 101 times.",
+                2: "You hesitated, but you came back.",
+                3: "The lamp burns for no one.",
+                4: "You saw what others missed."
+            };
+
+            try {
+                // If language or quote data is missing, fallback gracefully
+                if(LANG[lang] && LANG[lang].share_quotes && LANG[lang].share_quotes[safeId]) {
+                    const quotes = LANG[lang].share_quotes[safeId];
+                    if (quotes && quotes.length > 0) {
+                        return quotes[Math.floor(Math.random() * quotes.length)];
+                    }
+                }
+            } catch(e) { console.error(e); }
+            
+            // If all else fails
+            return defaults[safeId] || defaults[1];
         }
 
         function openShareModal() {
@@ -2118,13 +2843,47 @@
             modal.classList.add("visible"); 
 
             const id = SHARE_CARD.lastEndingId || 1;
+            const safeId = (id === '3_final') ? 3 : id;
             
+            // --- Theme Styling ---
+            const modalContent = document.querySelector("#share-modal .share-card-container");
+            if (safeId === 3) {
+                modalContent.classList.remove('glass-card');
+                modalContent.classList.add('horror-card');
+            } else {
+                modalContent.classList.remove('horror-card');
+                modalContent.classList.add('glass-card');
+            }
+
+            // --- Text Update ---
             const titleEl = document.getElementById("share-title");
             const subEl = document.getElementById("share-sub");
             if(titleEl) titleEl.innerText = "Share Card 💌";
-            if(subEl) subEl.innerText = `ENDING ${String(id).padStart(2,'0')}/04`;
+            if(subEl) subEl.innerText = `ENDING ${String(safeId).padStart(2,'0')}/04`;
 
-            renderShareCardCanvas(id);
+            // --- Random Quote Generation & Sync ---
+            // 1. Get Random Quote
+            const quoteText = getEndingQuote(safeId);
+            // 2. Store in State for Canvas
+            SHARE_CARD.quote = quoteText;
+            
+            // 3. Update DOM
+            const quoteEl = document.getElementById('share-quote');
+            if(quoteEl) {
+                const titles = { 
+                    1: (SETTINGS.lang === 'vi' ? "TÌNH YÊU ĐÍCH THỰC" : (SETTINGS.lang === 'es' ? "AMOR VERDADERO" : "TRUE LOVE")), 
+                    2: (SETTINGS.lang === 'vi' ? "TRÁI TIM DO DỰ" : (SETTINGS.lang === 'es' ? "CORAZÓN DUDOSO" : "HESITANT HEART")),
+                    3: (SETTINGS.lang === 'vi' ? "CĂN PHÒNG TRỐNG" : (SETTINGS.lang === 'es' ? "HABITACIÓN VACÍA" : "THE EMPTY ROOM")), 
+                    4: (SETTINGS.lang === 'vi' ? "BÍ MẬT" : (SETTINGS.lang === 'es' ? "SECRETO" : "SECRET YES"))
+                };
+                
+                const endingTitle = titles[safeId] || "VALENTINE";
+                // Format: Quote first, then hashtag/context
+                quoteEl.innerText = `"${quoteText}"\n\nI got ENDING ${safeId}/04: ${endingTitle} 💔\n#ValentineGame`;
+            }
+
+            // 4. Render Canvas (will read from SHARE_CARD.quote)
+            renderShareCardCanvas(safeId);
         }
 
         function closeShareModal() {
@@ -2137,12 +2896,8 @@
             if(!canvas) return;
             const ctx = canvas.getContext("2d");
 
-            if(SHARE_CARD.cachedDataURL && SHARE_CARD.lastEndingId === endingId) {
-                const img = new Image();
-                img.onload = ()=> ctx.drawImage(img, 0, 0);
-                img.src = SHARE_CARD.cachedDataURL;
-                return;
-            }
+            // Ignore cache for dev to ensure style updates
+            // if(SHARE_CARD.cachedDataURL && SHARE_CARD.lastEndingId === endingId) ... 
 
             const W = canvas.width;
             const H = canvas.height;
@@ -2206,7 +2961,9 @@
             roundRect(ctx, 120, 820, W-240, 420, 35);
             ctx.fill();
 
-            const quote = getEndingQuote(endingId);
+            // USE THE SYNCED QUOTE FROM STATE
+            const quote = SHARE_CARD.quote || "Happy Valentine!";
+            
             ctx.font = "bold 60px Nunito";
             ctx.fillStyle = "rgba(255,255,255,0.95)";
             wrapText(ctx, `"${quote}"`, W/2, 920, W-320, 78);
@@ -2293,26 +3050,23 @@
             if(!canvas) return;
             const link = document.createElement("a");
             const id = SHARE_CARD.lastEndingId || 1;
-            link.download = `valentine_ending_${String(id).padStart(2,'0')}.png`;
+            const safeId = (id === '3_final') ? 3 : id;
+            link.download = `valentine_ending_${String(safeId).padStart(2,'0')}.png`;
             link.href = canvas.toDataURL("image/png");
             link.click();
         }
 
-        async function copyShareCardToClipboard() {
-            const canvas = document.getElementById("share-canvas");
-            if(!canvas) return;
+        async function copyShareText() {
+            const quoteEl = document.getElementById('share-quote');
+            if(!quoteEl) return;
+            const text = quoteEl.innerText;
+            
             try {
-                const blob = await new Promise(res => canvas.toBlob(res));
-                if(!blob) throw new Error("Blob failed");
-                if(navigator.clipboard && window.ClipboardItem) {
-                    await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-                    const btn = document.getElementById('btn-share-copy');
-                    const original = btn.innerText;
-                    btn.innerText = "Copied! ✅";
-                    setTimeout(() => btn.innerText = original, 2000);
-                } else {
-                    showTooltip("Clipboard not supported 😭");
-                }
+                await navigator.clipboard.writeText(text);
+                const btn = document.getElementById('btn-share-copy');
+                const original = btn.innerText;
+                btn.innerText = "Copied! ✅";
+                setTimeout(() => btn.innerText = original, 2000);
             } catch(e) {
                 console.warn("Copy failed:", e);
                 showTooltip("Copy failed 😭");
