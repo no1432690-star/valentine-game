@@ -2068,13 +2068,36 @@
 
         function showTooltipAt(text, x, y) {
             const t = document.getElementById('room-tooltip');
-            t.innerText = text || "...";
-            t.style.opacity = 1;
             
-            if(t.hideTimer) clearTimeout(t.hideTimer);
-            t.hideTimer = setTimeout(() => {
-                t.style.opacity = 0;
-            }, 2500);
+            // Reset global text timer if active (safety)
+            if (ending3TextTimer) {
+                clearTimeout(ending3TextTimer);
+                ending3TextTimer = null;
+            }
+
+            if (UI_MODE === 'room') {
+                const rawText = text || "...";
+                const lines = rawText.split('\n');
+                renderLinesCinematic(t, lines, 260);
+                
+                // Calculate dynamic duration
+                const duration = Math.max(2500, 2000 + (lines.length * 600));
+                 t.style.opacity = 1;
+            
+                if(t.hideTimer) clearTimeout(t.hideTimer);
+                t.hideTimer = setTimeout(() => {
+                    t.style.opacity = 0;
+                }, duration);
+
+            } else {
+                // Legacy behavior just in case
+                t.innerText = text || "...";
+                t.style.opacity = 1;
+                if(t.hideTimer) clearTimeout(t.hideTimer);
+                t.hideTimer = setTimeout(() => {
+                    t.style.opacity = 0;
+                }, 2500);
+            }
         }
 
         function renderDebugHotspots(container) {
@@ -2095,18 +2118,75 @@
             if(DOM.roomItemsCounter) DOM.roomItemsCounter.innerText = `ITEMS: ${String(totalCount).padStart(2,'0')}/12`;
         }
 
+        /* --- CINEMATIC TEXT HELPER (ENDING 3) --- */
+        let ending3TextTimer = null;
+
+        function renderLinesCinematic(targetEl, lines, delay = 300) {
+            if (!targetEl) return;
+
+            // stop old animation
+            if (ending3TextTimer) {
+                clearTimeout(ending3TextTimer);
+                ending3TextTimer = null;
+            }
+
+            // clear old content
+            targetEl.innerHTML = "";
+
+            let i = 0;
+
+            function addNextLine() {
+                if (i >= lines.length) {
+                    ending3TextTimer = null;
+                    return;
+                }
+
+                const lineDiv = document.createElement("div");
+                lineDiv.textContent = lines[i];
+                lineDiv.style.opacity = "0";
+                lineDiv.style.transform = "translateY(4px)";
+                lineDiv.style.transition = "opacity 0.25s ease, transform 0.25s ease";
+                lineDiv.style.marginBottom = "6px";
+                
+                // Ensure proper wrapping
+                lineDiv.style.whiteSpace = "normal";
+                lineDiv.style.lineHeight = "1.5";
+
+                targetEl.appendChild(lineDiv);
+
+                requestAnimationFrame(() => {
+                    lineDiv.style.opacity = "1";
+                    lineDiv.style.transform = "translateY(0px)";
+                });
+
+                i++;
+                ending3TextTimer = setTimeout(addNextLine, delay);
+            }
+
+            addNextLine();
+        }
+
         function openRoomModal(content, onClose) {
-            // Check if array or string
-            let textToDisplay = "";
+            // Prepare lines
+            let lines = [];
             if (Array.isArray(content)) {
-                textToDisplay = content.join("\n\n");
+                lines = content;
+            } else if (typeof content === 'string') {
+                lines = content.split('\n');
             } else {
-                textToDisplay = content;
+                lines = ["..."];
             }
 
             // UI Setup
             DOM.roomModal.style.display = 'block';
-            DOM.roomModalText.textContent = textToDisplay; // Pre-wrap handles newlines
+            
+            // Use Cinematic Renderer for Ending 3 (room mode)
+            if (UI_MODE === 'room') {
+                 renderLinesCinematic(DOM.roomModalText, lines, 300);
+            } else {
+                 // Fallback for safety, though only used in room currently
+                 DOM.roomModalText.innerText = lines.join('\n');
+            }
             
             // Bind Close
             DOM.roomModal.onclick = (e) => {
@@ -2119,6 +2199,11 @@
         }
 
         function closeRoomModal(onCloseCallback) {
+            // Cancel any running text animation
+            if (ending3TextTimer) {
+                clearTimeout(ending3TextTimer);
+                ending3TextTimer = null;
+            }
             DOM.roomModal.style.display = 'none';
             if (onCloseCallback) onCloseCallback();
         }
