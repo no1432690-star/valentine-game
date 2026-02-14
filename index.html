@@ -719,6 +719,7 @@
         let UI_MODE = "start"; // allowed: start, lobby, game, ending, room, secret
         let roomInteractionLocked = false;
         let ending3ColdMode = false;
+        let ending3TransitionShown = false; // New flag to prevent duplicate trigger
 
         const STATE = {
             yes: 0,
@@ -873,6 +874,10 @@
                     "You said 'NO' one hundred times.",
                     "Now you understand why the room is empty."
                 ],
+                room_transition_short: [
+                    "Something in this room… is finally awake.",
+                    "And it knows you saw everything."
+                ],
                 
                 // OTHER ENDINGS
                 end1_title: "TRUE LOVE", end1_sub: "YES: 101/101",
@@ -982,6 +987,10 @@
                     "Cậu đã nói 'KHÔNG' một trăm lần.",
                     "Giờ thì cậu hiểu tại sao nơi này trống rỗng rồi chứ."
                 ],
+                room_transition_short: [
+                    "Có thứ gì đó trong phòng này… cuối cùng đã thức giấc.",
+                    "Và nó biết cậu đã nhìn thấy tất cả."
+                ],
 
                 end1_title: "TÌNH YÊU ĐÍCH THỰC", end1_sub: "CÓ: 101/101",
                 end1_lines: ["101 lần...", "Cậu không hề do dự.", "Có lẽ tình yêu là một lựa chọn.", "Và vì cậu đã ở lại...", "Tớ sẽ không bao giờ rời đi."],
@@ -1037,7 +1046,7 @@
                     "Có một mảnh phản chiếu trần nhà.",
                     "Có một mảnh phản chiếu cửa sổ.",
                     "Nhưng không có mảnh nào phản chiếu toàn bộ căn phòng.",
-                    "Giống như ai đó đã cố tình… không để mọi thứ còn nguyên.",
+                    "Giống como ai đó đã cố tình… không để mọi thứ còn nguyên.",
                     "Mình nhìn lâu thêm một chút.",
                     "Và tự dưng… không muốn nhìn nữa."
                 ],
@@ -1088,6 +1097,10 @@
                     "Y sin embargo... se siente como si te estuviera observando.",
                     "Dijiste 'NO' cien veces.",
                     "Ahora entiendes por qué la habitación está vacía."
+                ],
+                room_transition_short: [
+                    "Algo en esta habitación… finalmente ha despertado.",
+                    "Y sabe que lo has visto todo."
                 ],
                 
                 end1_title: "AMOR VERDADERO", end1_sub: "SÍ: 101/101",
@@ -1504,6 +1517,7 @@
             STATE.scoreClicked = false;
             STATE.endingId = null;
             STATE.roomSeen = new Set();
+            ending3TransitionShown = false; // Reset ending 3 flag
             
             document.getElementById('lbl-yes-trigger').style.color = "#666";
             if(DOM.yesBtn) DOM.yesBtn.disabled = false;
@@ -2209,19 +2223,22 @@
         }
 
         async function checkRoomCompletion() {
+            if (ending3TransitionShown) return; // Prevent duplicate trigger
+
             // Logic: 5 specific MAIN items: tulip, letter, diary, clock, mirror (Window is now side item)
             const required = ['tulip', 'letter', 'diary', 'clock', 'mirror'];
             let count = 0;
             required.forEach(k => { if(STATE.roomSeen.has(k)) count++; });
 
             if (count >= 5) {
+                ending3TransitionShown = true;
                 ending3ColdMode = true;
                 roomInteractionLocked = true; 
                 const L = getLang();
                 await wait(800);
                 
-                // Final modal
-                openRoomModal(L.room_finish, async () => {
+                // Final modal with SHORT transition text
+                openRoomModal(L.room_transition_short, async () => {
                     DOM.roomModal.style.display = 'none';
                     await wait(600);
                     DOM.roomBgLayer.style.opacity = '0'; // Fade out room
