@@ -374,7 +374,7 @@
 
         .hotspot-debug {
             position: absolute;
-            border: 1px solid red;
+            border: 2px solid rgba(255, 0, 0, 0.5);
             background: rgba(255, 0, 0, 0.2);
             pointer-events: none;
             z-index: 2000;
@@ -763,25 +763,24 @@
 
         /* --- 2. DATA & HOTSPOTS --- */
         
-        // HOTSPOTS DEFINITION
-        // x, y, w, h are ratios (0.0 to 1.0) relative to image size
+        // HOTSPOTS DEFINITION (Percentage 0-100% relative to image size)
         const ROOM_HOTSPOTS = [
             // MAIN ITEMS (Modal Dialogues)
-            { id: "tulip", type: "main", x: 0.15, y: 0.45, w: 0.12, h: 0.15, langKey: "room_tulip_lines" },
-            { id: "lamp", type: "side", x: 0.70, y: 0.52, w: 0.10, h: 0.15, langKey: "room_lamp_tooltip" },
-            { id: "window", type: "main", x: 0.40, y: 0.20, w: 0.20, h: 0.25, langKey: "room_window_lines" },
-            { id: "mirror", type: "main", x: 0.85, y: 0.25, w: 0.12, h: 0.25, langKey: "room_mirror_lines" },
-            { id: "letter", type: "main", x: 0.55, y: 0.65, w: 0.12, h: 0.10, langKey: "room_letter_lines" }, 
-            { id: "diary", type: "main", x: 0.25, y: 0.70, w: 0.12, h: 0.12, langKey: "room_diary_lines" },
+            { id: "tulip", type: "main", x: 15, y: 45, w: 12, h: 15, langKey: "room_tulip_lines" },
+            { id: "lamp", type: "side", x: 70, y: 52, w: 10, h: 15, langKey: "room_lamp_tooltip" },
+            { id: "window", type: "main", x: 40, y: 20, w: 20, h: 25, langKey: "room_window_lines" },
+            { id: "mirror", type: "main", x: 85, y: 25, w: 12, h: 25, langKey: "room_mirror_lines" },
+            { id: "letter", type: "main", x: 55, y: 65, w: 12, h: 10, langKey: "room_letter_lines" }, 
+            { id: "diary", type: "main", x: 25, y: 70, w: 12, h: 12, langKey: "room_diary_lines" },
 
             // SIDE ITEMS (Tooltips)
-            { id: "bookshelf", type: "side", x: 0.08, y: 0.25, w: 0.15, h: 0.40, langKey: "room_bookshelf" },
-            { id: "chair", type: "side", x: 0.35, y: 0.60, w: 0.12, h: 0.25, langKey: "room_chair" },
-            { id: "box", type: "side", x: 0.20, y: 0.80, w: 0.12, h: 0.12, langKey: "room_box" },
-            { id: "bed", type: "side", x: 0.10, y: 0.65, w: 0.20, h: 0.20, langKey: "room_bed" },
-            { id: "dust", type: "side", x: 0.50, y: 0.80, w: 0.30, h: 0.15, langKey: "room_dust" }, 
-            { id: "clock", type: "side", x: 0.45, y: 0.08, w: 0.10, h: 0.10, langKey: "room_clock" },
-            { id: "frame", type: "side", x: 0.78, y: 0.60, w: 0.08, h: 0.10, langKey: "room_frame" }
+            { id: "bookshelf", type: "side", x: 8, y: 25, w: 15, h: 40, langKey: "room_bookshelf" },
+            { id: "chair", type: "side", x: 35, y: 60, w: 12, h: 25, langKey: "room_chair" },
+            { id: "box", type: "side", x: 20, y: 80, w: 12, h: 12, langKey: "room_box" },
+            { id: "bed", type: "side", x: 10, y: 65, w: 20, h: 20, langKey: "room_bed" },
+            { id: "dust", type: "side", x: 50, y: 80, w: 30, h: 15, langKey: "room_dust" }, 
+            { id: "clock", type: "side", x: 45, y: 8, w: 10, h: 10, langKey: "room_clock" },
+            { id: "frame", type: "side", x: 78, y: 60, w: 8, h: 10, langKey: "room_frame" }
         ];
 
         const LANG = {
@@ -1708,10 +1707,37 @@
             }
         }
 
-        /* --- HOTSPOT CLICK SYSTEM (REFACTORED) --- */
+        /* --- HOTSPOT CLICK SYSTEM (SYSTEM A: PERCENTAGE BASED) --- */
+
+        // 1. Helper to calculate percentage position relative to the image
+        function getRelativePercentPosition(event, imgElement) {
+            const rect = imgElement.getBoundingClientRect();
+            // Handle both touch and mouse events
+            const clientX = (event.touches && event.touches.length > 0) ? event.touches[0].clientX : event.clientX;
+            const clientY = (event.touches && event.touches.length > 0) ? event.touches[0].clientY : event.clientY;
+
+            // Coordinates relative to the image element
+            const xPx = clientX - rect.left;
+            const yPx = clientY - rect.top;
+
+            // Convert to percentage
+            const xPercent = (xPx / rect.width) * 100;
+            const yPercent = (yPx / rect.height) * 100;
+
+            return { xPercent, yPercent };
+        }
+
+        // 2. Helper to find if a percentage coordinate is inside a hotspot
+        function findHotspotByPercent(xPercent, yPercent, hotspots) {
+            return hotspots.find(h =>
+                xPercent >= h.x &&
+                xPercent <= h.x + h.w &&
+                yPercent >= h.y &&
+                yPercent <= h.y + h.h
+            );
+        }
 
         function initRoomInteraction() {
-            // Remove old listener if needed (by cloning node or just assuming strict single bind)
             const mapContainer = DOM.roomMap;
             if(!mapContainer) return;
             
@@ -1722,7 +1748,7 @@
             DOM.roomBg = newMap.querySelector('#room-bg');
             DOM.roomHighlight = newMap.querySelector('#room-highlight');
 
-            // Bind single click listener to map container
+            // Bind click listener to map container (which wraps the image)
             DOM.roomMap.addEventListener('click', handleRoomMapClick);
             
             // Debug Mode
@@ -1735,48 +1761,33 @@
             if(roomInteractionLocked) return;
             if(UI_MODE !== 'room') return;
 
-            const bgRect = DOM.roomBg.getBoundingClientRect();
-            
-            // Calculate click position relative to the image
-            // Note: The click might be inside map-container but outside the image if image has aspect ratio diff
-            // We need coords relative to the *image*
-            const clickX = e.clientX;
-            const clickY = e.clientY;
+            const bgElement = DOM.roomBg;
+            if (!bgElement) return;
 
-            // Check if click is inside image bounds
-            if (clickX < bgRect.left || clickX > bgRect.right || clickY < bgRect.top || clickY > bgRect.bottom) {
-                return; // Clicked black bars/padding
+            // 1. Get click position in percentage
+            const { xPercent, yPercent } = getRelativePercentPosition(e, bgElement);
+
+            if(CONFIG.DEBUG_HOTSPOTS) {
+                console.log(`[DEBUG] Click: X=${xPercent.toFixed(2)}%, Y=${yPercent.toFixed(2)}%`);
             }
 
-            const xPct = (clickX - bgRect.left) / bgRect.width;
-            const yPct = (clickY - bgRect.top) / bgRect.height;
+            // 2. Check bounds (0-100%)
+            if (xPercent < 0 || xPercent > 100 || yPercent < 0 || yPercent > 100) return;
 
-            if(CONFIG.DEBUG_HOTSPOTS) console.log(`[CLICK] X:${xPct.toFixed(2)} Y:${yPct.toFixed(2)}`);
+            // 3. Find matching hotspot
+            const hotspot = findHotspotByPercent(xPercent, yPercent, ROOM_HOTSPOTS);
 
-            // Find matching hotspot
-            for(let h of ROOM_HOTSPOTS) {
-                const cx = h.x; 
-                const cy = h.y;
-                const hw = h.w / 2;
-                const hh = h.h / 2;
-                
-                const dx = Math.abs(xPct - cx);
-                const dy = Math.abs(yPct - cy);
-                
-                // Diamond hitbox check: dx/hw + dy/hh <= 1
-                if( (dx / hw) + (dy / hh) <= 1 ) {
-                    triggerHotspotAction(h, e.clientX, e.clientY, bgRect);
-                    return; 
-                }
+            if (hotspot) {
+                triggerHotspotAction(hotspot, e.clientX, e.clientY);
             }
         }
 
-        function triggerHotspotAction(hotspot, clientX, clientY, bgRect) {
+        function triggerHotspotAction(hotspot, clientX, clientY) {
             const L = getLang();
             console.log(`[HOTSPOT] ${hotspot.id}`);
 
-            // 1. Visual Feedback (Diamond Highlight)
-            triggerHighlight(hotspot, bgRect);
+            // 1. Visual Feedback (Responsive Positioning)
+            triggerHighlight(hotspot);
 
             // 2. Logic
             if(!STATE.roomSeen.has(hotspot.id)) {
@@ -1788,30 +1799,26 @@
                 roomInteractionLocked = true;
                 const content = L[hotspot.langKey];
                 
-                // Main items trigger modal
                 openRoomModal(content, () => {
                     roomInteractionLocked = false;
                     checkRoomCompletion();
                 });
             } else {
-                // Side items trigger tooltip
                 const text = L[hotspot.langKey];
                 showTooltipAt(text, clientX, clientY);
             }
         }
 
-        function triggerHighlight(hotspot, bgRect) {
+        function triggerHighlight(hotspot) {
             const hl = DOM.roomHighlight;
             
-            // Calculate center position in pixels relative to map container
-            const posX = hotspot.x * bgRect.width + bgRect.left - DOM.roomMap.getBoundingClientRect().left;
-            const posY = hotspot.y * bgRect.height + bgRect.top - DOM.roomMap.getBoundingClientRect().top;
+            // Center the highlight based on the hotspot's center percentage
+            const centerX = hotspot.x + (hotspot.w / 2);
+            const centerY = hotspot.y + (hotspot.h / 2);
             
-            hl.style.left = posX + 'px';
-            hl.style.top = posY + 'px';
+            hl.style.left = centerX + '%';
+            hl.style.top = centerY + '%';
             
-            // Size somewhat proportional but kept distinct
-            // For aesthetic, a fixed size or slight scaling is fine
             hl.style.width = '60px';
             hl.style.height = '60px';
             
@@ -1833,10 +1840,6 @@
         }
 
         function renderDebugHotspots(container) {
-            const bg = DOM.roomBg;
-            const rect = bg.getBoundingClientRect(); // This might be issue if init runs before layout.
-            // Better to rely on percentages in CSS.
-            
             // Remove old debugs
             const olds = container.querySelectorAll('.hotspot-debug');
             olds.forEach(o => o.remove());
@@ -1844,12 +1847,12 @@
             ROOM_HOTSPOTS.forEach(h => {
                 const el = document.createElement('div');
                 el.className = 'hotspot-debug';
-                // We need to position these inside the container relative to the image
-                // This is tricky if image is centered. 
-                // Simplified: Just center the debug div relative to the image using transform on container? 
-                // Actually, let's just log coords. 
-                // Visual debug in this structure requires knowing image offset inside container.
-                // Skipped complex visual debug for safety, console log exists.
+                el.style.left = h.x + '%';
+                el.style.top = h.y + '%';
+                el.style.width = h.w + '%';
+                el.style.height = h.h + '%';
+                el.title = `${h.id} (${h.x},${h.y})`;
+                container.appendChild(el);
             });
         }
 
@@ -1880,14 +1883,8 @@
             DOM.roomModal.style.display = 'block';
             DOM.roomModalText.textContent = textToDisplay; // Pre-wrap handles newlines
             
-            // Simple logic: Just show text. No typewriter for room modal to avoid complexity/bugs with newlines
-            // Prompt asked for typewriter OR render lines. Rendering static is safer for formatting.
-            
             // Bind Close
             DOM.roomModal.onclick = (e) => {
-                // If clicked outside text or on close btn, close
-                // Actually prompt says "click modal -> next line". 
-                // Let's stick to simple "Close to exit" for stability as modal has close button.
             };
             
             DOM.roomCloseBtn.onclick = (e) => {
