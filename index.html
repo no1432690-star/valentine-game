@@ -1396,6 +1396,15 @@
             document.getElementById('toggle-game-music').onchange = (e) => { SETTINGS.gameMusic = e.target.checked; saveSettings(); AudioCtrl.sync(); };
             document.getElementById('lang-select').onchange = (e) => { SETTINGS.lang = e.target.value; saveSettings(); updateTexts(); };
 
+            document.addEventListener('keydown', (e) => {
+                if (e.key.toLowerCase() === 'h') {
+                    DEBUG_HOTSPOTS = !DEBUG_HOTSPOTS;
+                    if(typeof initEnding3DebugOverlay === 'function') {
+                        initEnding3DebugOverlay();
+                    }
+                }
+            });
+
             setMode('start');
         }
 
@@ -1736,7 +1745,7 @@
           { id:"dust_on_floor",      x: 46.5, y: 75.0, w: 24.0, h: 15.5 },
         ];
 
-        const DEBUG_ENDING3_HOTSPOTS = true;
+        let DEBUG_HOTSPOTS = false;
 
         // Bridge new ID to existing logic
         const HOTSPOT_MAPPING = {
@@ -1787,7 +1796,7 @@
         }
 
         function updateEnding3DebugOverlay() {
-            if (!DEBUG_ENDING3_HOTSPOTS) return;
+            if (!DEBUG_HOTSPOTS) return;
             const overlay = document.getElementById('ending3-debug-overlay');
             const img = DOM.roomBg; // Ensure we use the cached DOM element or query it
             
@@ -1812,7 +1821,7 @@
 
             const { xPercent, yPercent } = pos;
 
-            if(DEBUG_ENDING3_HOTSPOTS) {
+            if(DEBUG_HOTSPOTS) {
                 console.log(`[DEBUG] Click: X=${xPercent.toFixed(2)}%, Y=${yPercent.toFixed(2)}%`);
             }
 
@@ -1839,7 +1848,7 @@
             const old = document.getElementById('ending3-debug-overlay');
             if (old) old.remove();
 
-            if (!DEBUG_ENDING3_HOTSPOTS) return;
+            if (!DEBUG_HOTSPOTS) return;
 
             // Create new container
             const overlay = document.createElement('div');
